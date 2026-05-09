@@ -3,6 +3,7 @@ import {
   handleStaticDemoRequest,
   resetStaticDemoStore,
 } from "../../src/demo/staticDemoApi";
+import { readClonedStaticDemoState } from "../../src/demo/staticDemoStore";
 
 async function readJson(response: Response) {
   return (await response.json()) as Record<string, unknown>;
@@ -165,6 +166,40 @@ describe("static demo API", () => {
     };
 
     expect(after.plannedItemHistory.some((item) => item.id === cancelledItem?.id)).toBe(false);
+  });
+
+  test("cancels actual entries without leaving browser-local auxiliary labels", async () => {
+    const createLabelledResponse = await handleStaticDemoRequest("/api/actual-entries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fundId: 1,
+        categoryId: 1,
+        actualDate: "2026-10-01",
+        description: "取消予定の実績",
+        amount: 10000,
+        notes: "",
+        auxiliaryLabelIds: [3],
+      }),
+    });
+    expect(createLabelledResponse.ok).toBe(true);
+
+    const labelledState = readClonedStaticDemoState();
+    const labelledEntry = labelledState.actual_entries.find((entry) => entry.description === "取消予定の実績");
+    expect(labelledEntry).toBeDefined();
+
+    const cancelResponse = await handleStaticDemoRequest(`/api/actual-entries/${labelledEntry?.id}/cancel`, {
+      method: "POST",
+    });
+    expect(cancelResponse.ok).toBe(true);
+    expect(
+      readClonedStaticDemoState().classification_assignments.filter(
+        (assignment) => (
+          assignment.target_type === "actual_entry" &&
+          assignment.target_id === labelledEntry?.id
+        ),
+      ),
+    ).toEqual([]);
   });
 
   test("serves cross-fund search results from browser-local demo data", async () => {

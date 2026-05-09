@@ -1502,6 +1502,10 @@ export function cancelStaticActualEntry(actualEntryId: number) {
       throw new Error("Actual entry not found");
     }
 
+    state.classification_assignments = state.classification_assignments.filter(
+      (assignment) => assignment.target_type !== "actual_entry" || assignment.target_id !== actualEntryId,
+    );
+
     return { success: true };
   });
 }

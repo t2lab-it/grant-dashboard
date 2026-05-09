@@ -6,11 +6,13 @@ import { loadSeedProfile } from "../../server/seeds/loadProfile";
 
 function baseProfile() {
   return {
-    "funds.json": [{ id: 1, name: "基盤研究費", fiscal_year: 2026, awarded_amount: 5080000, notes: "", display_order: 1 }],
-    "categories.json": [{ id: 1, fund_id: 1, name: "物品費", cross_aggregate_category: "equipment", display_order: 1 }],
+    "funds.json": [{ id: 1, fund_code: "basic-research", name: "基盤研究費", fiscal_year: 2026, awarded_amount: 5080000, notes: "", display_order: 1 }],
+    "categories.json": [{ id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 }],
     "budget_lines.json": [{ id: 1, fund_id: 1, category_id: 1, amount: 1400000, notes: "" }],
-    "planned_items.json": [{ id: 1, fund_id: 1, category_id: 1, planned_date: "2026-10-01", scheduled_month: "2026-10", description: "計算サーバ", amount: 200000, status: "planned", notes: "" }],
+    "planned_items.json": [{ id: 1, fund_id: 1, category_id: 1, planned_ref: "basic-research-equipment-20261001-001", planned_date: "2026-10-01", scheduled_month: "2026-10", description: "計算サーバ", amount: 200000, status: "planned", notes: "" }],
     "actual_entries.json": [{ id: 1, fund_id: 1, category_id: 1, planned_item_id: 1, actual_date: "2026-10-15", description: "計算サーバ", amount: 50000, notes: "" }],
+    "classification_tags.json": [],
+    "classification_assignments.json": [],
   };
 }
 
@@ -75,8 +77,8 @@ describe("loadSeedProfile", () => {
 
     const profile = baseProfile();
     profile["funds.json"] = [
-      { id: 1, name: "基盤研究費", fiscal_year: 2026, awarded_amount: 5080000, notes: "", display_order: 1 },
-      { id: 1, name: "教育研究費", fiscal_year: 2026, awarded_amount: 1221296, notes: "", display_order: 2 },
+      { id: 1, fund_code: "basic-research", name: "基盤研究費", fiscal_year: 2026, awarded_amount: 5080000, notes: "", display_order: 1 },
+      { id: 1, fund_code: "education", name: "教育研究費", fiscal_year: 2026, awarded_amount: 1221296, notes: "", display_order: 2 },
     ];
     profile["categories.json"] = [];
     profile["budget_lines.json"] = [];
@@ -95,7 +97,7 @@ describe("loadSeedProfile", () => {
       {
         message: "categories.json references missing fund_id 99",
         mutate: (profile) => {
-          profile["categories.json"] = [{ id: 1, fund_id: 99, name: "物品費", cross_aggregate_category: "equipment", display_order: 1 }];
+          profile["categories.json"] = [{ id: 1, fund_id: 99, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 }];
           profile["budget_lines.json"] = [];
           profile["planned_items.json"] = [];
           profile["actual_entries.json"] = [];
@@ -121,7 +123,7 @@ describe("loadSeedProfile", () => {
         message: "planned_items.json references missing fund_id 99",
         mutate: (profile) => {
           profile["budget_lines.json"] = [];
-          profile["planned_items.json"] = [{ id: 1, fund_id: 99, category_id: 1, planned_date: "2026-10-01", scheduled_month: "2026-10", description: "計算サーバ", amount: 200000, status: "planned", notes: "" }];
+          profile["planned_items.json"] = [{ id: 1, fund_id: 99, category_id: 1, planned_ref: "basic-research-equipment-20261001-001", planned_date: "2026-10-01", scheduled_month: "2026-10", description: "計算サーバ", amount: 200000, status: "planned", notes: "" }];
           profile["actual_entries.json"] = [];
         },
       },
@@ -129,7 +131,7 @@ describe("loadSeedProfile", () => {
         message: "planned_items.json references missing category_id 99",
         mutate: (profile) => {
           profile["budget_lines.json"] = [];
-          profile["planned_items.json"] = [{ id: 1, fund_id: 1, category_id: 99, planned_date: "2026-10-01", scheduled_month: "2026-10", description: "計算サーバ", amount: 200000, status: "planned", notes: "" }];
+          profile["planned_items.json"] = [{ id: 1, fund_id: 1, category_id: 99, planned_ref: "basic-research-equipment-20261001-001", planned_date: "2026-10-01", scheduled_month: "2026-10", description: "計算サーバ", amount: 200000, status: "planned", notes: "" }];
           profile["actual_entries.json"] = [];
         },
       },

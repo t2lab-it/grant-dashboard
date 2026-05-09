@@ -52,24 +52,14 @@ export function seedDatabase({
       `);
 
       for (const row of data.funds) {
-        fundStmt.run({
-          ...row,
-          fund_code: row.fund_code ?? null,
-        });
+        fundStmt.run(row);
       }
       for (const row of data.categories) {
-        categoryStmt.run({
-          ...row,
-          category_code: row.category_code ?? null,
-          cross_aggregate_category: row.cross_aggregate_category,
-        });
+        categoryStmt.run(row);
       }
       for (const row of data.budget_lines) budgetStmt.run(row);
       for (const row of data.planned_items) {
-        plannedStmt.run({
-          ...row,
-          planned_ref: row.planned_ref ?? null,
-        });
+        plannedStmt.run(row);
       }
       for (const row of data.actual_entries) actualStmt.run(row);
       for (const row of data.classification_tags) classificationTagStmt.run(row);

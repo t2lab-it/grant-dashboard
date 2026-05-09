@@ -1,3 +1,3 @@
 [
-  { "id": 1, "fund_id": 1, "name": "物品費", "cross_aggregate_category": "equipment", "display_order": 1 }
+  { "id": 1, "fund_id": 1, "category_code": "equipment", "name": "物品費", "cross_aggregate_category": "equipment", "display_order": 1 }
 ]

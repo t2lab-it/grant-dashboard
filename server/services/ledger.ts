@@ -46,20 +46,12 @@ function buildPlannedRefPrefix(fundCode: string, categoryCode: string, plannedDa
   return `${fundCode}-${categoryCode}-${plannedDate.replaceAll("-", "")}`;
 }
 
-function fallbackFundCode(fundId: number) {
-  return `fund-${fundId}`;
-}
-
-function fallbackCategoryCode(categoryId: number) {
-  return `category-${categoryId}`;
-}
-
 function insertAndReadId(db: Database.Database) {
   const row = db.prepare("SELECT last_insert_rowid() AS id").get() as { id: number };
   return Number(row.id);
 }
 
-function ensurePlannedRefIdentity(
+function getPlannedRefIdentity(
   db: Database.Database,
   fundId: number,
   categoryId: number,
@@ -73,22 +65,12 @@ function ensurePlannedRefIdentity(
       WHERE funds.id = @fundId AND categories.id = @categoryId
       `,
     )
-    .get({ fundId, categoryId }) as { fund_code: string | null; category_code: string | null };
+    .get({ fundId, categoryId }) as { fund_code: string | null; category_code: string | null } | undefined;
 
-  const fundCode = identity.fund_code?.trim() || fallbackFundCode(fundId);
-  if (identity.fund_code !== fundCode) {
-    db.prepare("UPDATE funds SET fund_code = @fundCode WHERE id = @fundId").run({
-      fundCode,
-      fundId,
-    });
-  }
-
-  const categoryCode = identity.category_code?.trim() || fallbackCategoryCode(categoryId);
-  if (identity.category_code !== categoryCode) {
-    db.prepare("UPDATE categories SET category_code = @categoryCode WHERE id = @categoryId").run({
-      categoryCode,
-      categoryId,
-    });
+  const fundCode = identity?.fund_code?.trim();
+  const categoryCode = identity?.category_code?.trim();
+  if (!fundCode || !categoryCode) {
+    throwEntryWorkflowError("invalid_reference");
   }
 
   return { fund_code: fundCode, category_code: categoryCode };
@@ -100,7 +82,7 @@ function nextPlannedRef(
   categoryId: number,
   plannedDate: string,
 ) {
-  const identity = ensurePlannedRefIdentity(db, fundId, categoryId);
+  const identity = getPlannedRefIdentity(db, fundId, categoryId);
 
   const prefix = buildPlannedRefPrefix(identity.fund_code, identity.category_code, plannedDate);
   const siblings = db

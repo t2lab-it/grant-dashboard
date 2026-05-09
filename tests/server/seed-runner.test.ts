@@ -12,11 +12,11 @@ function writeProfile(rootDir: string) {
 
   writeFileSync(
     join(profileDir, "funds.json"),
-    JSON.stringify([{ id: 1, name: "基盤研究費", fiscal_year: 2026, awarded_amount: 5080000, notes: "", display_order: 1 }], null, 2),
+    JSON.stringify([{ id: 1, fund_code: "basic-research", name: "基盤研究費", fiscal_year: 2026, awarded_amount: 5080000, notes: "", display_order: 1 }], null, 2),
   );
   writeFileSync(
     join(profileDir, "categories.json"),
-    JSON.stringify([{ id: 1, fund_id: 1, name: "物品費", cross_aggregate_category: "equipment", display_order: 1 }], null, 2),
+    JSON.stringify([{ id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 }], null, 2),
   );
   writeFileSync(
     join(profileDir, "budget_lines.json"),
@@ -30,6 +30,7 @@ function writeProfile(rootDir: string) {
           id: 1,
           fund_id: 1,
           category_id: 1,
+          planned_ref: "basic-research-equipment-20261001-001",
           planned_date: "2026-10-01",
           scheduled_month: "2026-10",
           description: "計算サーバ",
@@ -43,6 +44,8 @@ function writeProfile(rootDir: string) {
     ),
   );
   writeFileSync(join(profileDir, "actual_entries.json"), JSON.stringify([], null, 2));
+  writeFileSync(join(profileDir, "classification_tags.json"), JSON.stringify([], null, 2));
+  writeFileSync(join(profileDir, "classification_assignments.json"), JSON.stringify([], null, 2));
 }
 
 describe("seedDatabase", () => {
@@ -63,24 +66,25 @@ describe("seedDatabase", () => {
 
     const first = seedDatabase({ rootDir, profile: "test", dbPath });
     let db = new Database(dbPath, { readonly: true });
-    expect(db.prepare("SELECT id, name, fiscal_year, awarded_amount, notes, display_order FROM funds").all()).toEqual([
-      { id: 1, name: "基盤研究費", fiscal_year: 2026, awarded_amount: 5080000, notes: "", display_order: 1 },
+    expect(db.prepare("SELECT id, fund_code, name, fiscal_year, awarded_amount, notes, display_order FROM funds").all()).toEqual([
+      { id: 1, fund_code: "basic-research", name: "基盤研究費", fiscal_year: 2026, awarded_amount: 5080000, notes: "", display_order: 1 },
     ]);
-    expect(db.prepare("SELECT id, fund_id, name, cross_aggregate_category, display_order FROM categories").all()).toEqual([
-      { id: 1, fund_id: 1, name: "物品費", cross_aggregate_category: "equipment", display_order: 1 },
+    expect(db.prepare("SELECT id, fund_id, category_code, name, cross_aggregate_category, display_order FROM categories").all()).toEqual([
+      { id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 },
     ]);
     expect(db.prepare("SELECT id, fund_id, category_id, amount, notes FROM budget_lines").all()).toEqual([
       { id: 1, fund_id: 1, category_id: 1, amount: 1400000, notes: "" },
     ]);
     expect(
       db.prepare(
-        "SELECT id, fund_id, category_id, planned_date, scheduled_month, description, amount, status, notes FROM planned_items",
+        "SELECT id, fund_id, category_id, planned_ref, planned_date, scheduled_month, description, amount, status, notes FROM planned_items",
       ).all(),
     ).toEqual([
       {
         id: 1,
         fund_id: 1,
         category_id: 1,
+        planned_ref: "basic-research-equipment-20261001-001",
         planned_date: "2026-10-01",
         scheduled_month: "2026-10",
         description: "計算サーバ",
@@ -93,7 +97,7 @@ describe("seedDatabase", () => {
     db.close();
 
     const writableDb = new Database(dbPath);
-    writableDb.exec(`INSERT INTO funds (id, name, fiscal_year, awarded_amount, notes, display_order) VALUES (99, '余計な行', 2026, 1, '', 99)`);
+    writableDb.exec(`INSERT INTO funds (id, fund_code, name, fiscal_year, awarded_amount, notes, display_order) VALUES (99, 'extra', '余計な行', 2026, 1, '', 99)`);
     writableDb.close();
 
     const second = seedDatabase({ rootDir, profile: "test", dbPath });

@@ -1,7 +1,7 @@
 [
-  { "id": 1, "fund_id": 1, "category_id": 1, "planned_date": "2026-06-01", "scheduled_month": "2026-06", "description": "計算サーバ", "amount": 1200000, "status": "planned", "notes": "" },
-  { "id": 2, "fund_id": 1, "category_id": 2, "planned_date": "2026-07-10", "scheduled_month": "2026-07", "description": "研究会旅費", "amount": 150000, "status": "planned", "notes": "" },
-  { "id": 3, "fund_id": 2, "category_id": 3, "planned_date": "2026-09-15", "scheduled_month": "2026-09", "description": "国際会議参加", "amount": 500000, "status": "planned", "notes": "" },
-  { "id": 4, "fund_id": 3, "category_id": 5, "planned_date": "2026-05-01", "scheduled_month": "2026-05", "description": "RA給与", "amount": 180000, "status": "planned", "notes": "" },
-  { "id": 5, "fund_id": 4, "category_id": 6, "planned_date": "2026-08-01", "scheduled_month": "2026-08", "description": "Coding Agent", "amount": 30000, "status": "planned", "notes": "" }
+  { "id": 1, "fund_id": 1, "category_id": 1, "planned_ref": "dev-basic-research-equipment-20260601-001", "planned_date": "2026-06-01", "scheduled_month": "2026-06", "description": "計算サーバ", "amount": 1200000, "status": "planned", "notes": "" },
+  { "id": 2, "fund_id": 1, "category_id": 2, "planned_ref": "dev-basic-research-travel-20260710-001", "planned_date": "2026-07-10", "scheduled_month": "2026-07", "description": "研究会旅費", "amount": 150000, "status": "planned", "notes": "" },
+  { "id": 3, "fund_id": 2, "category_id": 3, "planned_ref": "dev-education-conference-20260915-001", "planned_date": "2026-09-15", "scheduled_month": "2026-09", "description": "国際会議参加", "amount": 500000, "status": "planned", "notes": "" },
+  { "id": 4, "fund_id": 3, "category_id": 5, "planned_ref": "dev-collaboration-personnel-20260501-001", "planned_date": "2026-05-01", "scheduled_month": "2026-05", "description": "RA給与", "amount": 180000, "status": "planned", "notes": "" },
+  { "id": 5, "fund_id": 4, "category_id": 6, "planned_ref": "dev-internal-support-services-20260801-001", "planned_date": "2026-08-01", "scheduled_month": "2026-08", "description": "Coding Agent", "amount": 30000, "status": "planned", "notes": "" }
 ]

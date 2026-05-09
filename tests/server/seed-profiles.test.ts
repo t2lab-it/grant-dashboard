@@ -28,6 +28,8 @@ function writeSeedProfile(profileDir: string, data: {
   writeJsonFile(join(profileDir, "budget_lines.json"), data.budget_lines);
   writeJsonFile(join(profileDir, "planned_items.json"), data.planned_items);
   writeJsonFile(join(profileDir, "actual_entries.json"), data.actual_entries);
+  writeJsonFile(join(profileDir, "classification_tags.json"), []);
+  writeJsonFile(join(profileDir, "classification_assignments.json"), []);
 }
 
 describe("seed profiles", () => {
@@ -138,80 +140,6 @@ describe("seed profiles", () => {
       ]),
     );
     db.close();
-  });
-
-  it("canonicalizes blank workbook identities to null while loading a profile", () => {
-    const tempDir = mkdtempSync(join(tmpdir(), "budget-seed-whitespace-"));
-    const profileDir = join(tempDir, "seeds", "whitespace");
-    tempDirs.push(tempDir);
-    writeSeedProfile(profileDir, {
-      funds: [
-        { id: 1, fund_code: "", name: "基金A", fiscal_year: 2026, awarded_amount: 100, notes: "", display_order: 1 },
-      ],
-      categories: [
-        { id: 1, fund_id: 1, category_code: "", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 },
-      ],
-      budget_lines: [{ id: 1, fund_id: 1, category_id: 1, amount: null, notes: "" }],
-      planned_items: [
-        {
-          id: 1,
-          fund_id: 1,
-          category_id: 1,
-          planned_ref: "",
-          planned_date: "2026-05-01",
-          scheduled_month: "2026-05",
-          description: "予定A",
-          amount: 10,
-          status: "planned",
-          notes: "",
-        },
-      ],
-      actual_entries: [{ id: 1, fund_id: 1, category_id: 1, planned_item_id: null, actual_date: "2026-05-03", description: "実績", amount: 5, notes: "" }],
-    });
-
-    const data = loadSeedProfile({ rootDir: tempDir, profile: "whitespace" });
-
-    expect(data.funds).toEqual([
-      expect.objectContaining({ fund_code: null }),
-    ]);
-    expect(data.categories).toEqual([
-      expect.objectContaining({ category_code: null }),
-    ]);
-    expect(data.planned_items).toEqual([
-      expect.objectContaining({ planned_ref: null }),
-    ]);
-  });
-
-  it("backfills referenced blank planned_ref values while loading a profile", () => {
-    const tempDir = mkdtempSync(join(tmpdir(), "budget-seed-backfill-"));
-    const profileDir = join(tempDir, "seeds", "backfill");
-    tempDirs.push(tempDir);
-    writeSeedProfile(profileDir, {
-      funds: [{ id: 1, fund_code: "fund-a", name: "基金A", fiscal_year: 2026, awarded_amount: 100, notes: "", display_order: 1 }],
-      categories: [{ id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 }],
-      budget_lines: [{ id: 1, fund_id: 1, category_id: 1, amount: null, notes: "" }],
-      planned_items: [
-        {
-          id: 1,
-          fund_id: 1,
-          category_id: 1,
-          planned_ref: "",
-          planned_date: "2026-05-01",
-          scheduled_month: "2026-05",
-          description: "予定A",
-          amount: 10,
-          status: "planned",
-          notes: "",
-        },
-      ],
-      actual_entries: [{ id: 1, fund_id: 1, category_id: 1, planned_item_id: 1, actual_date: "2026-05-03", description: "実績", amount: 5, notes: "" }],
-    });
-
-    const data = loadSeedProfile({ rootDir: tempDir, profile: "backfill" });
-
-    expect(data.planned_items).toEqual([
-      expect.objectContaining({ planned_ref: "planned-1" }),
-    ]);
   });
 
   it("rejects whitespace-padded duplicate fund_code values while loading a profile", () => {

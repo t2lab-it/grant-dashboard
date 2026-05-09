@@ -35,10 +35,10 @@ describe("ledger rules", () => {
     runMigrations(db);
 
     db.exec(`
-      INSERT INTO funds (id, name, fiscal_year, awarded_amount, display_order) VALUES
-        (1, '学内研究支援費', 2026, 643000, 1);
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES
-        (1, 1, '旅費', 'travel', 1);
+      INSERT INTO funds (id, fund_code, name, fiscal_year, awarded_amount, display_order) VALUES
+        (1, 'basic-research', '学内研究支援費', 2026, 643000, 1);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES
+        (1, 1, 'travel', '旅費', 'travel', 1);
       INSERT INTO budget_lines (id, fund_id, category_id, amount) VALUES
         (1, 1, 1, 120000),
         (2, 1, 1, 120000);
@@ -97,11 +97,6 @@ describe("ledger rules", () => {
   });
 
   it("assigns a generated planned_ref when inserting a browser-created planned item", () => {
-    db.exec(`
-      UPDATE funds SET fund_code = 'basic-research' WHERE id = 1;
-      UPDATE categories SET category_code = 'travel' WHERE id = 1;
-    `);
-
     upsertPlannedItem(db, {
       fundId: 1,
       categoryId: 1,
@@ -139,8 +134,6 @@ describe("ledger rules", () => {
 
   it("skips over gaps when generating a new planned_ref for the same prefix", () => {
     db.exec(`
-      UPDATE funds SET fund_code = 'basic-research' WHERE id = 1;
-      UPDATE categories SET category_code = 'travel' WHERE id = 1;
       UPDATE planned_items SET planned_ref = 'basic-research-travel-20260920-001' WHERE id = 1;
       INSERT INTO planned_items (
         id,
@@ -183,8 +176,6 @@ describe("ledger rules", () => {
 
   it("keeps refs unique when an existing sibling already uses a four-digit suffix", () => {
     db.exec(`
-      UPDATE funds SET fund_code = 'basic-research' WHERE id = 1;
-      UPDATE categories SET category_code = 'travel' WHERE id = 1;
       UPDATE planned_items SET planned_ref = 'basic-research-travel-20260921-0999' WHERE id = 1;
       INSERT INTO planned_items (
         id,
@@ -223,36 +214,6 @@ describe("ledger rules", () => {
 
     expect(inserted.planned_ref).toBe("basic-research-travel-20260921-1001");
     expect(inserted.planned_ref).not.toBe("basic-research-travel-20260921-1000");
-  });
-
-  it("backfills missing codes before generating a planned_ref", () => {
-    db.exec(`
-      UPDATE funds SET fund_code = NULL WHERE id = 1;
-      UPDATE categories SET category_code = NULL WHERE id = 1;
-    `);
-
-    upsertPlannedItem(db, {
-      fundId: 1,
-      categoryId: 1,
-      plannedDate: "2026-10-01",
-      scheduledMonth: "2026-10",
-      description: "追加出張",
-      amount: 190000,
-      notes: "",
-    });
-
-    expect(db.prepare("SELECT fund_code FROM funds WHERE id = 1").get()).toEqual({
-      fund_code: "fund-1",
-    });
-    expect(db.prepare("SELECT category_code FROM categories WHERE id = 1").get()).toEqual({
-      category_code: "category-1",
-    });
-
-    const inserted = db.prepare("SELECT planned_ref FROM planned_items WHERE id != 1").get() as {
-      planned_ref: string;
-    };
-    expect(inserted.planned_ref).toBe("fund-1-category-1-20261001-001");
-    expect(inserted.planned_ref).not.toContain("null");
   });
 
   it("reduces remaining commitment when an actual entry is linked to a planned item", () => {

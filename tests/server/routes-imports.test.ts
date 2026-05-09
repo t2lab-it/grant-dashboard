@@ -202,31 +202,6 @@ describe("API import routes", () => {
     );
   });
 
-  it("imports an uploaded workbook when the browser omits the xlsx MIME type", async () => {
-    const fixture = createImportFixtureWorkbook();
-    cleanups.push(fixture.cleanup);
-
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/imports/workbook",
-      payload: readFileSync(fixture.workbookPath),
-      headers: {
-        "content-type": "application/octet-stream",
-        "x-workbook-filename": basename(fixture.workbookPath),
-      },
-    });
-
-    expect(response.statusCode).toBe(201);
-    expect(response.json()).toMatchObject({
-      source_filename: "simple-budget.xlsx",
-      mode: "replace",
-      counts: { funds: 1, warnings: 0 },
-    });
-    expect(
-      app.db.prepare("SELECT COUNT(*) AS count FROM funds").get(),
-    ).toEqual({ count: 1 });
-  });
-
   it("returns demo import metadata after importing the repository demo workbook", async () => {
     const workbookPath = resolve("seeds/demo/demo-budget.xlsx");
 

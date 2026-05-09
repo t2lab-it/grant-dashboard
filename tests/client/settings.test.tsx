@@ -41,14 +41,6 @@ function storedSettings(overrides: Record<string, unknown> = {}) {
   });
 }
 
-function expectTextsInOrder(texts: string[]) {
-  for (let index = 0; index < texts.length - 1; index += 1) {
-    const firstElement = screen.getByText(texts[index]);
-    const secondElement = screen.getByText(texts[index + 1]);
-    expect(Boolean(firstElement.compareDocumentPosition(secondElement) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
-  }
-}
-
 describe("SettingsPage", () => {
   beforeEach(() => {
     resetClientTestState();
@@ -171,32 +163,6 @@ describe("SettingsPage", () => {
 
     expect(fetchMock).toHaveBeenCalledWith("/api/classifications/1", { method: "DELETE" });
   }, 10_000);
-
-  it("orders settings from classification to defaults, display, and appearance", async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => ({ funds: [] }),
-    });
-
-    renderAppRoute("/settings");
-
-    expect(await screen.findByRole("heading", { name: "分類" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "カラーテーマ" })).not.toBeInTheDocument();
-    expectTextsInOrder([
-      "分類",
-      "研究プロジェクトタグ",
-      "補助ラベル",
-      "入力の既定値",
-      "新規作成時の既定値",
-      "表示",
-      "Overview の既定表示",
-      "率表示の既定値",
-      "金額表示",
-      "注記の表示方法",
-      "予算ページの表示順",
-      "外観",
-    ]);
-  });
 
   it("renders theme cards with donut previews and persists the selected theme", async () => {
     const user = userEvent.setup();

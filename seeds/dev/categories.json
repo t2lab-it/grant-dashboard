@@ -1,0 +1,8 @@
+[
+  { "id": 1, "fund_id": 1, "name": "物品費", "cross_aggregate_category": "equipment", "display_order": 1 },
+  { "id": 2, "fund_id": 1, "name": "旅費", "cross_aggregate_category": "travel", "display_order": 2 },
+  { "id": 3, "fund_id": 2, "name": "学会費", "cross_aggregate_category": "other", "display_order": 1 },
+  { "id": 4, "fund_id": 2, "name": "消耗品費", "cross_aggregate_category": "equipment", "display_order": 2 },
+  { "id": 5, "fund_id": 3, "name": "人件費", "cross_aggregate_category": "personnel", "display_order": 1 },
+  { "id": 6, "fund_id": 4, "name": "サービス費", "cross_aggregate_category": "other", "display_order": 1 }
+]

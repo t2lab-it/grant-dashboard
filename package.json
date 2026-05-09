@@ -1,0 +1,65 @@
+{
+  "name": "grant-dashboard",
+  "description": "Local-first dashboard for managing research budget plans and actuals from workbook imports.",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/t2lab-it/grant-dashboard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/t2lab-it/grant-dashboard/issues"
+  },
+  "homepage": "https://t2lab-it.github.io/grant-dashboard/",
+  "engines": {
+    "node": ">=22"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "tsx scripts/dev.ts",
+    "dev:client": "vite",
+    "dev:server": "tsx watch server/app.ts",
+    "build": "vite build && tsc --noEmit",
+    "build:demo": "VITE_STATIC_DEMO=true vite build && cp dist/index.html dist/404.html && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "simple:template": "tsx scripts/simple-template.ts",
+    "simple:import:dry": "tsx scripts/simple-import-dry.ts",
+    "simple:import": "tsx scripts/simple-import.ts",
+    "export:json": "tsx scripts/export-json.ts",
+    "backup": "tsx scripts/backup.ts",
+    "restore": "tsx scripts/restore.ts",
+    "seed:dev": "tsx scripts/seed.ts dev",
+    "seed:test": "tsx scripts/seed.ts test",
+    "seed:demo": "tsx scripts/seed.ts demo",
+    "screenshots:demo": "tsx scripts/demo-screenshots.ts",
+    "generate:demo-workbook": "tsx scripts/generate-demo-workbook.ts",
+    "audit:public-safety": "tsx scripts/audit-public-safety.ts"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.59.0",
+    "better-sqlite3": "^11.5.0",
+    "fastify": "^5.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.0",
+    "xlsx": "file:vendor/xlsx-0.20.3.tgz",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "jsdom": "^25.0.1",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.5"
+  }
+}

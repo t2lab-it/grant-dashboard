@@ -1,0 +1,17 @@
+.superpowers/
+.worktrees/
+/docs/superpowers/plans/
+*.db
+*.sqlite
+*.sqlite3
+app.db
+*.db.uploads/
+exports/*
+!exports/current.json
+/imports/
+playwright-report/
+test-results/
+node_modules/
+dist/
+build/
+tmp/

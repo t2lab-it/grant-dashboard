@@ -1,0 +1,8 @@
+[
+  { "id": 1, "fund_id": 1, "category_id": 1, "amount": 1000000, "notes": "学習用GPU更新の見積ベース" },
+  { "id": 2, "fund_id": 1, "category_id": 2, "amount": 400000, "notes": "研究会発表と出張手配を想定" },
+  { "id": 3, "fund_id": 1, "category_id": 3, "amount": 200000, "notes": "評価試験の内容確定後に少額を仮置き" },
+  { "id": 4, "fund_id": 2, "category_id": 4, "amount": 500000, "notes": "解析支援の委託契約ベース" },
+  { "id": 5, "fund_id": 3, "category_id": 5, "amount": 240000, "notes": "被験者対応補助のRA謝金枠" },
+  { "id": 6, "fund_id": 4, "category_id": 6, "amount": 500000, "notes": "低残高リスクを確認するためのデモ枠" }
+]

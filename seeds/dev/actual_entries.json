@@ -1,0 +1,5 @@
+[
+  { "id": 1, "fund_id": 1, "category_id": 1, "planned_item_id": 1, "actual_date": "2026-06-20", "description": "計算サーバ", "amount": 600000, "notes": "保守契約の更新費用" },
+  { "id": 2, "fund_id": 2, "category_id": 4, "planned_item_id": null, "actual_date": "2026-04-08", "description": "書籍と開発補助", "amount": 58336, "notes": "" },
+  { "id": 3, "fund_id": 3, "category_id": 5, "planned_item_id": 4, "actual_date": "2026-05-25", "description": "RA給与", "amount": 90000, "notes": "" }
+]

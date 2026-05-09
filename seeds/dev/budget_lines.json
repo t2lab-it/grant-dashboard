@@ -1,0 +1,8 @@
+[
+  { "id": 1, "fund_id": 1, "category_id": 1, "amount": 1400000, "notes": "" },
+  { "id": 2, "fund_id": 1, "category_id": 2, "amount": 300000, "notes": "" },
+  { "id": 3, "fund_id": 2, "category_id": 3, "amount": 400000, "notes": "" },
+  { "id": 4, "fund_id": 2, "category_id": 4, "amount": null, "notes": "" },
+  { "id": 5, "fund_id": 3, "category_id": 5, "amount": 300000, "notes": "" },
+  { "id": 6, "fund_id": 4, "category_id": 6, "amount": 120000, "notes": "" }
+]

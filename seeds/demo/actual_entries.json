@@ -1,0 +1,9 @@
+[
+  { "id": 1, "fund_id": 1, "category_id": 1, "planned_item_id": 1, "actual_date": "2026-05-28", "description": "GPUサーバ更新着手金", "amount": 300000, "notes": "初回請求分、セットアップ作業を含む" },
+  { "id": 2, "fund_id": 1, "category_id": 2, "planned_item_id": 2, "actual_date": "2026-04-18", "description": "研究会早割航空券", "amount": 60000, "notes": "発表参加に向けた早割手配" },
+  { "id": 3, "fund_id": 1, "category_id": 3, "planned_item_id": 3, "actual_date": "2026-06-12", "description": "予備センサー購入", "amount": 45000, "notes": "予備実験で追加購入した評価用センサー" },
+  { "id": 4, "fund_id": 2, "category_id": 4, "planned_item_id": 4, "actual_date": "2026-04-28", "description": "UI外注着手金", "amount": 410000, "notes": "初回納品分の検収後に計上" },
+  { "id": 5, "fund_id": 2, "category_id": 4, "planned_item_id": 5, "actual_date": "2026-09-30", "description": "分析補助追加", "amount": 90000, "notes": "追加解析のスポット対応分" },
+  { "id": 6, "fund_id": 3, "category_id": 5, "planned_item_id": 6, "actual_date": "2026-06-25", "description": "RA謝金", "amount": 90000, "notes": "実験補助RAの6月勤務分を計上" },
+  { "id": 7, "fund_id": 4, "category_id": 6, "planned_item_id": 9, "actual_date": "2026-10-20", "description": "年度末調整用消耗品", "amount": 90000, "notes": "予定に紐づく一部執行" }
+]

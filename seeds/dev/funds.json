@@ -1,0 +1,6 @@
+[
+  { "id": 1, "name": "基盤研究費", "fiscal_year": 2026, "awarded_amount": 5080000, "notes": "", "display_order": 1 },
+  { "id": 2, "name": "教育研究費", "fiscal_year": 2026, "awarded_amount": 1221296, "notes": "", "display_order": 2 },
+  { "id": 3, "name": "共同研究費", "fiscal_year": 2026, "awarded_amount": 2000000, "notes": "", "display_order": 3 },
+  { "id": 4, "name": "学内研究支援費", "fiscal_year": 2026, "awarded_amount": 643000, "notes": "", "display_order": 4 }
+]

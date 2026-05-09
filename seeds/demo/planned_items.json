@@ -1,0 +1,11 @@
+[
+  { "id": 1, "fund_id": 1, "category_id": 1, "planned_ref": "demo-a-equipment-202605-001", "planned_date": "2026-05-15", "scheduled_month": "2026-05", "description": "GPUサーバ更新", "amount": 700000, "status": "planned", "notes": "見積取得済み、学習系GPUを分割発注予定" },
+  { "id": 2, "fund_id": 1, "category_id": 2, "planned_ref": "demo-a-travel-202607-001", "planned_date": "2026-07-10", "scheduled_month": "2026-07", "description": "夏季研究会旅費", "amount": 240000, "status": "planned", "notes": "研究会発表を含む出張、宿泊は後日手配" },
+  { "id": 3, "fund_id": 1, "category_id": 3, "planned_ref": "demo-a-supplies-202608-001", "planned_date": "2026-08-05", "scheduled_month": "2026-08", "description": "センサー部材", "amount": 120000, "status": "planned", "notes": "評価試験用の予備部材、配賦額は仮置き" },
+  { "id": 4, "fund_id": 2, "category_id": 4, "planned_ref": "demo-b-outsourcing-202604-001", "planned_date": "2026-04-20", "scheduled_month": "2026-04", "description": "UI外注", "amount": 420000, "status": "planned", "notes": "画面改修の委託契約分、初回請求を想定" },
+  { "id": 5, "fund_id": 2, "category_id": 4, "planned_ref": "demo-b-outsourcing-202609-001", "planned_date": "2026-09-01", "scheduled_month": "2026-09", "description": "解析補助委託", "amount": 410000, "status": "planned", "notes": "解析パイプライン整備の追加委託を見込み" },
+  { "id": 6, "fund_id": 3, "category_id": 5, "planned_ref": "demo-c-personnel-202606-001", "planned_date": "2026-06-01", "scheduled_month": "2026-06", "description": "RA謝金", "amount": 180000, "status": "planned", "notes": "実験補助RAの夏学期分として計画" },
+  { "id": 7, "fund_id": 1, "category_id": 1, "planned_ref": "demo-a-equipment-202604-archived-001", "planned_date": "2026-04-05", "scheduled_month": "2026-04", "description": "取消済み計測部材", "amount": 80000, "status": "cancelled", "notes": "年度初めの手配を取り消し" },
+  { "id": 8, "fund_id": 1, "category_id": 2, "planned_ref": "demo-a-travel-202606-archived-001", "planned_date": "2026-06-20", "scheduled_month": "2026-06", "description": "取消済み国内研究会", "amount": 90000, "status": "cancelled", "notes": "日程変更で参加を取りやめ" },
+  { "id": 9, "fund_id": 4, "category_id": 6, "planned_ref": "demo-d-low-balance-202610-001", "planned_date": "2026-10-01", "scheduled_month": "2026-10", "description": "年度末調整用消耗品", "amount": 470000, "status": "planned", "notes": "残高率が低い状態を確認するための予定" }
+]

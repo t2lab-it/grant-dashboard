@@ -1,0 +1,64 @@
+import type { FastifyInstance } from "fastify";
+import { handleFundRouteError } from "./formErrors";
+import { parsePositiveIntParam, sendNotFound } from "./routeHelpers";
+import { getFundSnapshot } from "../services/dashboard";
+import { createFundWithBudget, updateFundWithBudget } from "../services/fundCreation";
+import { fundCreationSchema, fundUpdateSchema } from "../validation";
+
+export function registerFundRoutes(app: FastifyInstance) {
+  app.post("/api/funds", (request, reply) => {
+    try {
+      const input = fundCreationSchema.parse(request.body);
+      const result = createFundWithBudget(app.db, input);
+      reply.code(201).send(result);
+    } catch (error) {
+      if (handleFundRouteError(reply, error)) {
+        return;
+      }
+
+      throw error;
+    }
+  });
+
+  app.put("/api/funds/:fundId", (request, reply) => {
+    const fundId = parsePositiveIntParam(
+      reply,
+      (request.params as { fundId?: string }).fundId,
+      "Invalid fund id",
+    );
+    if (fundId === undefined) {
+      return;
+    }
+
+    try {
+      const input = fundUpdateSchema.parse(request.body);
+      const result = updateFundWithBudget(app.db, fundId, input);
+      reply.code(200).send(result);
+    } catch (error) {
+      if (handleFundRouteError(reply, error)) {
+        return;
+      }
+
+      throw error;
+    }
+  });
+
+  app.get("/api/funds/:fundId", (request, reply) => {
+    const fundId = parsePositiveIntParam(
+      reply,
+      (request.params as { fundId?: string }).fundId,
+      "Invalid fund id",
+    );
+    if (fundId === undefined) {
+      return;
+    }
+
+    const snapshot = getFundSnapshot(app.db, fundId);
+    if (snapshot.fund === undefined) {
+      sendNotFound(reply, "Fund not found");
+      return;
+    }
+
+    return snapshot;
+  });
+}

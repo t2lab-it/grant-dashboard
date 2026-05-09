@@ -1,0 +1,54 @@
+{
+  "funds": [
+    {
+      "id": 1,
+      "name": "基盤研究費",
+      "fiscal_year": 2026,
+      "awarded_amount": 5080000,
+      "notes": "",
+      "display_order": 1
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "fund_id": 1,
+      "name": "物品費",
+      "display_order": 1
+    }
+  ],
+  "budget_lines": [
+    {
+      "id": 1,
+      "fund_id": 1,
+      "category_id": 1,
+      "amount": 20000,
+      "notes": ""
+    }
+  ],
+  "planned_items": [
+    {
+      "id": 1,
+      "fund_id": 1,
+      "category_id": 1,
+      "planned_date": "2026-10-01",
+      "scheduled_month": "2026-10",
+      "description": "計算サーバ購入",
+      "amount": 200000,
+      "status": "planned",
+      "notes": ""
+    }
+  ],
+  "actual_entries": [
+    {
+      "id": 1,
+      "fund_id": 1,
+      "category_id": 1,
+      "planned_item_id": 1,
+      "actual_date": "2026-10-05",
+      "description": "着手金",
+      "amount": 50000,
+      "notes": ""
+    }
+  ]
+}

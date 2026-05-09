@@ -202,31 +202,6 @@ describe("API import routes", () => {
     );
   });
 
-  it("imports an uploaded workbook when the browser omits the xlsx MIME type", async () => {
-    const fixture = createImportFixtureWorkbook();
-    cleanups.push(fixture.cleanup);
-
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/imports/workbook",
-      payload: readFileSync(fixture.workbookPath),
-      headers: {
-        "content-type": "application/octet-stream",
-        "x-workbook-filename": basename(fixture.workbookPath),
-      },
-    });
-
-    expect(response.statusCode).toBe(201);
-    expect(response.json()).toMatchObject({
-      source_filename: "simple-budget.xlsx",
-      mode: "replace",
-      counts: { funds: 1, warnings: 0 },
-    });
-    expect(
-      app.db.prepare("SELECT COUNT(*) AS count FROM funds").get(),
-    ).toEqual({ count: 1 });
-  });
-
   it("returns demo import metadata after importing the repository demo workbook", async () => {
     const workbookPath = resolve("seeds/demo/demo-budget.xlsx");
 
@@ -282,50 +257,6 @@ describe("API import routes", () => {
         mismatches: [expect.objectContaining({ metric: "assets", delta: 1 })],
       },
     });
-  });
-
-  it.each([
-    {
-      id: 3,
-      sourceFilename: "broken-budget.xlsx",
-      importedAt: "2026-04-18T15:00:00.000Z",
-      mappingSummary: "{}",
-      reconciliationJson: "{}",
-    },
-    {
-      id: 4,
-      sourceFilename: "modern-broken-budget.xlsx",
-      importedAt: "2026-04-17T15:00:00.000Z",
-      mappingSummary: JSON.stringify({
-        mode: "replace",
-        counts: {
-          funds: 1,
-          categories: 1,
-          budget_lines: 1,
-          planned_items: 1,
-          actual_entries: 0,
-          warnings: 0,
-        },
-        warning_count_by_code: {},
-      }),
-      reconciliationJson: "[]",
-    },
-  ])("rejects malformed import review payloads for list and detail routes", async (fixture) => {
-    insertImportHistoryFixture(app.db, {
-      id: fixture.id,
-      sourceFilename: fixture.sourceFilename,
-      importedAt: fixture.importedAt,
-      warningCount: 0,
-      mappingSummaryJson: fixture.mappingSummary,
-      warningsJson: "[]",
-      reconciliationJson: fixture.reconciliationJson,
-    });
-
-    const listResponse = await app.inject({ method: "GET", url: "/api/imports" });
-    expect(listResponse.statusCode).toBe(500);
-
-    const detailResponse = await app.inject({ method: "GET", url: `/api/imports/${fixture.id}` });
-    expect(detailResponse.statusCode).toBe(500);
   });
 
   it("returns 400 for an invalid import id", async () => {

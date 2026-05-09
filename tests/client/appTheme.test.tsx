@@ -5,6 +5,7 @@ import {
   renderWithAppRouter,
   resetClientTestState,
   setMatchMediaMatches,
+  storedAppSettings,
   stubMatchMedia,
 } from "./testUtils";
 
@@ -24,7 +25,7 @@ describe("app theme resolution", () => {
   it("keeps an explicit light selection when the system theme changes", async () => {
     window.localStorage.setItem(
       "budget-dashboard:settings",
-      JSON.stringify({ appThemeMode: "light" }),
+      storedAppSettings({ appThemeMode: "light" }),
     );
     setMatchMediaMatches("(prefers-color-scheme: dark)", true);
 
@@ -40,7 +41,7 @@ describe("app theme resolution", () => {
   it("updates when the system theme changes in system mode", async () => {
     window.localStorage.setItem(
       "budget-dashboard:settings",
-      JSON.stringify({ appThemeMode: "system" }),
+      storedAppSettings({ appThemeMode: "system" }),
     );
     setMatchMediaMatches("(prefers-color-scheme: dark)", false);
 

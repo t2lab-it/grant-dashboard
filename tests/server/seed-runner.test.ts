@@ -1,48 +1,14 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import Database from "better-sqlite3";
 import { seedDatabase } from "../../server/seeds/seedDatabase";
+import { writeNamedSeedProfile } from "../support/seed";
 
 function writeProfile(rootDir: string) {
-  const profileDir = join(rootDir, "seeds", "test");
-  mkdirSync(profileDir, { recursive: true });
-
-  writeFileSync(
-    join(profileDir, "funds.json"),
-    JSON.stringify([{ id: 1, name: "基盤研究費", fiscal_year: 2026, awarded_amount: 5080000, notes: "", display_order: 1 }], null, 2),
-  );
-  writeFileSync(
-    join(profileDir, "categories.json"),
-    JSON.stringify([{ id: 1, fund_id: 1, name: "物品費", cross_aggregate_category: "equipment", display_order: 1 }], null, 2),
-  );
-  writeFileSync(
-    join(profileDir, "budget_lines.json"),
-    JSON.stringify([{ id: 1, fund_id: 1, category_id: 1, amount: 1400000, notes: "" }], null, 2),
-  );
-  writeFileSync(
-    join(profileDir, "planned_items.json"),
-    JSON.stringify(
-      [
-        {
-          id: 1,
-          fund_id: 1,
-          category_id: 1,
-          planned_date: "2026-10-01",
-          scheduled_month: "2026-10",
-          description: "計算サーバ",
-          amount: 200000,
-          status: "planned",
-          notes: "",
-        },
-      ],
-      null,
-      2,
-    ),
-  );
-  writeFileSync(join(profileDir, "actual_entries.json"), JSON.stringify([], null, 2));
+  writeNamedSeedProfile(rootDir, "test", { actual_entries: [] });
 }
 
 describe("seedDatabase", () => {
@@ -63,24 +29,25 @@ describe("seedDatabase", () => {
 
     const first = seedDatabase({ rootDir, profile: "test", dbPath });
     let db = new Database(dbPath, { readonly: true });
-    expect(db.prepare("SELECT id, name, fiscal_year, awarded_amount, notes, display_order FROM funds").all()).toEqual([
-      { id: 1, name: "基盤研究費", fiscal_year: 2026, awarded_amount: 5080000, notes: "", display_order: 1 },
+    expect(db.prepare("SELECT id, fund_code, name, fiscal_year, awarded_amount, notes, display_order FROM funds").all()).toEqual([
+      { id: 1, fund_code: "basic-research", name: "基盤研究費", fiscal_year: 2026, awarded_amount: 5080000, notes: "", display_order: 1 },
     ]);
-    expect(db.prepare("SELECT id, fund_id, name, cross_aggregate_category, display_order FROM categories").all()).toEqual([
-      { id: 1, fund_id: 1, name: "物品費", cross_aggregate_category: "equipment", display_order: 1 },
+    expect(db.prepare("SELECT id, fund_id, category_code, name, cross_aggregate_category, display_order FROM categories").all()).toEqual([
+      { id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 },
     ]);
     expect(db.prepare("SELECT id, fund_id, category_id, amount, notes FROM budget_lines").all()).toEqual([
       { id: 1, fund_id: 1, category_id: 1, amount: 1400000, notes: "" },
     ]);
     expect(
       db.prepare(
-        "SELECT id, fund_id, category_id, planned_date, scheduled_month, description, amount, status, notes FROM planned_items",
+        "SELECT id, fund_id, category_id, planned_ref, planned_date, scheduled_month, description, amount, status, notes FROM planned_items",
       ).all(),
     ).toEqual([
       {
         id: 1,
         fund_id: 1,
         category_id: 1,
+        planned_ref: "basic-research-equipment-20261001-001",
         planned_date: "2026-10-01",
         scheduled_month: "2026-10",
         description: "計算サーバ",
@@ -93,7 +60,7 @@ describe("seedDatabase", () => {
     db.close();
 
     const writableDb = new Database(dbPath);
-    writableDb.exec(`INSERT INTO funds (id, name, fiscal_year, awarded_amount, notes, display_order) VALUES (99, '余計な行', 2026, 1, '', 99)`);
+    writableDb.exec(`INSERT INTO funds (id, fund_code, name, fiscal_year, awarded_amount, notes, display_order) VALUES (99, 'extra', '余計な行', 2026, 1, '', 99)`);
     writableDb.close();
 
     const second = seedDatabase({ rootDir, profile: "test", dbPath });

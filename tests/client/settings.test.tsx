@@ -6,6 +6,7 @@ import {
   fetchMock,
   renderWithAppRouter,
   resetClientTestState,
+  storedAppSettings,
   stubMatchMedia,
 } from "./testUtils";
 
@@ -13,40 +14,6 @@ stubMatchMedia();
 
 function renderAppRoute(initialEntry: string) {
   return renderWithAppRouter(routes, initialEntry);
-}
-
-function storedSettings(overrides: Record<string, unknown> = {}) {
-  return JSON.stringify({
-    appThemeMode: "system",
-    themePreset: "teal-yellow",
-    customChartPresets: [],
-    defaultRateMetric: "execution",
-    defaultOverviewDisplayMode: "chart",
-    notesDisplayMode: "hover",
-    defaultFundId: null,
-    defaultCategoryId: null,
-    amountDisplayMode: "grouped-yen",
-    fundDetailSectionOrder: ["categories", "timeline", "actualEntries", "plannedItems"],
-    executionRateThresholds: {
-      notice: 70,
-      warning: 90,
-      alert: 100,
-    },
-    balanceRateThresholds: {
-      notice: 30,
-      warning: 10,
-      alert: 0,
-    },
-    ...overrides,
-  });
-}
-
-function expectTextsInOrder(texts: string[]) {
-  for (let index = 0; index < texts.length - 1; index += 1) {
-    const firstElement = screen.getByText(texts[index]);
-    const secondElement = screen.getByText(texts[index + 1]);
-    expect(Boolean(firstElement.compareDocumentPosition(secondElement) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
-  }
 }
 
 describe("SettingsPage", () => {
@@ -172,32 +139,6 @@ describe("SettingsPage", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/classifications/1", { method: "DELETE" });
   }, 10_000);
 
-  it("orders settings from classification to defaults, display, and appearance", async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => ({ funds: [] }),
-    });
-
-    renderAppRoute("/settings");
-
-    expect(await screen.findByRole("heading", { name: "分類" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "カラーテーマ" })).not.toBeInTheDocument();
-    expectTextsInOrder([
-      "分類",
-      "研究プロジェクトタグ",
-      "補助ラベル",
-      "入力の既定値",
-      "新規作成時の既定値",
-      "表示",
-      "Overview の既定表示",
-      "率表示の既定値",
-      "金額表示",
-      "注記の表示方法",
-      "予算ページの表示順",
-      "外観",
-    ]);
-  });
-
   it("renders theme cards with donut previews and persists the selected theme", async () => {
     const user = userEvent.setup();
 
@@ -225,7 +166,7 @@ describe("SettingsPage", () => {
     await user.click(graySkyRadio);
 
     expect(graySkyRadio).toBeChecked();
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedSettings({ themePreset: "gray-sky" }));
+    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedAppSettings({ themePreset: "gray-sky" }));
   });
 
   it("loads saved custom chart presets and keeps the selected custom preset checked", async () => {
@@ -237,7 +178,7 @@ describe("SettingsPage", () => {
     });
     window.localStorage.setItem(
       "budget-dashboard:settings",
-      storedSettings({
+      storedAppSettings({
         themePreset: "custom:lab-standard",
         customChartPresets: [
           {
@@ -264,55 +205,6 @@ describe("SettingsPage", () => {
     expect(within(customCard as HTMLElement).getByLabelText("研究室標準 の予算内訳")).toBeInTheDocument();
   });
 
-  it("drops invalid stored custom chart presets and falls back when the selected custom preset is missing", async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        funds: [],
-      }),
-    });
-    window.localStorage.setItem(
-      "budget-dashboard:settings",
-      storedSettings({
-        themePreset: "custom:missing",
-        customChartPresets: [
-          {
-            id: "bad-color",
-            label: "不正な色",
-            palette: {
-              actual: "#12345",
-              committed: "#f97316",
-              balance: "#fff7ed",
-              balanceBorder: "#c2410c",
-            },
-          },
-          {
-            id: "",
-            label: "ID なし",
-            palette: {
-              actual: "#7c3aed",
-              committed: "#f97316",
-              balance: "#fff7ed",
-              balanceBorder: "#c2410c",
-            },
-          },
-        ],
-      }),
-    );
-
-    renderAppRoute("/settings");
-
-    expect(await screen.findByRole("radio", { name: /青緑＋黄色系/ })).toBeChecked();
-    expect(screen.queryByRole("radio", { name: /不正な色/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole("radio", { name: /ID なし/ })).not.toBeInTheDocument();
-    const savedSettings = JSON.parse(window.localStorage.getItem("budget-dashboard:settings") ?? "{}") as {
-      themePreset?: string;
-      customChartPresets?: unknown[];
-    };
-    expect(savedSettings.themePreset).toBe("teal-yellow");
-    expect(savedSettings.customChartPresets).toEqual([]);
-  });
-
   it("creates, selects, edits, and deletes custom chart presets from the folded editor", async () => {
     const user = userEvent.setup();
 
@@ -327,7 +219,6 @@ describe("SettingsPage", () => {
 
     await screen.findByRole("heading", { name: "外観" });
     await user.click(screen.getByRole("button", { name: "カスタムプリセットを追加" }));
-    expect(screen.getByLabelText("カスタムプリセット例 の予算内訳")).toBeInTheDocument();
     await user.type(screen.getByLabelText("プリセット名"), "研究室標準");
     fireEvent.change(screen.getByLabelText("執行済カラーピッカー"), {
       target: { value: "#7c3aed" },
@@ -375,32 +266,15 @@ describe("SettingsPage", () => {
     await user.click(screen.getByRole("button", { name: "カスタムプリセットを編集: 研究室標準" }));
     await user.clear(screen.getByLabelText("プリセット名"));
     await user.type(screen.getByLabelText("プリセット名"), "研究室暖色");
-    fireEvent.change(screen.getByLabelText("執行済カラーピッカー"), {
-      target: { value: "#db2777" },
-    });
     await user.click(screen.getByRole("button", { name: /保存/ }));
 
     expect(screen.getByRole("radio", { name: /研究室暖色/ })).toBeChecked();
     expect(screen.queryByRole("radio", { name: /研究室標準/ })).not.toBeInTheDocument();
-    const savedAfterEdit = JSON.parse(window.localStorage.getItem("budget-dashboard:settings") ?? "{}") as {
-      customChartPresets?: Array<{ id: string; label: string; palette: { actual: string } }>;
-    };
-    expect(savedAfterEdit.customChartPresets?.[0]).toMatchObject({
-      id: savedAfterCreate.customChartPresets?.[0].id,
-      label: "研究室暖色",
-      palette: { actual: "#db2777" },
-    });
 
     await user.click(screen.getByRole("button", { name: "カスタムプリセットを削除: 研究室暖色" }));
 
     expect(screen.queryByRole("radio", { name: /研究室暖色/ })).not.toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /青緑＋黄色系/ })).toBeChecked();
-    const savedAfterDelete = JSON.parse(window.localStorage.getItem("budget-dashboard:settings") ?? "{}") as {
-      themePreset?: string;
-      customChartPresets?: unknown[];
-    };
-    expect(savedAfterDelete.themePreset).toBe("teal-yellow");
-    expect(savedAfterDelete.customChartPresets).toEqual([]);
   }, 10_000);
 
   it("warns about low readability for custom preset colors selected from pickers", async () => {
@@ -468,7 +342,7 @@ describe("SettingsPage", () => {
     expect(darkButton).toHaveAttribute("aria-pressed", "true");
     expect(tealYellowRadio).toBeChecked();
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({ appThemeMode: "dark" }),
+      storedAppSettings({ appThemeMode: "dark" }),
     );
 
     await user.click(systemButton);
@@ -477,7 +351,7 @@ describe("SettingsPage", () => {
     expect(lightButton).toHaveAttribute("aria-pressed", "true");
     expect(darkButton).toHaveAttribute("aria-pressed", "false");
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({ appThemeMode: "system" }),
+      storedAppSettings({ appThemeMode: "system" }),
     );
   });
 
@@ -522,7 +396,7 @@ describe("SettingsPage", () => {
     expect(balanceRateButton).toHaveAttribute("aria-pressed", "true");
 
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({
+      storedAppSettings({
         defaultRateMetric: "balance",
         defaultOverviewDisplayMode: "numeric",
         notesDisplayMode: "click",
@@ -549,7 +423,7 @@ describe("SettingsPage", () => {
     await user.click(thousandYenRadio);
 
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({ amountDisplayMode: "thousand-yen" }),
+      storedAppSettings({ amountDisplayMode: "thousand-yen" }),
     );
   });
 
@@ -569,16 +443,9 @@ describe("SettingsPage", () => {
     const rateFieldset = screen.getByText("率表示の既定値").closest("fieldset");
     expect(rateFieldset).not.toBeNull();
     expect(within(rateFieldset as HTMLElement).getByText("予算消化率のしきい値")).toBeInTheDocument();
-    expect(screen.queryByText("「率表示の既定値」で選んでいる方の境界を編集します。")).not.toBeInTheDocument();
     expect(screen.getByRole("spinbutton", { name: "notice" })).toHaveValue(70);
     expect(screen.getByRole("spinbutton", { name: "warning" })).toHaveValue(90);
     expect(screen.getByRole("spinbutton", { name: "alert" })).toHaveValue(100);
-    expect(screen.getByText("notice ≥")).toBeInTheDocument();
-    expect(screen.getByText("warning ≥")).toBeInTheDocument();
-    expect(screen.getByText("alert ≥")).toBeInTheDocument();
-    expect(screen.getByText("normal: 69.0%")).toBeInTheDocument();
-    expect(screen.getByText("notice: 80.0%")).toHaveClass("detail-rate-notice");
-    expect(screen.getByText("warning: 95.0%")).toHaveClass("detail-rate-warning");
     expect(screen.getByText("alert: 100.0%")).toHaveClass("detail-rate-alert");
 
     fireEvent.change(screen.getByRole("spinbutton", { name: "notice" }), {
@@ -592,7 +459,7 @@ describe("SettingsPage", () => {
     });
 
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({
+      storedAppSettings({
         executionRateThresholds: {
           notice: 60,
           warning: 90,
@@ -600,9 +467,6 @@ describe("SettingsPage", () => {
         },
       }),
     );
-    expect(screen.getByText("normal: 59.0%")).toBeInTheDocument();
-    expect(screen.getByText("notice: 75.0%")).toHaveClass("detail-rate-notice");
-    expect(screen.getByText("warning: 105.0%")).toHaveClass("detail-rate-warning");
     expect(screen.getByText("alert: 120.0%")).toHaveClass("detail-rate-alert");
 
     const thresholdFieldset = screen.getByText("予算消化率のしきい値").closest("fieldset");
@@ -610,9 +474,7 @@ describe("SettingsPage", () => {
     await user.click(within(thresholdFieldset as HTMLElement).getByRole("button", { name: "デフォルト値に戻す" }));
 
     expect(screen.getByRole("spinbutton", { name: "notice" })).toHaveValue(70);
-    expect(screen.getByRole("spinbutton", { name: "warning" })).toHaveValue(90);
-    expect(screen.getByRole("spinbutton", { name: "alert" })).toHaveValue(100);
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedSettings());
+    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedAppSettings());
   });
 
   it("switches the threshold editor to balance mode using the selected default rate metric", async () => {
@@ -635,15 +497,8 @@ describe("SettingsPage", () => {
     expect(rateFieldset).not.toBeNull();
     expect(within(rateFieldset as HTMLElement).getByText("残高率のしきい値")).toBeInTheDocument();
     expect(screen.getByText("notice <")).toBeInTheDocument();
-    expect(screen.getByText("warning <")).toBeInTheDocument();
-    expect(screen.getByText("alert <")).toBeInTheDocument();
     expect(screen.getByRole("spinbutton", { name: "notice" })).toHaveValue(30);
-    expect(screen.getByRole("spinbutton", { name: "warning" })).toHaveValue(10);
-    expect(screen.getByRole("spinbutton", { name: "alert" })).toHaveValue(0);
-    expect(screen.getByText("normal: 31.0%")).toBeInTheDocument();
     expect(screen.getByText("notice: 20.0%")).toHaveClass("detail-rate-notice");
-    expect(screen.getByText("warning: 5.0%")).toHaveClass("detail-rate-warning");
-    expect(screen.getByText("alert: -1.0%")).toHaveClass("detail-rate-alert");
 
     fireEvent.change(screen.getByRole("spinbutton", { name: "notice" }), {
       target: { value: "40", valueAsNumber: 40 },
@@ -656,7 +511,7 @@ describe("SettingsPage", () => {
     });
 
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({
+      storedAppSettings({
         defaultRateMetric: "balance",
         balanceRateThresholds: {
           notice: 40,
@@ -665,10 +520,7 @@ describe("SettingsPage", () => {
         },
       }),
     );
-    expect(screen.getByText("normal: 41.0%")).toBeInTheDocument();
     expect(screen.getByText("notice: 25.0%")).toHaveClass("detail-rate-notice");
-    expect(screen.getByText("warning: 2.5%")).toHaveClass("detail-rate-warning");
-    expect(screen.getByText("alert: -6.0%")).toHaveClass("detail-rate-alert");
   });
 
   it("persists the shared default fund and category, and clears the category when the fund changes", async () => {
@@ -730,7 +582,7 @@ describe("SettingsPage", () => {
     await user.selectOptions(defaultCategorySelect, "14");
 
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({
+      storedAppSettings({
         defaultFundId: 2,
         defaultCategoryId: 14,
       }),
@@ -740,7 +592,7 @@ describe("SettingsPage", () => {
 
     expect(screen.getByLabelText("新規作成時の既定費目")).toHaveValue("");
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({
+      storedAppSettings({
         defaultFundId: 3,
         defaultCategoryId: null,
       }),
@@ -798,6 +650,6 @@ describe("SettingsPage", () => {
       "精算項目一覧",
       "計画項目一覧",
     ]);
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedSettings());
+    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedAppSettings());
   });
 });

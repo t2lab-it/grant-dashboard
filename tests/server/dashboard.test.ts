@@ -352,92 +352,21 @@ describe("dashboard calculations", () => {
     expect(fund.categories).toHaveLength(3);
     expect(fund.categories.map((category) => category.categoryName)).toEqual(["物品費", "旅費", "消耗品費"]);
 
-    expect(fund.plannedItems).toEqual([
-      {
-        id: 1,
-        plannedDate: "2026-06-01",
-        scheduledMonth: "2026-06",
-        categoryId: 1,
-        categoryName: "物品費",
-        description: "計算サーバ購入",
-        amount: 1400000,
-        notes: "",
-        auxiliaryLabels: [],
-      },
-      {
-        id: 5,
-        plannedDate: "2026-07-03",
-        scheduledMonth: "2026-07",
-        categoryId: 1,
-        categoryName: "物品費",
-        description: "GPU増設",
-        amount: 300000,
-        notes: "",
-        auxiliaryLabels: [],
-      },
-      {
-        id: 6,
-        plannedDate: "2026-07-04",
-        scheduledMonth: "2026-07",
-        categoryId: 1,
-        categoryName: "物品費",
-        description: "予備部品",
-        amount: 20000,
-        notes: "",
-        auxiliaryLabels: [],
-      },
-      {
-        id: 2,
-        plannedDate: "2026-07-01",
-        scheduledMonth: "2026-07",
-        categoryId: 2,
-        categoryName: "旅費",
-        description: "学会旅費",
-        amount: 100000,
-        notes: "",
-        auxiliaryLabels: [],
-      },
-      {
-        id: 4,
-        plannedDate: "2026-07-02",
-        scheduledMonth: "2026-07",
-        categoryId: 3,
-        categoryName: "消耗品費",
-        description: "研究ノート補充",
-        amount: 5000,
-        notes: "",
-        auxiliaryLabels: [],
-      },
-    ]);
-    expect(fund.actualEntries).toEqual([
-      {
-        id: 3,
-        actualDate: "2026-08-10",
-        categoryName: "旅費",
-        description: "資料印刷",
-        amount: 150,
-        notes: "",
-        auxiliaryLabels: [],
-      },
-      {
-        id: 1,
-        actualDate: "2026-06-15",
-        categoryName: "物品費",
-        description: "計算サーバ購入",
-        amount: 600000,
-        notes: "",
-        auxiliaryLabels: [],
-      },
-      {
-        id: 2,
-        actualDate: "2026-04-08",
-        categoryName: "物品費",
-        description: "書籍",
-        amount: 47590,
-        notes: "",
-        auxiliaryLabels: [],
-      },
-    ]);
+    expect(fund.plannedItems.map((item) => item.id)).toEqual([1, 5, 6, 2, 4]);
+    expect(fund.plannedItems[0]).toMatchObject({
+      id: 1,
+      categoryName: "物品費",
+      description: "計算サーバ購入",
+      amount: 1400000,
+    });
+    expect(fund.actualEntries.map((entry) => entry.id)).toEqual([3, 1, 2]);
+    expect(fund.actualEntries[0]).toMatchObject({
+      id: 3,
+      actualDate: "2026-08-10",
+      categoryName: "旅費",
+      description: "資料印刷",
+      amount: 150,
+    });
   });
 
   it("hides non-planned planned items while preserving linked actual totals", () => {

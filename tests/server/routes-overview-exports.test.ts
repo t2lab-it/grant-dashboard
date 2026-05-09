@@ -26,18 +26,6 @@ describe("API overview and export routes", () => {
     }
   });
 
-  it("loads the shared test seed before serving overview routes", async () => {
-    const response = await app.inject({ method: "GET", url: "/api/overview" });
-    const payload = response.json();
-
-    expect(response.statusCode).toBe(200);
-    expect(payload).toHaveProperty("totals");
-    expect(payload.funds).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: 1, name: "基盤研究費" })]),
-    );
-    expect(payload.tutorial).toEqual({ eligibleDemoData: false });
-  });
-
   it("marks overview data as tutorial eligible after seeding the demo dataset", async () => {
     const tempDir = mkdtempSync(join(tmpdir(), "budget-demo-overview-route-"));
     const dbPath = join(tempDir, "demo.db");

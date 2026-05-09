@@ -37,6 +37,14 @@ function insertAndReadId(db: Database.Database) {
   return Number(row.id);
 }
 
+function defaultFundCode(fundId: number) {
+  return `fund-${fundId}`;
+}
+
+function defaultCategoryCode(categoryId: number) {
+  return `category-${categoryId}`;
+}
+
 function getNextFundDisplayOrder(db: Database.Database) {
   const row = db.prepare("SELECT COALESCE(MAX(display_order), 0) + 1 AS display_order FROM funds").get() as {
     display_order: number;
@@ -68,6 +76,10 @@ export function createFundWithBudget(db: Database.Database, input: CreateFundInp
     });
 
     const fundId = insertAndReadId(db);
+    db.prepare("UPDATE funds SET fund_code = @fundCode WHERE id = @fundId").run({
+      fundCode: defaultFundCode(fundId),
+      fundId,
+    });
     setFundClassifications(db, fundId, {
       projectTagIds: input.projectTagIds ?? [],
       auxiliaryLabelIds: input.auxiliaryLabelIds ?? [],
@@ -81,6 +93,10 @@ export function createFundWithBudget(db: Database.Database, input: CreateFundInp
         display_order: index + 1,
       });
       const categoryId = insertAndReadId(db);
+      db.prepare("UPDATE categories SET category_code = @categoryCode WHERE id = @categoryId").run({
+        categoryCode: defaultCategoryCode(categoryId),
+        categoryId,
+      });
 
       budgetLineStmt.run({
         fund_id: fundId,
@@ -212,6 +228,10 @@ export function updateFundWithBudget(db: Database.Database, fundId: number, inpu
           display_order: displayOrder,
         });
         categoryId = insertAndReadId(db);
+        db.prepare("UPDATE categories SET category_code = @categoryCode WHERE id = @categoryId").run({
+          categoryCode: defaultCategoryCode(categoryId),
+          categoryId,
+        });
       } else {
         updateCategoryStmt.run({
           id: categoryId,

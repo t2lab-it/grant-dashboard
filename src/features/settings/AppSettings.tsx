@@ -2,17 +2,12 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import {
   defaultOverviewChartPreset,
   getCustomOverviewChartPresetId,
-  getOverviewChartPresetRef,
-  normalizeCustomOverviewChartPresets,
   type CustomOverviewChartPreset,
   type OverviewChartPresetRef,
 } from "../overview/overviewChart";
 import {
   defaultBalanceRateThresholds,
   defaultExecutionRateThresholds,
-  getRateMetricKey,
-  normalizeBalanceRateThresholds,
-  normalizeExecutionRateThresholds,
   type BalanceRateThresholds,
   type ExecutionRateThresholds,
   type RateMetricKey,
@@ -20,7 +15,6 @@ import {
 import { type AmountDisplayMode } from "../../lib/format";
 import {
   defaultFundDetailSectionOrder,
-  normalizeFundDetailSectionOrder,
   type FundDetailSectionKey,
 } from "./fundDetailSectionOrder";
 
@@ -103,38 +97,6 @@ const AppSettingsContext = createContext<AppSettingsContextValue>({
   resetBalanceRateThresholds: () => undefined,
 });
 
-function getAppThemeMode(value: string | undefined): AppThemeMode {
-  if (value === "light" || value === "dark") {
-    return value;
-  }
-
-  return "system";
-}
-
-function getOverviewDisplayMode(value: string | undefined): OverviewDisplayMode {
-  return value === "numeric" ? "numeric" : defaultOverviewDisplayMode;
-}
-
-function getNotesDisplayMode(value: string | undefined): NotesDisplayMode {
-  if (value === "click" || value === "expanded") {
-    return value;
-  }
-
-  return defaultNotesDisplayMode;
-}
-
-function getAmountDisplayMode(value: string | undefined): AmountDisplayMode {
-  if (value === "plain-yen" || value === "thousand-yen") {
-    return value;
-  }
-
-  return defaultAmountDisplayMode;
-}
-
-function getStoredPositiveInteger(value: unknown): number | null {
-  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
-}
-
 function readStoredSettings(): AppSettings {
   if (typeof window === "undefined") {
     return defaultSettings;
@@ -145,44 +107,7 @@ function readStoredSettings(): AppSettings {
     return defaultSettings;
   }
 
-  try {
-    const parsed = JSON.parse(rawValue) as {
-      appThemeMode?: string;
-      themePreset?: string;
-      customChartPresets?: unknown;
-      defaultRateMetric?: string;
-      defaultOverviewDisplayMode?: string;
-      notesDisplayMode?: string;
-      defaultFundId?: number;
-      defaultCategoryId?: number;
-      amountDisplayMode?: string;
-      fundDetailSectionOrder?: unknown;
-      executionRateThresholds?: Partial<ExecutionRateThresholds>;
-      balanceRateThresholds?: Partial<BalanceRateThresholds>;
-    };
-    const customChartPresets = normalizeCustomOverviewChartPresets(parsed.customChartPresets);
-    const themePreset = getOverviewChartPresetRef(parsed.themePreset, customChartPresets);
-    const defaultFundId = getStoredPositiveInteger(parsed.defaultFundId);
-    const defaultCategoryId =
-      defaultFundId === null ? null : getStoredPositiveInteger(parsed.defaultCategoryId);
-
-    return {
-      appThemeMode: getAppThemeMode(parsed.appThemeMode),
-      themePreset,
-      customChartPresets,
-      defaultRateMetric: getRateMetricKey(parsed.defaultRateMetric ?? null),
-      defaultOverviewDisplayMode: getOverviewDisplayMode(parsed.defaultOverviewDisplayMode),
-      notesDisplayMode: getNotesDisplayMode(parsed.notesDisplayMode),
-      defaultFundId,
-      defaultCategoryId,
-      amountDisplayMode: getAmountDisplayMode(parsed.amountDisplayMode),
-      fundDetailSectionOrder: normalizeFundDetailSectionOrder(parsed.fundDetailSectionOrder),
-      executionRateThresholds: normalizeExecutionRateThresholds(parsed.executionRateThresholds),
-      balanceRateThresholds: normalizeBalanceRateThresholds(parsed.balanceRateThresholds),
-    };
-  } catch {
-    return defaultSettings;
-  }
+  return JSON.parse(rawValue) as AppSettings;
 }
 
 export function AppSettingsProvider({ children }: { children: ReactNode }) {
@@ -205,14 +130,14 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       setCustomChartPresets: (customChartPresets) =>
         setSettings((current) => ({
           ...current,
-          customChartPresets: normalizeCustomOverviewChartPresets(customChartPresets),
+          customChartPresets,
         })),
       saveCustomChartPreset: (preset) =>
         setSettings((current) => {
-          const customChartPresets = normalizeCustomOverviewChartPresets([
+          const customChartPresets = [
             ...current.customChartPresets.filter((candidate) => candidate.id !== preset.id),
             preset,
-          ]);
+          ];
           return { ...current, customChartPresets };
         }),
       deleteCustomChartPreset: (id) =>
@@ -249,17 +174,17 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       setFundDetailSectionOrder: (fundDetailSectionOrder) =>
         setSettings((current) => ({
           ...current,
-          fundDetailSectionOrder: normalizeFundDetailSectionOrder(fundDetailSectionOrder),
+          fundDetailSectionOrder,
         })),
       setExecutionRateThresholds: (executionRateThresholds) =>
         setSettings((current) => ({
           ...current,
-          executionRateThresholds: normalizeExecutionRateThresholds(executionRateThresholds),
+          executionRateThresholds,
         })),
       setBalanceRateThresholds: (balanceRateThresholds) =>
         setSettings((current) => ({
           ...current,
-          balanceRateThresholds: normalizeBalanceRateThresholds(balanceRateThresholds),
+          balanceRateThresholds,
         })),
       resetExecutionRateThresholds: () =>
         setSettings((current) => ({

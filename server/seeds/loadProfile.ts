@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { z } from "zod";
 import type {
@@ -18,7 +18,7 @@ const CODE_PATTERN = /^[A-Za-z0-9_-]+$/;
 const fundSchema = z
   .object({
     id: z.number().int(),
-    fund_code: z.string().nullable().optional(),
+    fund_code: z.string(),
     name: z.string().min(1),
     fiscal_year: z.number().int(),
     awarded_amount: z.number().int(),
@@ -31,7 +31,7 @@ const categorySchema = z
   .object({
     id: z.number().int(),
     fund_id: z.number().int(),
-    category_code: z.string().nullable().optional(),
+    category_code: z.string(),
     name: z.string().min(1),
     cross_aggregate_category: z.enum(CROSS_AGGREGATE_CATEGORY_CODES),
     display_order: z.number().int(),
@@ -53,7 +53,7 @@ const plannedItemSchema = z
     id: z.number().int(),
     fund_id: z.number().int(),
     category_id: z.number().int(),
-    planned_ref: z.string().nullable().optional(),
+    planned_ref: z.string(),
     planned_date: z.string().min(1),
     scheduled_month: z.string().min(1),
     description: z.string().min(1),
@@ -97,14 +97,6 @@ function readSeedTable<T>(filePath: string, schema: z.ZodType<T[]>) {
   return schema.parse(JSON.parse(readFileSync(filePath, "utf8")));
 }
 
-function readOptionalSeedTable<T>(filePath: string, schema: z.ZodType<T[]>) {
-  if (!existsSync(filePath)) {
-    return [];
-  }
-
-  return readSeedTable(filePath, schema);
-}
-
 function assertUniqueIds(rows: Array<{ id: number }>, filename: string) {
   const seen = new Set<number>();
 
@@ -116,10 +108,10 @@ function assertUniqueIds(rows: Array<{ id: number }>, filename: string) {
   }
 }
 
-function assertWorkbookIdentity(value: string | null | undefined, label: string, filename: string) {
-  const trimmed = value?.trim();
+function assertWorkbookIdentity(value: string, label: string, filename: string) {
+  const trimmed = value.trim();
   if (!trimmed) {
-    return null;
+    throw new Error(`Missing ${label} in ${filename}`);
   }
 
   if (!CODE_PATTERN.test(trimmed)) {
@@ -134,33 +126,12 @@ function assertUniqueCategoryIdentity(rows: CategorySeed[]) {
 
   for (const row of rows) {
     const categoryCode = assertWorkbookIdentity(row.category_code, "category_code", "categories.json");
-    if (!categoryCode) {
-      continue;
-    }
-
     const key = `${row.fund_id}:${categoryCode}`;
     if (seen.has(key)) {
       throw new Error(`Duplicate category identity ${key} in categories.json`);
     }
     seen.add(key);
   }
-}
-
-function normalizeReferencedPlannedItems(plannedItems: PlannedItemSeed[], actualEntries: ActualEntrySeed[]) {
-  const referencedPlannedItemIds = new Set(
-    actualEntries.flatMap((row) => (row.planned_item_id === null ? [] : [row.planned_item_id])),
-  );
-
-  return plannedItems.map((row) => {
-    if (!referencedPlannedItemIds.has(row.id) || row.planned_ref !== null) {
-      return row;
-    }
-
-    return {
-      ...row,
-      planned_ref: `planned-${row.id}`,
-    };
-  });
 }
 
 function assertForeignKey(filename: string, fieldName: string, value: number, ids: Set<number>) {
@@ -198,12 +169,6 @@ function assertPlannedItemMatchesActualEntry(
   const plannedItem = plannedItemById.get(plannedItemId);
   if (!plannedItem) {
     return;
-  }
-
-  if (plannedItem.planned_ref === null) {
-    throw new Error(
-      `actual_entries.json ${rowId} planned_item_id ${plannedItemId} requires a nonblank planned_ref`,
-    );
   }
 
   if (plannedItem.fund_id !== fundId || plannedItem.category_id !== categoryId) {
@@ -299,31 +264,30 @@ export function loadSeedProfile({
     }),
   );
   const actualEntries = readSeedTable<ActualEntrySeed>(resolve(profileDir, "actual_entries.json"), z.array(actualEntrySchema));
-  const classificationTags = readOptionalSeedTable<ClassificationTagSeed>(
+  const classificationTags = readSeedTable<ClassificationTagSeed>(
     resolve(profileDir, "classification_tags.json"),
     z.array(classificationTagSchema),
   );
-  const classificationAssignments = readOptionalSeedTable<ClassificationAssignmentSeed>(
+  const classificationAssignments = readSeedTable<ClassificationAssignmentSeed>(
     resolve(profileDir, "classification_assignments.json"),
     z.array(classificationAssignmentSchema),
   );
-  const normalizedPlannedItems = normalizeReferencedPlannedItems(plannedItems, actualEntries);
 
   assertUniqueIds(funds, "funds.json");
   assertUniqueIds(categories, "categories.json");
   assertUniqueIds(budgetLines, "budget_lines.json");
-  assertUniqueIds(normalizedPlannedItems, "planned_items.json");
+  assertUniqueIds(plannedItems, "planned_items.json");
   assertUniqueIds(actualEntries, "actual_entries.json");
   assertUniqueIds(classificationTags, "classification_tags.json");
   assertUniqueIdentityValues(funds, "fund_code", (row) => row.fund_code);
   assertUniqueCategoryIdentity(categories);
-  assertUniqueIdentityValues(normalizedPlannedItems, "planned_ref", (row) => row.planned_ref ?? null);
+  assertUniqueIdentityValues(plannedItems, "planned_ref", (row) => row.planned_ref);
 
   assertRelations({
     funds,
     categories,
     budget_lines: budgetLines,
-    planned_items: normalizedPlannedItems,
+    planned_items: plannedItems,
     actual_entries: actualEntries,
     classification_tags: classificationTags,
     classification_assignments: classificationAssignments,
@@ -333,7 +297,7 @@ export function loadSeedProfile({
     funds,
     categories,
     budget_lines: budgetLines,
-    planned_items: normalizedPlannedItems,
+    planned_items: plannedItems,
     actual_entries: actualEntries,
     classification_tags: classificationTags,
     classification_assignments: classificationAssignments,
@@ -343,16 +307,12 @@ export function loadSeedProfile({
 function assertUniqueIdentityValues<T>(
   rows: T[],
   fieldName: string,
-  getValue: (row: T) => string | null,
+  getValue: (row: T) => string,
 ) {
   const seen = new Set<string>();
 
   for (const row of rows) {
     const value = getValue(row);
-    if (value === null) {
-      continue;
-    }
-
     if (seen.has(value)) {
       throw new Error(`Duplicate ${fieldName}: ${value}`);
     }

@@ -12,7 +12,7 @@ export type SeedTable = (typeof SEED_TABLES)[number];
 
 export type FundSeed = {
   id: number;
-  fund_code?: string | null;
+  fund_code: string;
   name: string;
   fiscal_year: number;
   awarded_amount: number;
@@ -23,7 +23,7 @@ export type FundSeed = {
 export type CategorySeed = {
   id: number;
   fund_id: number;
-  category_code?: string | null;
+  category_code: string;
   name: string;
   cross_aggregate_category: CrossAggregateCategory;
   display_order: number;
@@ -41,7 +41,7 @@ export type PlannedItemSeed = {
   id: number;
   fund_id: number;
   category_id: number;
-  planned_ref?: string | null;
+  planned_ref: string;
   planned_date: string;
   scheduled_month: string;
   description: string;

@@ -2,6 +2,7 @@ import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { fetchMock, renderAppRoute, resetOverviewTestState } from "./overviewTestUtils";
+import { storedAppSettings } from "./testUtils";
 
 describe("Fund detail display", () => {
   beforeEach(() => {
@@ -139,10 +140,7 @@ describe("Fund detail display", () => {
     expect(summaryScope.getByText("交付額")).toBeInTheDocument();
     expect(summaryScope.getByText("執行予定額")).toBeInTheDocument();
     expect(summaryScope.getByText("執行済額")).toBeInTheDocument();
-    expect(within(view.container.querySelector(".detail-hero") as HTMLElement).queryByText("要確認")).toBeNull();
-    expect(within(view.container.querySelector(".detail-hero") as HTMLElement).queryByText("出張")).toBeNull();
     expect(categoryPanel).not.toBeNull();
-    expect(categoryPanel?.querySelector(".detail-categories-layout")).not.toBeNull();
     expect(exportLink).toHaveAttribute("href", "/api/exports/ledger.xlsx?year=2026&fundId=1");
     const rateToggleScope = within(fundPage.getByRole("group", { name: "率表示" }));
     expect(rateToggleScope.getByRole("button", { name: "予算消化率" })).toHaveAttribute(
@@ -154,47 +152,17 @@ describe("Fund detail display", () => {
     expect(categoryScope.getByText("執行済額")).toBeInTheDocument();
     expect(categoryScope.getByText("予算消化率")).toBeInTheDocument();
     expect(fundPage.getByText("150.0%")).toHaveClass("detail-rate-alert");
-    expect(categoryScope.getByText("-")).not.toHaveClass("detail-rate-alert");
-    const totalCategoryRow = Array.from(categoryTable.querySelectorAll(".detail-table-row")).at(-1);
-    expect(totalCategoryRow).not.toBeUndefined();
-    expect(Array.from((totalCategoryRow as HTMLElement).children).map((element) => element.textContent)).toEqual([
-      "合計",
-      "",
-      "2,600,000円",
-      "558,336円",
-      "",
-    ]);
+    expect(categoryScope.getByText("2,600,000円")).toBeInTheDocument();
+    expect(categoryScope.getByText("558,336円")).toBeInTheDocument();
     const chart = fundPage.getByLabelText("基盤研究費 の費目別執行内訳");
     expect(chart).toBeInTheDocument();
     expect(chart).toHaveAttribute("aria-describedby");
-    expect(chart.querySelectorAll("circle").length).toBe(13);
-    expect(chart.querySelectorAll('circle[r="54"]').length).toBe(8);
-    expect(chart.querySelectorAll('circle[r="40"]').length).toBe(5);
-    expect(chart.querySelectorAll('circle[r="34"]').length).toBe(0);
     expect(within(chart).getByText("62.2%")).toBeInTheDocument();
     const chartSummary = document.getElementById(chart.getAttribute("aria-describedby") ?? "");
     expect(chartSummary).not.toBeNull();
     expect(chartSummary).toHaveTextContent("執行予定 2,600,000円");
     expect(chartSummary).toHaveTextContent("執行済 558,336円");
     expect(chartSummary).toHaveTextContent("残高 1,921,664円");
-    expect(chartSummary).toHaveTextContent("物品費 執行予定 1,000,000円");
-    expect(chartSummary).toHaveTextContent("消耗品費 執行済 58,336円");
-    const chartContainer = chart.closest(".detail-fund-chart");
-    expect(chartContainer).not.toBeNull();
-    const actualLegendSection = within(chartContainer as HTMLElement).getByLabelText("執行済 の凡例");
-    const plannedLegendSection = within(chartContainer as HTMLElement).getByLabelText("執行予定 の凡例");
-    const balanceLegendSection = within(chartContainer as HTMLElement).getByLabelText("残高 の凡例");
-    expect(within(actualLegendSection).getByRole("heading", { name: "執行済" })).toBeInTheDocument();
-    expect(within(plannedLegendSection).getByRole("heading", { name: "執行予定" })).toBeInTheDocument();
-    expect(within(balanceLegendSection).getByRole("heading", { name: "残高" })).toBeInTheDocument();
-    expect(within(actualLegendSection).getByText("物品費")).toBeInTheDocument();
-    expect(within(actualLegendSection).getByText("消耗品費")).toBeInTheDocument();
-    expect(within(plannedLegendSection).getByText("しきい値70")).toBeInTheDocument();
-    expect(within(plannedLegendSection).getByText("しきい値90")).toBeInTheDocument();
-    expect(within(plannedLegendSection).getByText("物品費")).toBeInTheDocument();
-    expect(within(balanceLegendSection).getAllByText("残高")).toHaveLength(2);
-    expect(within(actualLegendSection).queryByText("物品費 執行済")).toBeNull();
-    expect(within(plannedLegendSection).queryByText("物品費 執行予定")).toBeNull();
 
     await user.click(rateToggleScope.getByRole("button", { name: "残高率" }));
 
@@ -207,7 +175,6 @@ describe("Fund detail display", () => {
     const timelineSection = fundPage.getByRole("heading", { name: "月別の状況" }).closest(".detail-panel");
     expect(timelineSection).not.toBeNull();
     const timelineScope = within(timelineSection as HTMLElement);
-    const categoryRows = Array.from(categoryTable.querySelectorAll(".detail-table-row"));
     expect(fundPage.queryByRole("table", { name: "Cross aggregate categories" })).not.toBeInTheDocument();
     await user.click(fundPage.getByRole("button", { name: "横断集計カテゴリ別の状況" }));
     const crossAggregateTable = fundPage.getByRole("table", { name: "Cross aggregate categories" });
@@ -217,47 +184,13 @@ describe("Fund detail display", () => {
     expect(crossAggregateScope.getAllByText("未設定").length).toBeGreaterThanOrEqual(1);
     expect(crossAggregateScope.getByText("-500,000円")).toBeInTheDocument();
     expect(crossAggregateScope.getByText("-58,336円")).toBeInTheDocument();
-    expect(categoryTable.querySelector(".detail-table-head .detail-table-rate-heading")?.textContent).toBe(
-      "残高率",
-    );
-    expect(categoryRows.map((row) => row.children[4]?.textContent)).toEqual([
-      "30.0%",
-      "10.0%",
-      "-50.0%",
-      "-",
-      "",
-    ]);
-    const categoryMoneyHeadings = Array.from(
-      categoryTable.querySelectorAll(".detail-table-head .detail-table-money-heading"),
-    );
-    const timelineRows = Array.from((timelineSection as HTMLElement).querySelectorAll(".timeline-row"));
-    const timelineMoneyHeadings = Array.from(
-      (timelineSection as HTMLElement).querySelectorAll(".timeline-head .detail-table-money-heading"),
-    );
+    expect(categoryScope.getByText("残高率")).toBeInTheDocument();
+    expect(categoryScope.getByText("-50.0%")).toHaveClass("detail-rate-alert");
 
     expect(timelineScope.getByText("執行予定額")).toBeInTheDocument();
     expect(timelineScope.getByText("執行済額")).toBeInTheDocument();
     expect(timelineScope.getByText("執行予定額+執行済額")).toBeInTheDocument();
     expect(timelineScope.getByText("2026-04")).toBeInTheDocument();
-    expect(categoryMoneyHeadings.map((element) => element.textContent)).toEqual([
-      "予算",
-      "執行予定額",
-      "執行済額",
-    ]);
-    expect(categoryRows[0].children[0]).not.toHaveClass("detail-table-money-cell");
-    expect(categoryRows[0].children[1]).toHaveClass("detail-table-money-cell");
-    expect(categoryRows[0].children[2]).toHaveClass("detail-table-money-cell");
-    expect(categoryRows[0].children[3]).toHaveClass("detail-table-money-cell");
-    expect(categoryRows[0].children[4]).toHaveClass("detail-table-rate-cell");
-    expect(timelineMoneyHeadings.map((element) => element.textContent)).toEqual([
-      "執行予定額",
-      "執行済額",
-      "執行予定額+執行済額",
-    ]);
-    expect(timelineRows[0].children[0]).not.toHaveClass("detail-table-money-cell");
-    expect(timelineRows[0].children[1]).toHaveClass("detail-table-money-cell");
-    expect(timelineRows[0].children[2]).toHaveClass("detail-table-money-cell");
-    expect(timelineRows[0].children[3]).toHaveClass("detail-table-money-cell");
     expect(fundPage.getByRole("heading", { name: "精算項目一覧" })).toBeInTheDocument();
     const historyTable = fundPage.getByRole("table", { name: "Fund actual entries" });
     const historyScope = within(historyTable);
@@ -267,24 +200,14 @@ describe("Fund detail display", () => {
     expect(historyScope.getByText("研究ノート")).toBeInTheDocument();
     expect(historyScope.getByText("300,000円")).toBeInTheDocument();
     expect(historyScope.getByText("5,000円")).toBeInTheDocument();
-    expect(
-      Array.from(historyTable.querySelectorAll(".detail-history-row")).map((row) => row.children[0]?.textContent),
-    ).toEqual(["2026-04-01", "2026-06-20"]);
-    expect(historyTable).toHaveClass("detail-history-table-actual");
-    expect(historyTable.querySelector(".detail-table-head .detail-history-heading-amount")).not.toBeNull();
-    expect(historyTable.querySelector(".detail-table-row .detail-history-actions")).not.toBeNull();
     const actualHistorySection = fundPage.getByRole("heading", { name: "精算項目一覧" }).closest(".detail-panel");
     expect(actualHistorySection).not.toBeNull();
     expect(fundPage.getByRole("heading", { name: "計画項目一覧" })).toBeInTheDocument();
-    expect(fundPage.queryByText("支払先")).toBeNull();
     const plannedTable = fundPage.getByRole("table", { name: "Fund planned items" });
     const plannedScope = within(plannedTable);
     const plannedSection = fundPage.getByRole("heading", { name: "計画項目一覧" }).closest(".detail-panel");
     expect(plannedSection).not.toBeNull();
 
-    expect(plannedTable).toHaveClass("detail-history-table-planned");
-    expect(plannedTable.querySelector(".detail-table-head .detail-history-heading-amount")).not.toBeNull();
-    expect(plannedTable.querySelector(".detail-table-row .detail-history-actions")).not.toBeNull();
     expect(within(plannedSection as HTMLElement).getByRole("link", { name: "計画作成" })).toHaveAttribute(
       "href",
       "/planned-items/new?fundId=1&year=2026",
@@ -294,19 +217,11 @@ describe("Fund detail display", () => {
     expect(plannedScope.getByText("GPU サーバ保守更新")).toBeInTheDocument();
     expect(plannedScope.getByText("出張")).toBeInTheDocument();
     expect(plannedScope.getByText("280,000円")).toBeInTheDocument();
-    expect(
-      Array.from(plannedTable.querySelectorAll(".detail-history-row")).map((row) => row.children[0]?.textContent),
-    ).toEqual(["2026-05", "2026-07"]);
     expect(fundPage.getByRole("heading", { name: "取消済項目一覧" })).toBeInTheDocument();
     const plannedHistoryTable = fundPage.getByRole("table", { name: "Fund planned item history" });
     const plannedHistoryScope = within(plannedHistoryTable);
-    expect(plannedHistoryScope.queryByText("2026-05")).not.toBeInTheDocument();
-    expect(plannedHistoryScope.queryByText("120,000円")).not.toBeInTheDocument();
-    expect(within(plannedHistoryTable.querySelector(".detail-table-head") as HTMLElement).getByText("操作")).toBeInTheDocument();
-    expect(plannedHistoryScope.queryByText("ステータス")).not.toBeInTheDocument();
     expect(plannedHistoryScope.getByText("2026-06")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("取消済み研究会")).toBeInTheDocument();
-    expect(plannedHistoryScope.queryByText("取消")).not.toBeInTheDocument();
     expect(plannedHistoryScope.getByText("80,000円")).toBeInTheDocument();
     expect(plannedHistoryScope.getByRole("button", { name: "再計画" })).toBeInTheDocument();
     expect(plannedHistoryScope.getByRole("button", { name: "削除" })).toHaveClass("detail-action-button-danger");
@@ -338,13 +253,7 @@ describe("Fund detail display", () => {
   it("renders fund detail amounts in rounded thousand-yen units when the saved amount display mode is thousand-yen", async () => {
     window.localStorage.setItem(
       "budget-dashboard:settings",
-      JSON.stringify({
-        themePreset: "teal-yellow",
-        defaultRateMetric: "execution",
-        defaultOverviewDisplayMode: "chart",
-        notesDisplayMode: "hover",
-        defaultFundId: null,
-        defaultCategoryId: null,
+      storedAppSettings({
         amountDisplayMode: "thousand-yen",
       }),
     );

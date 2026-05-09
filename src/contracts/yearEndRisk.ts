@@ -41,25 +41,6 @@ export const defaultYearEndRiskThresholds: YearEndRiskThresholds = {
 
 const MAX_RISK_FUNDS = 5;
 
-function getFiniteThreshold(value: number | undefined, fallback: number) {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-}
-
-function normalizeYearEndRiskThresholds(
-  thresholds: Partial<YearEndRiskThresholds> = {},
-): YearEndRiskThresholds {
-  return {
-    excessBalanceRate: getFiniteThreshold(
-      thresholds.excessBalanceRate,
-      defaultYearEndRiskThresholds.excessBalanceRate,
-    ),
-    lowBalanceRate: getFiniteThreshold(
-      thresholds.lowBalanceRate,
-      defaultYearEndRiskThresholds.lowBalanceRate,
-    ),
-  };
-}
-
 function getPlannedBalanceRate(fund: YearEndRiskSourceFund) {
   if (fund.awarded_amount <= 0) {
     return null;
@@ -124,13 +105,12 @@ function compareYearEndRiskFunds(left: YearEndRiskFund, right: YearEndRiskFund) 
 export function buildYearEndRiskSummary(
   funds: YearEndRiskSourceFund[],
   overduePlannedAmountByFundId: Map<number, number>,
-  thresholds: Partial<YearEndRiskThresholds> = {},
+  thresholds: YearEndRiskThresholds,
 ): YearEndRiskSummary {
-  const normalizedThresholds = normalizeYearEndRiskThresholds(thresholds);
   const riskFunds = funds
     .map((fund): YearEndRiskFund | null => {
       const overduePlannedAmount = overduePlannedAmountByFundId.get(fund.id) ?? 0;
-      const riskKinds = getRiskKinds(fund, overduePlannedAmount, normalizedThresholds);
+      const riskKinds = getRiskKinds(fund, overduePlannedAmount, thresholds);
 
       if (riskKinds.length === 0) {
         return null;

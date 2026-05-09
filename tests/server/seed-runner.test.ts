@@ -1,51 +1,14 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import Database from "better-sqlite3";
 import { seedDatabase } from "../../server/seeds/seedDatabase";
+import { writeNamedSeedProfile } from "../support/seed";
 
 function writeProfile(rootDir: string) {
-  const profileDir = join(rootDir, "seeds", "test");
-  mkdirSync(profileDir, { recursive: true });
-
-  writeFileSync(
-    join(profileDir, "funds.json"),
-    JSON.stringify([{ id: 1, fund_code: "basic-research", name: "基盤研究費", fiscal_year: 2026, awarded_amount: 5080000, notes: "", display_order: 1 }], null, 2),
-  );
-  writeFileSync(
-    join(profileDir, "categories.json"),
-    JSON.stringify([{ id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 }], null, 2),
-  );
-  writeFileSync(
-    join(profileDir, "budget_lines.json"),
-    JSON.stringify([{ id: 1, fund_id: 1, category_id: 1, amount: 1400000, notes: "" }], null, 2),
-  );
-  writeFileSync(
-    join(profileDir, "planned_items.json"),
-    JSON.stringify(
-      [
-        {
-          id: 1,
-          fund_id: 1,
-          category_id: 1,
-          planned_ref: "basic-research-equipment-20261001-001",
-          planned_date: "2026-10-01",
-          scheduled_month: "2026-10",
-          description: "計算サーバ",
-          amount: 200000,
-          status: "planned",
-          notes: "",
-        },
-      ],
-      null,
-      2,
-    ),
-  );
-  writeFileSync(join(profileDir, "actual_entries.json"), JSON.stringify([], null, 2));
-  writeFileSync(join(profileDir, "classification_tags.json"), JSON.stringify([], null, 2));
-  writeFileSync(join(profileDir, "classification_assignments.json"), JSON.stringify([], null, 2));
+  writeNamedSeedProfile(rootDir, "test", { actual_entries: [] });
 }
 
 describe("seedDatabase", () => {

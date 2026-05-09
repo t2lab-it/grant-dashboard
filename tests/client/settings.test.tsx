@@ -6,6 +6,7 @@ import {
   fetchMock,
   renderWithAppRouter,
   resetClientTestState,
+  storedAppSettings,
   stubMatchMedia,
 } from "./testUtils";
 
@@ -13,32 +14,6 @@ stubMatchMedia();
 
 function renderAppRoute(initialEntry: string) {
   return renderWithAppRouter(routes, initialEntry);
-}
-
-function storedSettings(overrides: Record<string, unknown> = {}) {
-  return JSON.stringify({
-    appThemeMode: "system",
-    themePreset: "teal-yellow",
-    customChartPresets: [],
-    defaultRateMetric: "execution",
-    defaultOverviewDisplayMode: "chart",
-    notesDisplayMode: "hover",
-    defaultFundId: null,
-    defaultCategoryId: null,
-    amountDisplayMode: "grouped-yen",
-    fundDetailSectionOrder: ["categories", "timeline", "actualEntries", "plannedItems"],
-    executionRateThresholds: {
-      notice: 70,
-      warning: 90,
-      alert: 100,
-    },
-    balanceRateThresholds: {
-      notice: 30,
-      warning: 10,
-      alert: 0,
-    },
-    ...overrides,
-  });
 }
 
 describe("SettingsPage", () => {
@@ -191,7 +166,7 @@ describe("SettingsPage", () => {
     await user.click(graySkyRadio);
 
     expect(graySkyRadio).toBeChecked();
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedSettings({ themePreset: "gray-sky" }));
+    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedAppSettings({ themePreset: "gray-sky" }));
   });
 
   it("loads saved custom chart presets and keeps the selected custom preset checked", async () => {
@@ -203,7 +178,7 @@ describe("SettingsPage", () => {
     });
     window.localStorage.setItem(
       "budget-dashboard:settings",
-      storedSettings({
+      storedAppSettings({
         themePreset: "custom:lab-standard",
         customChartPresets: [
           {
@@ -385,7 +360,7 @@ describe("SettingsPage", () => {
     expect(darkButton).toHaveAttribute("aria-pressed", "true");
     expect(tealYellowRadio).toBeChecked();
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({ appThemeMode: "dark" }),
+      storedAppSettings({ appThemeMode: "dark" }),
     );
 
     await user.click(systemButton);
@@ -394,7 +369,7 @@ describe("SettingsPage", () => {
     expect(lightButton).toHaveAttribute("aria-pressed", "true");
     expect(darkButton).toHaveAttribute("aria-pressed", "false");
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({ appThemeMode: "system" }),
+      storedAppSettings({ appThemeMode: "system" }),
     );
   });
 
@@ -439,7 +414,7 @@ describe("SettingsPage", () => {
     expect(balanceRateButton).toHaveAttribute("aria-pressed", "true");
 
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({
+      storedAppSettings({
         defaultRateMetric: "balance",
         defaultOverviewDisplayMode: "numeric",
         notesDisplayMode: "click",
@@ -466,7 +441,7 @@ describe("SettingsPage", () => {
     await user.click(thousandYenRadio);
 
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({ amountDisplayMode: "thousand-yen" }),
+      storedAppSettings({ amountDisplayMode: "thousand-yen" }),
     );
   });
 
@@ -509,7 +484,7 @@ describe("SettingsPage", () => {
     });
 
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({
+      storedAppSettings({
         executionRateThresholds: {
           notice: 60,
           warning: 90,
@@ -529,7 +504,7 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("spinbutton", { name: "notice" })).toHaveValue(70);
     expect(screen.getByRole("spinbutton", { name: "warning" })).toHaveValue(90);
     expect(screen.getByRole("spinbutton", { name: "alert" })).toHaveValue(100);
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedSettings());
+    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedAppSettings());
   });
 
   it("switches the threshold editor to balance mode using the selected default rate metric", async () => {
@@ -573,7 +548,7 @@ describe("SettingsPage", () => {
     });
 
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({
+      storedAppSettings({
         defaultRateMetric: "balance",
         balanceRateThresholds: {
           notice: 40,
@@ -647,7 +622,7 @@ describe("SettingsPage", () => {
     await user.selectOptions(defaultCategorySelect, "14");
 
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({
+      storedAppSettings({
         defaultFundId: 2,
         defaultCategoryId: 14,
       }),
@@ -657,7 +632,7 @@ describe("SettingsPage", () => {
 
     expect(screen.getByLabelText("新規作成時の既定費目")).toHaveValue("");
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedSettings({
+      storedAppSettings({
         defaultFundId: 3,
         defaultCategoryId: null,
       }),
@@ -715,6 +690,6 @@ describe("SettingsPage", () => {
       "精算項目一覧",
       "計画項目一覧",
     ]);
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedSettings());
+    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedAppSettings());
   });
 });

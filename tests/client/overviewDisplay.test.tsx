@@ -9,6 +9,7 @@ import {
   renderOverviewPage,
   resetOverviewTestState,
 } from "./overviewTestUtils";
+import { storedAppSettings } from "./testUtils";
 
 const actXOnlyOverview = {
   funds: [
@@ -311,27 +312,9 @@ describe("Overview display", () => {
 
     window.localStorage.setItem(
       "budget-dashboard:settings",
-      JSON.stringify({
-        appThemeMode: "system",
-        themePreset: "teal-yellow",
-        customChartPresets: [],
+      storedAppSettings({
         defaultRateMetric: "balance",
         defaultOverviewDisplayMode: "numeric",
-        notesDisplayMode: "hover",
-        defaultFundId: null,
-        defaultCategoryId: null,
-        amountDisplayMode: "grouped-yen",
-        fundDetailSectionOrder: ["categories", "timeline", "actualEntries", "plannedItems"],
-        executionRateThresholds: {
-          notice: 70,
-          warning: 90,
-          alert: 100,
-        },
-        balanceRateThresholds: {
-          notice: 30,
-          warning: 10,
-          alert: 0,
-        },
       }),
     );
 

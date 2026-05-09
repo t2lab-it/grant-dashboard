@@ -2,6 +2,7 @@ import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/re
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { fetchMock, renderAppRoute, resetOverviewTestState, setHoverCapablePointer } from "./overviewTestUtils";
+import { storedAppSettings } from "./testUtils";
 
 describe("Fund detail interactions", () => {
   beforeEach(() => {
@@ -478,16 +479,7 @@ describe("Fund detail interactions", () => {
   it("renders fund detail sections in the persisted settings order", async () => {
     window.localStorage.setItem(
       "budget-dashboard:settings",
-      JSON.stringify({
-        appThemeMode: "system",
-        themePreset: "teal-yellow",
-        customChartPresets: [],
-        defaultRateMetric: "execution",
-        defaultOverviewDisplayMode: "chart",
-        notesDisplayMode: "hover",
-        defaultFundId: null,
-        defaultCategoryId: null,
-        amountDisplayMode: "grouped-yen",
+      storedAppSettings({
         fundDetailSectionOrder: ["actualEntries", "plannedItems", "categories", "timeline"],
         executionRateThresholds: {
           notice: 50,

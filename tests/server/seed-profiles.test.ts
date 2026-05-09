@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
@@ -8,29 +8,9 @@ import { buildServer } from "../../server/app";
 import { loadSeedProfile } from "../../server/seeds/loadProfile";
 import { seedDatabase } from "../../server/seeds/seedDatabase";
 import { getFundSnapshot, getOverviewSnapshot } from "../../server/services/dashboard";
+import { writeSeedProfile } from "../support/seed";
 
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-
-function writeJsonFile(filePath: string, value: unknown) {
-  writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
-}
-
-function writeSeedProfile(profileDir: string, data: {
-  funds: unknown[];
-  categories: unknown[];
-  budget_lines: unknown[];
-  planned_items: unknown[];
-  actual_entries: unknown[];
-}) {
-  mkdirSync(profileDir, { recursive: true });
-  writeJsonFile(join(profileDir, "funds.json"), data.funds);
-  writeJsonFile(join(profileDir, "categories.json"), data.categories);
-  writeJsonFile(join(profileDir, "budget_lines.json"), data.budget_lines);
-  writeJsonFile(join(profileDir, "planned_items.json"), data.planned_items);
-  writeJsonFile(join(profileDir, "actual_entries.json"), data.actual_entries);
-  writeJsonFile(join(profileDir, "classification_tags.json"), []);
-  writeJsonFile(join(profileDir, "classification_assignments.json"), []);
-}
 
 describe("seed profiles", () => {
   const tempDirs: string[] = [];
@@ -151,23 +131,6 @@ describe("seed profiles", () => {
         { id: 1, fund_code: "dup-fund", name: "基金A", fiscal_year: 2026, awarded_amount: 100, notes: "", display_order: 1 },
         { id: 2, fund_code: " dup-fund ", name: "基金B", fiscal_year: 2026, awarded_amount: 200, notes: "", display_order: 2 },
       ],
-      categories: [{ id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 }],
-      budget_lines: [{ id: 1, fund_id: 1, category_id: 1, amount: null, notes: "" }],
-      planned_items: [
-        {
-          id: 1,
-          fund_id: 1,
-          category_id: 1,
-          planned_ref: "dup-ref-a",
-          planned_date: "2026-05-01",
-          scheduled_month: "2026-05",
-          description: "予定A",
-          amount: 10,
-          status: "planned",
-          notes: "",
-        },
-      ],
-      actual_entries: [{ id: 1, fund_id: 1, category_id: 1, planned_item_id: 1, actual_date: "2026-05-03", description: "実績", amount: 5, notes: "" }],
     });
 
     expect(() => loadSeedProfile({ rootDir: tempDir, profile: "dup-identity" })).toThrow(
@@ -180,9 +143,6 @@ describe("seed profiles", () => {
     const profileDir = join(tempDir, "seeds", "dup-planned-ref");
     tempDirs.push(tempDir);
     writeSeedProfile(profileDir, {
-      funds: [{ id: 1, fund_code: "fund-a", name: "基金A", fiscal_year: 2026, awarded_amount: 100, notes: "", display_order: 1 }],
-      categories: [{ id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 }],
-      budget_lines: [{ id: 1, fund_id: 1, category_id: 1, amount: null, notes: "" }],
       planned_items: [
         {
           id: 1,
@@ -209,7 +169,6 @@ describe("seed profiles", () => {
           notes: "",
         },
       ],
-      actual_entries: [{ id: 1, fund_id: 1, category_id: 1, planned_item_id: 1, actual_date: "2026-05-03", description: "実績", amount: 5, notes: "" }],
     });
 
     expect(() => loadSeedProfile({ rootDir: tempDir, profile: "dup-planned-ref" })).toThrow(
@@ -222,27 +181,10 @@ describe("seed profiles", () => {
     const profileDir = join(tempDir, "seeds", "dup-category");
     tempDirs.push(tempDir);
     writeSeedProfile(profileDir, {
-      funds: [{ id: 1, fund_code: "fund-a", name: "基金A", fiscal_year: 2026, awarded_amount: 100, notes: "", display_order: 1 }],
       categories: [
         { id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 },
         { id: 2, fund_id: 1, category_code: " equipment ", name: "物品費2", cross_aggregate_category: "equipment", display_order: 2 },
       ],
-      budget_lines: [{ id: 1, fund_id: 1, category_id: 1, amount: null, notes: "" }],
-      planned_items: [
-        {
-          id: 1,
-          fund_id: 1,
-          category_id: 1,
-          planned_ref: "fund-a-equipment-001",
-          planned_date: "2026-05-01",
-          scheduled_month: "2026-05",
-          description: "予定A",
-          amount: 10,
-          status: "planned",
-          notes: "",
-        },
-      ],
-      actual_entries: [{ id: 1, fund_id: 1, category_id: 1, planned_item_id: 1, actual_date: "2026-05-03", description: "実績", amount: 5, notes: "" }],
     });
 
     expect(() => loadSeedProfile({ rootDir: tempDir, profile: "dup-category" })).toThrow(

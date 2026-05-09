@@ -5,37 +5,13 @@ import {
   renderWithAppRouter,
   resetClientTestState,
   setMatchMediaMatches,
+  storedAppSettings,
   stubMatchMedia,
 } from "./testUtils";
 
 stubMatchMedia();
 
 describe("app theme resolution", () => {
-  function storedSettings(appThemeMode: "system" | "light" | "dark") {
-    return JSON.stringify({
-      appThemeMode,
-      themePreset: "teal-yellow",
-      customChartPresets: [],
-      defaultRateMetric: "execution",
-      defaultOverviewDisplayMode: "chart",
-      notesDisplayMode: "hover",
-      defaultFundId: null,
-      defaultCategoryId: null,
-      amountDisplayMode: "grouped-yen",
-      fundDetailSectionOrder: ["categories", "timeline", "actualEntries", "plannedItems"],
-      executionRateThresholds: {
-        notice: 70,
-        warning: 90,
-        alert: 100,
-      },
-      balanceRateThresholds: {
-        notice: 30,
-        warning: 10,
-        alert: 0,
-      },
-    });
-  }
-
   beforeEach(() => {
     resetClientTestState();
     document.documentElement.removeAttribute("data-theme");
@@ -49,7 +25,7 @@ describe("app theme resolution", () => {
   it("keeps an explicit light selection when the system theme changes", async () => {
     window.localStorage.setItem(
       "budget-dashboard:settings",
-      storedSettings("light"),
+      storedAppSettings({ appThemeMode: "light" }),
     );
     setMatchMediaMatches("(prefers-color-scheme: dark)", true);
 
@@ -65,7 +41,7 @@ describe("app theme resolution", () => {
   it("updates when the system theme changes in system mode", async () => {
     window.localStorage.setItem(
       "budget-dashboard:settings",
-      storedSettings("system"),
+      storedAppSettings({ appThemeMode: "system" }),
     );
     setMatchMediaMatches("(prefers-color-scheme: dark)", false);
 

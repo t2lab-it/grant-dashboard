@@ -463,9 +463,18 @@ export function cancelActualEntry(db: Database.Database, actualEntryId: number) 
     throwEntryWorkflowError("actual_entry_not_found");
   }
 
-  db.prepare("DELETE FROM actual_entries WHERE id = ?").run(actualEntryId);
+  return db.transaction(() => {
+    db.prepare(
+      `
+      DELETE FROM classification_assignments
+      WHERE target_type = 'actual_entry'
+        AND target_id = ?
+      `,
+    ).run(actualEntryId);
+    db.prepare("DELETE FROM actual_entries WHERE id = ?").run(actualEntryId);
 
-  return { success: true };
+    return { success: true };
+  })();
 }
 
 export function updatePlannedItem(db: Database.Database, plannedItemId: number, input: PlannedItemEditInput) {

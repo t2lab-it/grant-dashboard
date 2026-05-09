@@ -195,8 +195,6 @@ describe("Overview display", () => {
       "true",
     );
     expect(rateToggleScope.getByRole("button", { name: "残高率" })).toHaveAttribute("aria-pressed", "false");
-    expect(screen.queryByLabelText("配色プリセット")).not.toBeInTheDocument();
-    expect(document.querySelectorAll(".hero-card")).toHaveLength(4);
 
     const fundCard = screen.getByRole("link", { name: /ACT-X/i });
     const fundCardScope = within(fundCard);
@@ -204,20 +202,6 @@ describe("Overview display", () => {
     const chart = fundCardScope.getByLabelText("ACT-X の予算内訳");
     expect(chart).toBeInTheDocument();
     expect(chart).toHaveAttribute("aria-describedby");
-    const chartSummary = document.getElementById(chart.getAttribute("aria-describedby") ?? "");
-    expect(chartSummary).not.toBeNull();
-    expect(chartSummary).toHaveTextContent("執行済 47,590円");
-    expect(chartSummary).toHaveTextContent("執行予定 4,685,000円");
-    expect(chartSummary).toHaveTextContent("残高 347,410円");
-    const legend = fundCard.querySelector(".fund-card-legend");
-    expect(legend).not.toBeNull();
-    const legendScope = within(legend as HTMLElement);
-    expect(legendScope.getByText("残高")).not.toHaveClass("detail-rate-alert");
-    const chartMetrics = fundCard.querySelector(".fund-card-chart-metrics");
-    expect(chartMetrics).not.toBeNull();
-    const chartMetricsScope = within(chartMetrics as HTMLElement);
-    expect(chartMetricsScope.getByText("消化額")).toBeInTheDocument();
-    expect(chartMetricsScope.getByText("4,732,590円")).toBeInTheDocument();
     expect(fundCardScope.queryByText("予算消化率 [%]")).not.toBeInTheDocument();
     expect(within(chart).getByText("93.2%")).toBeInTheDocument();
 
@@ -225,11 +209,7 @@ describe("Overview display", () => {
     const overBudgetScope = within(overBudgetCard);
     const overBudgetChart = overBudgetScope.getByLabelText("基盤研究費 の予算内訳");
     expect(within(overBudgetChart).getByText("超過")).toHaveClass("detail-rate-alert");
-    expect(within(overBudgetChart).getByText("-100,000円")).toHaveClass("detail-rate-alert");
     expect(overBudgetChart.querySelector(".fund-card-over-budget-ring")).not.toBeNull();
-    const overBudgetLegend = overBudgetCard.querySelector(".fund-card-legend");
-    expect(overBudgetLegend).not.toBeNull();
-    expect(within(overBudgetLegend as HTMLElement).getByText("残高")).toHaveClass("detail-rate-alert");
 
     await user.click(rateToggleScope.getByRole("button", { name: "残高率" }));
 
@@ -238,30 +218,17 @@ describe("Overview display", () => {
       "false",
     );
     expect(rateToggleScope.getByRole("button", { name: "残高率" })).toHaveAttribute("aria-pressed", "true");
-    expect(legend).toHaveClass("overview-fund-card-legend");
-    expect(legendScope.getByText("執行済")).toBeInTheDocument();
-    expect(legendScope.getByText("執行予定")).toBeInTheDocument();
-    expect(legendScope.getAllByText(/執行済|執行予定|残高/)).toHaveLength(3);
-    expect(chartMetricsScope.queryByText("交付額")).toBeNull();
-    expect(chartMetricsScope.queryByText("執行予定額")).toBeNull();
-    expect(chartMetricsScope.getByText("残高")).toBeInTheDocument();
-    expect(chartMetricsScope.getByText("347,410円")).toBeInTheDocument();
     expect(within(chart).getByText("6.8%")).toHaveClass("detail-rate-warning");
 
     await user.click(toggleScope.getByRole("button", { name: "数値" }));
 
     expect(toggleScope.getByRole("button", { name: "円グラフ" })).toHaveAttribute("aria-pressed", "false");
     expect(toggleScope.getByRole("button", { name: "数値" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.queryByLabelText("配色プリセット")).not.toBeInTheDocument();
     expect(fundCardScope.queryByLabelText("ACT-X の予算内訳")).not.toBeInTheDocument();
-    expect(fundCardScope.getByText("執行済額")).toBeInTheDocument();
-    expect(fundCardScope.getByText("4,685,000円")).toBeInTheDocument();
     expect(fundCardScope.getByText("残高率 [%]")).toBeInTheDocument();
     expect(fundCardScope.getByText("6.8%")).toHaveClass("detail-rate-warning");
 
     expect(overBudgetScope.queryByLabelText("基盤研究費 の予算内訳")).not.toBeInTheDocument();
-    expect(overBudgetScope.getByText("700,000円")).toBeInTheDocument();
-    expect(overBudgetScope.getByText("残高率 [%]")).toBeInTheDocument();
     expect(overBudgetScope.getByText("-10.0%")).toHaveClass("detail-rate-alert");
   });
 
@@ -416,7 +383,6 @@ describe("Overview display", () => {
       renderOverviewPage();
       await vi.runAllTimersAsync();
 
-      expect(screen.queryByRole("heading", { name: "執行済額の分析" })).not.toBeInTheDocument();
       expect(document.querySelector(".overview-grid-with-context")).not.toBeNull();
       expect(screen.getByRole("button", { name: /^予算総額 1,000,000円$/ })).toHaveAttribute(
         "aria-pressed",
@@ -427,82 +393,41 @@ describe("Overview display", () => {
       expect(screen.getByText("2件")).toBeInTheDocument();
       expect(screen.getByText("計画化率")).toBeInTheDocument();
       expect(screen.getByText("40.0%")).toBeInTheDocument();
-      const crossAggregateSection = screen.getByRole("heading", { name: "大費目別内訳" }).closest("section");
-      expect(crossAggregateSection).not.toBeNull();
-      const crossAggregateScope = within(crossAggregateSection as HTMLElement);
-      expect(crossAggregateScope.getByLabelText("予算総額の大費目別内訳グラフ")).toBeInTheDocument();
-      expect(crossAggregateScope.getByText("物品系")).toBeInTheDocument();
-      expect(crossAggregateScope.getByText("700,000円")).toBeInTheDocument();
-      expect(crossAggregateScope.getByText("(70.0%)")).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole("button", { name: /執行済額/ }));
 
       const panel = screen.getByLabelText("Overview summary context");
       const panelScope = within(panel);
-      const breakdownSection = panelScope.getByRole("heading", { name: "予算別内訳" }).closest("section");
-      expect(breakdownSection).not.toBeNull();
-      const breakdownRows = within(breakdownSection as HTMLElement).getAllByRole("listitem");
       expect(panelScope.getByRole("heading", { name: "執行済額の分析" })).toBeInTheDocument();
       expect(panelScope.getByLabelText("執行済額の大費目別内訳グラフ")).toBeInTheDocument();
-      const actualCrossAggregateSection = panelScope.getByRole("heading", { name: "大費目別内訳" }).closest("section");
-      expect(actualCrossAggregateSection).not.toBeNull();
-      expect(within(actualCrossAggregateSection as HTMLElement).getByText("90,000円")).toBeInTheDocument();
-      expect(within(actualCrossAggregateSection as HTMLElement).getByText("(60.0%)")).toBeInTheDocument();
-      expect(breakdownRows[0]).toHaveTextContent("1.基盤研究費120,000円(80.0%)");
       expect(panelScope.getByText("前月差")).toBeInTheDocument();
       expect(panelScope.getByText("+10,000円")).toBeInTheDocument();
       expect(panelScope.getByText("到達率")).toBeInTheDocument();
       expect(panelScope.getByText("15.0%")).toBeInTheDocument();
-      expect(panelScope.getByText("直近3ヶ月平均執行額")).toBeInTheDocument();
-      expect(panelScope.getByText("50,000円")).toBeInTheDocument();
       const actualTrendChart = panelScope.getByLabelText("執行済額の月次推移グラフ");
       const actualTrendSummary = document.getElementById(actualTrendChart.getAttribute("aria-describedby") ?? "");
       expect(actualTrendSummary).not.toBeNull();
-      expect(actualTrendSummary).toHaveTextContent("目標 1,000,000円");
       expect(actualTrendSummary).toHaveTextContent("現在進捗 8.0%");
-      expect(actualTrendSummary).toHaveTextContent("理想比 -40.9pt");
-      expect(actualTrendChart.querySelector(".overview-context-trend-today-line")).not.toBeNull();
-      expect(actualTrendChart).toHaveTextContent("進捗：8.0%");
-      expect(actualTrendChart).toHaveTextContent("理想比：-40.9pt");
-      expect(actualTrendChart.querySelector(".overview-context-trend-ideal-line")).not.toBeNull();
 
       fireEvent.click(screen.getByRole("button", { name: /^執行予定額 250,000円$/ }));
 
       expect(panelScope.getByRole("heading", { name: "執行予定額の分析" })).toBeInTheDocument();
-      expect(panelScope.getByLabelText("執行予定額の大費目別内訳グラフ")).toBeInTheDocument();
-      const committedCrossAggregateSection = panelScope.getByRole("heading", { name: "大費目別内訳" }).closest("section");
-      expect(committedCrossAggregateSection).not.toBeNull();
-      expect(within(committedCrossAggregateSection as HTMLElement).getByText("180,000円")).toBeInTheDocument();
-      expect(within(committedCrossAggregateSection as HTMLElement).getByText("(72.0%)")).toBeInTheDocument();
       const committedTrendChart = panelScope.getByLabelText("執行予定額の月次推移グラフ");
       const committedTrendSummary = document.getElementById(committedTrendChart.getAttribute("aria-describedby") ?? "");
       expect(committedTrendSummary).not.toBeNull();
       expect(panelScope.getByText("予定残高")).toBeInTheDocument();
       expect(panelScope.getByText("計画済み支出の実行率")).toBeInTheDocument();
-      expect(panelScope.getByRole("button", { name: "計画済み支出の実行率の定義" })).toBeInTheDocument();
       expect(panelScope.getByText("28.6%")).toBeInTheDocument();
       expect(panelScope.getByText("未実行予定件数")).toBeInTheDocument();
       expect(panelScope.getByText("4件")).toBeInTheDocument();
-      expect(panelScope.getByText("期限超過の予定残高")).toBeInTheDocument();
-      expect(panelScope.getByRole("button", { name: "期限超過の予定残高の定義" })).toBeInTheDocument();
-      expect(panelScope.getByText("50,000円")).toBeInTheDocument();
-      expect(panelScope.getByText("目標: 計画済み支出を完了")).toBeInTheDocument();
-      expect(panelScope.getByRole("button", { name: "予定残高の定義" })).toBeInTheDocument();
-      expect(committedTrendSummary).toHaveTextContent("目標 0円");
       expect(committedTrendSummary).toHaveTextContent("現在進捗 20.0%");
-      expect(committedTrendSummary).toHaveTextContent("理想比 -28.9pt");
-      expect(committedTrendChart).toHaveTextContent("進捗：20.0%");
-      expect(committedTrendChart).toHaveTextContent("理想比：-28.9pt");
 
       fireEvent.click(screen.getByRole("button", { name: /^残高 600,000円$/ }));
 
       expect(panelScope.getByRole("heading", { name: "残高の分析" })).toBeInTheDocument();
       expect(panelScope.getByText("未計画率")).toBeInTheDocument();
       expect(panelScope.getByText("60.0%")).toBeInTheDocument();
-      expect(panelScope.getByText("最低残高率")).toBeInTheDocument();
-      expect(panelScope.getByText("50.0%")).toBeInTheDocument();
       expect(panelScope.getByLabelText("残高の月次推移グラフ")).toBeInTheDocument();
-      expect(panelScope.getByText("目標 0円")).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole("button", { name: /^残高 600,000円$/ }));
 

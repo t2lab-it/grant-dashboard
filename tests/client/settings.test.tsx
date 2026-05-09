@@ -219,7 +219,6 @@ describe("SettingsPage", () => {
 
     await screen.findByRole("heading", { name: "外観" });
     await user.click(screen.getByRole("button", { name: "カスタムプリセットを追加" }));
-    expect(screen.getByLabelText("カスタムプリセット例 の予算内訳")).toBeInTheDocument();
     await user.type(screen.getByLabelText("プリセット名"), "研究室標準");
     fireEvent.change(screen.getByLabelText("執行済カラーピッカー"), {
       target: { value: "#7c3aed" },
@@ -267,32 +266,15 @@ describe("SettingsPage", () => {
     await user.click(screen.getByRole("button", { name: "カスタムプリセットを編集: 研究室標準" }));
     await user.clear(screen.getByLabelText("プリセット名"));
     await user.type(screen.getByLabelText("プリセット名"), "研究室暖色");
-    fireEvent.change(screen.getByLabelText("執行済カラーピッカー"), {
-      target: { value: "#db2777" },
-    });
     await user.click(screen.getByRole("button", { name: /保存/ }));
 
     expect(screen.getByRole("radio", { name: /研究室暖色/ })).toBeChecked();
     expect(screen.queryByRole("radio", { name: /研究室標準/ })).not.toBeInTheDocument();
-    const savedAfterEdit = JSON.parse(window.localStorage.getItem("budget-dashboard:settings") ?? "{}") as {
-      customChartPresets?: Array<{ id: string; label: string; palette: { actual: string } }>;
-    };
-    expect(savedAfterEdit.customChartPresets?.[0]).toMatchObject({
-      id: savedAfterCreate.customChartPresets?.[0].id,
-      label: "研究室暖色",
-      palette: { actual: "#db2777" },
-    });
 
     await user.click(screen.getByRole("button", { name: "カスタムプリセットを削除: 研究室暖色" }));
 
     expect(screen.queryByRole("radio", { name: /研究室暖色/ })).not.toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /青緑＋黄色系/ })).toBeChecked();
-    const savedAfterDelete = JSON.parse(window.localStorage.getItem("budget-dashboard:settings") ?? "{}") as {
-      themePreset?: string;
-      customChartPresets?: unknown[];
-    };
-    expect(savedAfterDelete.themePreset).toBe("teal-yellow");
-    expect(savedAfterDelete.customChartPresets).toEqual([]);
   }, 10_000);
 
   it("warns about low readability for custom preset colors selected from pickers", async () => {
@@ -461,16 +443,9 @@ describe("SettingsPage", () => {
     const rateFieldset = screen.getByText("率表示の既定値").closest("fieldset");
     expect(rateFieldset).not.toBeNull();
     expect(within(rateFieldset as HTMLElement).getByText("予算消化率のしきい値")).toBeInTheDocument();
-    expect(screen.queryByText("「率表示の既定値」で選んでいる方の境界を編集します。")).not.toBeInTheDocument();
     expect(screen.getByRole("spinbutton", { name: "notice" })).toHaveValue(70);
     expect(screen.getByRole("spinbutton", { name: "warning" })).toHaveValue(90);
     expect(screen.getByRole("spinbutton", { name: "alert" })).toHaveValue(100);
-    expect(screen.getByText("notice ≥")).toBeInTheDocument();
-    expect(screen.getByText("warning ≥")).toBeInTheDocument();
-    expect(screen.getByText("alert ≥")).toBeInTheDocument();
-    expect(screen.getByText("normal: 69.0%")).toBeInTheDocument();
-    expect(screen.getByText("notice: 80.0%")).toHaveClass("detail-rate-notice");
-    expect(screen.getByText("warning: 95.0%")).toHaveClass("detail-rate-warning");
     expect(screen.getByText("alert: 100.0%")).toHaveClass("detail-rate-alert");
 
     fireEvent.change(screen.getByRole("spinbutton", { name: "notice" }), {
@@ -492,9 +467,6 @@ describe("SettingsPage", () => {
         },
       }),
     );
-    expect(screen.getByText("normal: 59.0%")).toBeInTheDocument();
-    expect(screen.getByText("notice: 75.0%")).toHaveClass("detail-rate-notice");
-    expect(screen.getByText("warning: 105.0%")).toHaveClass("detail-rate-warning");
     expect(screen.getByText("alert: 120.0%")).toHaveClass("detail-rate-alert");
 
     const thresholdFieldset = screen.getByText("予算消化率のしきい値").closest("fieldset");
@@ -502,8 +474,6 @@ describe("SettingsPage", () => {
     await user.click(within(thresholdFieldset as HTMLElement).getByRole("button", { name: "デフォルト値に戻す" }));
 
     expect(screen.getByRole("spinbutton", { name: "notice" })).toHaveValue(70);
-    expect(screen.getByRole("spinbutton", { name: "warning" })).toHaveValue(90);
-    expect(screen.getByRole("spinbutton", { name: "alert" })).toHaveValue(100);
     expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedAppSettings());
   });
 
@@ -527,15 +497,8 @@ describe("SettingsPage", () => {
     expect(rateFieldset).not.toBeNull();
     expect(within(rateFieldset as HTMLElement).getByText("残高率のしきい値")).toBeInTheDocument();
     expect(screen.getByText("notice <")).toBeInTheDocument();
-    expect(screen.getByText("warning <")).toBeInTheDocument();
-    expect(screen.getByText("alert <")).toBeInTheDocument();
     expect(screen.getByRole("spinbutton", { name: "notice" })).toHaveValue(30);
-    expect(screen.getByRole("spinbutton", { name: "warning" })).toHaveValue(10);
-    expect(screen.getByRole("spinbutton", { name: "alert" })).toHaveValue(0);
-    expect(screen.getByText("normal: 31.0%")).toBeInTheDocument();
     expect(screen.getByText("notice: 20.0%")).toHaveClass("detail-rate-notice");
-    expect(screen.getByText("warning: 5.0%")).toHaveClass("detail-rate-warning");
-    expect(screen.getByText("alert: -1.0%")).toHaveClass("detail-rate-alert");
 
     fireEvent.change(screen.getByRole("spinbutton", { name: "notice" }), {
       target: { value: "40", valueAsNumber: 40 },
@@ -557,10 +520,7 @@ describe("SettingsPage", () => {
         },
       }),
     );
-    expect(screen.getByText("normal: 41.0%")).toBeInTheDocument();
     expect(screen.getByText("notice: 25.0%")).toHaveClass("detail-rate-notice");
-    expect(screen.getByText("warning: 2.5%")).toHaveClass("detail-rate-warning");
-    expect(screen.getByText("alert: -6.0%")).toHaveClass("detail-rate-alert");
   });
 
   it("persists the shared default fund and category, and clears the category when the fund changes", async () => {

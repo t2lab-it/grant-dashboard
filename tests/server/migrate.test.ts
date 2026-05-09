@@ -11,6 +11,17 @@ function getColumnNames(db: Database.Database, tableName: string) {
   ).map((column) => column.name);
 }
 
+function getColumnDefault(db: Database.Database, tableName: string, columnName: string) {
+  const column = (
+    db.prepare(`PRAGMA table_info(${tableName})`).all() as Array<{
+      name: string;
+      dflt_value: string | null;
+    }>
+  ).find((candidate) => candidate.name === columnName);
+
+  return column?.dflt_value ?? null;
+}
+
 describe("runMigrations", () => {
   it("adds import review columns to an existing imports table", () => {
     const tempDir = mkdtempSync(join(tmpdir(), "budget-migrate-"));
@@ -120,14 +131,34 @@ describe("runMigrations", () => {
           reconciliation_json TEXT NOT NULL DEFAULT '{}'
         );
       `);
+      db.exec(`
+        INSERT INTO funds (id, name, fiscal_year, awarded_amount, notes, display_order)
+        VALUES (1, '既存予算', 2026, 100000, '', 1);
+
+        INSERT INTO categories (id, fund_id, name, display_order)
+        VALUES (1, 1, '既存費目', 1);
+      `);
 
       runMigrations(db);
 
       expect(getColumnNames(db, "funds")).toContain("fund_code");
       expect(getColumnNames(db, "categories")).toContain("category_code");
-      expect(getColumnNames(db, "categories")).toContain("cross_aggregate_category");
+      expect(getColumnDefault(db, "categories", "cross_aggregate_category")).toBe("'unset'");
       expect(getColumnNames(db, "planned_items")).toContain("planned_ref");
       expect(getColumnNames(db, "imports")).toContain("workbook_path");
+      runMigrations(db);
+
+      expect(
+        db.prepare(
+          "SELECT id, name, cross_aggregate_category FROM categories ORDER BY id",
+        ).all(),
+      ).toEqual([
+        {
+          id: 1,
+          name: "既存費目",
+          cross_aggregate_category: "unset",
+        },
+      ]);
     } finally {
       db.close();
       rmSync(tempDir, { recursive: true, force: true });

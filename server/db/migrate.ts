@@ -43,7 +43,7 @@ export function runMigrations(db: Database.Database) {
   db.exec(schema);
   ensureColumn(db, "funds", "fund_code", "TEXT");
   ensureColumn(db, "categories", "category_code", "TEXT");
-  ensureColumn(db, "categories", "cross_aggregate_category", "TEXT NOT NULL");
+  ensureColumn(db, "categories", "cross_aggregate_category", "TEXT NOT NULL DEFAULT 'unset'");
   ensureColumn(db, "planned_items", "planned_ref", "TEXT");
   ensureColumn(db, "imports", "workbook_path", "TEXT NOT NULL DEFAULT ''");
   ensureColumn(db, "imports", "warnings_json", "TEXT NOT NULL DEFAULT '[]'");

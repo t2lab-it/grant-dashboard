@@ -9,6 +9,10 @@ import { persistWorkbookImport } from "./persistImport";
 
 export const WORKBOOK_UPLOAD_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+export const WORKBOOK_UPLOAD_CONTENT_TYPES = [
+  WORKBOOK_UPLOAD_CONTENT_TYPE,
+  "application/octet-stream",
+];
 
 export type WorkbookImportCommitResult = WorkbookImportResult;
 

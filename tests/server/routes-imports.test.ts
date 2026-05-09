@@ -98,6 +98,49 @@ describe("API import routes", () => {
     expect(response.json().warnings).toHaveLength(2);
   });
 
+  it("returns workbook import preview data when the browser omits the xlsx MIME type", async () => {
+    const fixture = createSimpleWorkbookFixture();
+    cleanups.push(fixture.cleanup);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/imports/workbook/preview",
+      payload: readFileSync(fixture.workbookPath),
+      headers: {
+        "content-type": "application/octet-stream",
+        "x-workbook-filename": basename(fixture.workbookPath),
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      source_filename: "simple-budget.xlsx",
+      replace: true,
+      counts: {
+        funds: 2,
+        warnings: 2,
+      },
+    });
+  });
+
+  it("rejects octet-stream workbook previews when the filename is not an xlsx file", async () => {
+    const fixture = createSimpleWorkbookFixture();
+    cleanups.push(fixture.cleanup);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/imports/workbook/preview",
+      payload: readFileSync(fixture.workbookPath),
+      headers: {
+        "content-type": "application/octet-stream",
+        "x-workbook-filename": "budget2026.txt",
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({ message: "`.xlsx` ファイルを選択してください。" });
+  });
+
   it("returns demo import metadata for the repository demo workbook preview", async () => {
     const workbookPath = resolve("seeds/demo/demo-budget.xlsx");
 
@@ -157,6 +200,31 @@ describe("API import routes", () => {
         workbook_path: expect.stringMatching(/test-routes-imports\.db\.uploads\/.+\.xlsx$/),
       }),
     );
+  });
+
+  it("imports an uploaded workbook when the browser omits the xlsx MIME type", async () => {
+    const fixture = createImportFixtureWorkbook();
+    cleanups.push(fixture.cleanup);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/imports/workbook",
+      payload: readFileSync(fixture.workbookPath),
+      headers: {
+        "content-type": "application/octet-stream",
+        "x-workbook-filename": basename(fixture.workbookPath),
+      },
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toMatchObject({
+      source_filename: "simple-budget.xlsx",
+      mode: "replace",
+      counts: { funds: 1, warnings: 0 },
+    });
+    expect(
+      app.db.prepare("SELECT COUNT(*) AS count FROM funds").get(),
+    ).toEqual({ count: 1 });
   });
 
   it("returns demo import metadata after importing the repository demo workbook", async () => {

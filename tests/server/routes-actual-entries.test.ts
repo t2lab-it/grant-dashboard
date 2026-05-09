@@ -94,6 +94,14 @@ describe("API actual-entry routes", () => {
   });
 
   it("cancels an actual entry", async () => {
+    app.db.exec(`
+      INSERT INTO classification_tags (id, kind, name, color) VALUES
+        (10, 'auxiliary', '要確認', '#7c3aed');
+      INSERT INTO classification_assignments (tag_id, target_type, target_id) VALUES
+        (10, 'fund', 1),
+        (10, 'planned_item', 1),
+        (10, 'actual_entry', 1);
+    `);
 
     const response = await app.inject({
       method: "POST",
@@ -103,6 +111,30 @@ describe("API actual-entry routes", () => {
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({ success: true });
     expect(app.db.prepare("SELECT id FROM actual_entries WHERE id = ?").get(1)).toBeUndefined();
+    expect(
+      app.db
+        .prepare(
+          `
+          SELECT tag_id
+          FROM classification_assignments
+          WHERE target_type = 'actual_entry'
+            AND target_id = 1
+          `,
+        )
+        .all(),
+    ).toEqual([]);
+    expect(
+      app.db
+        .prepare(
+          `
+          SELECT target_type
+          FROM classification_assignments
+          WHERE tag_id = 10
+          ORDER BY target_type
+          `,
+        )
+        .all(),
+    ).toEqual([{ target_type: "fund" }, { target_type: "planned_item" }]);
   });
 
   it.each([

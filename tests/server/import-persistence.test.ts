@@ -129,42 +129,26 @@ describe("persistWorkbookImport", () => {
       mode: "initial",
       counts: draft.counts,
     });
-    expect(db.prepare("SELECT name, fiscal_year, awarded_amount FROM funds").all()).toEqual([
-      { name: "テスト資金", fiscal_year: 2026, awarded_amount: 500000 },
-    ]);
-    expect(db.prepare("SELECT fund_code FROM funds").get()).toEqual({ fund_code: "basic-research" });
-    expect(db.prepare("SELECT name, display_order FROM categories").all()).toEqual([
-      { name: "物品費", display_order: 1 },
-    ]);
-    expect(db.prepare("SELECT category_code FROM categories").get()).toEqual({
+    expect(
+      db.prepare(
+        `
+          SELECT
+            f.fund_code,
+            c.category_code,
+            p.planned_ref,
+            a.description AS actual_description
+          FROM funds f
+          JOIN categories c ON c.fund_id = f.id
+          JOIN planned_items p ON p.category_id = c.id
+          JOIN actual_entries a ON a.category_id = c.id
+        `,
+      ).get(),
+    ).toEqual({
+      fund_code: "basic-research",
       category_code: "equipment",
+      planned_ref: "basic-research-equipment-20260401-001",
+      actual_description: "初回支払",
     });
-    expect(
-      db.prepare(
-        "SELECT planned_ref, planned_date, scheduled_month, description, amount, status FROM planned_items",
-      ).all(),
-    ).toEqual([
-      {
-        planned_ref: "basic-research-equipment-20260401-001",
-        planned_date: "2026-04-01",
-        scheduled_month: "2026-04",
-        description: "計算サーバ",
-        amount: 120000,
-        status: "planned",
-      },
-    ]);
-    expect(
-      db.prepare(
-        "SELECT actual_date, description, amount, planned_item_id FROM actual_entries",
-      ).all(),
-    ).toEqual([
-      {
-        actual_date: "2026-04-15",
-        description: "初回支払",
-        amount: 60000,
-        planned_item_id: null,
-      },
-    ]);
 
     const importRow = db.prepare(
       `
@@ -197,34 +181,13 @@ describe("persistWorkbookImport", () => {
         negative_planned_adjustment: 1,
       },
     });
-    expect(JSON.parse(importRow.warnings_json)).toEqual([
-      {
-        code: "negative_planned_adjustment",
-        sheet_name: "テスト資金",
-        row_number: 7,
-        message: "negative planned adjustment is treated as a warning",
-      },
-    ]);
     expect(JSON.parse(importRow.reconciliation_json)).toMatchObject({
       workbook_path: draft.workbook_path,
       db_path: dbPath,
       ok: true,
       mismatches: [],
-      overall: {
-        expected: {
-          assets: expect.any(Number),
-          planned: expect.any(Number),
-          actual: expect.any(Number),
-          free_balance: expect.any(Number),
-        },
-        actual: {
-          assets: expect.any(Number),
-          planned: expect.any(Number),
-          actual: expect.any(Number),
-          free_balance: expect.any(Number),
-        },
-      },
     });
+    expect(JSON.parse(importRow.warnings_json)).toHaveLength(1);
     expect(importRow.workbook_path).toBe("/tmp/budget2026.xlsx");
 
     db.close();

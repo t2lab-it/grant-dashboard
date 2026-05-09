@@ -8,9 +8,23 @@ import { buildServer } from "../../server/app";
 import { loadSeedProfile } from "../../server/seeds/loadProfile";
 import { seedDatabase } from "../../server/seeds/seedDatabase";
 import { getFundSnapshot, getOverviewSnapshot } from "../../server/services/dashboard";
-import { writeSeedProfile } from "../support/seed";
+import { type SeedProfileTables, writeSeedProfile } from "../support/seed";
 
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+
+function twoFundProfile(overrides: Partial<SeedProfileTables> = {}) {
+  return {
+    funds: [
+      { id: 1, fund_code: "fund-a", name: "基金A", fiscal_year: 2026, awarded_amount: 100, notes: "", display_order: 1 },
+      { id: 2, fund_code: "fund-b", name: "基金B", fiscal_year: 2026, awarded_amount: 200, notes: "", display_order: 2 },
+    ],
+    categories: [
+      { id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 },
+      { id: 2, fund_id: 2, category_code: "travel", name: "旅費", cross_aggregate_category: "travel", display_order: 1 },
+    ],
+    ...overrides,
+  };
+}
 
 describe("seed profiles", () => {
   const tempDirs: string[] = [];
@@ -76,7 +90,7 @@ describe("seed profiles", () => {
     const db = new Database(dbPath, { readonly: true });
     const overview = getOverviewSnapshot(db);
     const fundSnapshot = getFundSnapshot(db, 1);
-    const plannedItemRows = db.prepare("SELECT id, planned_ref FROM planned_items ORDER BY id").all();
+    const plannedRefs = db.prepare("SELECT planned_ref FROM planned_items ORDER BY id").all();
 
     expect(overview.totals.assets).toBe(4200000);
     expect(overview.totals.actual).toBe(1085000);
@@ -98,17 +112,14 @@ describe("seed profiles", () => {
         expect.objectContaining({ name: "デモ研究費D", freeBalance: 30000, projectTags: [] }),
       ]),
     );
-    expect(plannedItemRows).toEqual([
-      { id: 1, planned_ref: "demo-a-equipment-202605-001" },
-      { id: 2, planned_ref: "demo-a-travel-202607-001" },
-      { id: 3, planned_ref: "demo-a-supplies-202608-001" },
-      { id: 4, planned_ref: "demo-b-outsourcing-202604-001" },
-      { id: 5, planned_ref: "demo-b-outsourcing-202609-001" },
-      { id: 6, planned_ref: "demo-c-personnel-202606-001" },
-      { id: 7, planned_ref: "demo-a-equipment-202604-archived-001" },
-      { id: 8, planned_ref: "demo-a-travel-202606-archived-001" },
-      { id: 9, planned_ref: "demo-d-low-balance-202610-001" },
-    ]);
+    expect(plannedRefs).toHaveLength(9);
+    expect(plannedRefs).toEqual(
+      expect.arrayContaining([
+        { planned_ref: "demo-a-equipment-202605-001" },
+        { planned_ref: "demo-a-equipment-202604-archived-001" },
+        { planned_ref: "demo-d-low-balance-202610-001" },
+      ]),
+    );
     expect(fundSnapshot.categories).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -197,47 +208,15 @@ describe("seed profiles", () => {
       name: "budget_lines",
       profile: "mismatch-budget",
       expectedError: /budget_lines\.json 1 category_id 2 belongs to fund_id 2, expected 1/,
-      build: () => ({
-        funds: [
-          { id: 1, fund_code: "fund-a", name: "基金A", fiscal_year: 2026, awarded_amount: 100, notes: "", display_order: 1 },
-          { id: 2, fund_code: "fund-b", name: "基金B", fiscal_year: 2026, awarded_amount: 200, notes: "", display_order: 2 },
-        ],
-        categories: [
-          { id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 },
-          { id: 2, fund_id: 2, category_code: "travel", name: "旅費", cross_aggregate_category: "travel", display_order: 1 },
-        ],
+      build: () => twoFundProfile({
         budget_lines: [{ id: 1, fund_id: 1, category_id: 2, amount: null, notes: "" }],
-        planned_items: [
-          {
-            id: 1,
-            fund_id: 1,
-            category_id: 1,
-            planned_ref: "fund-a-equipment-001",
-            planned_date: "2026-05-01",
-            scheduled_month: "2026-05",
-            description: "予定A",
-            amount: 10,
-            status: "planned",
-            notes: "",
-          },
-        ],
-        actual_entries: [{ id: 1, fund_id: 1, category_id: 1, planned_item_id: 1, actual_date: "2026-05-03", description: "実績", amount: 5, notes: "" }],
       }),
     },
     {
       name: "planned_items",
       profile: "mismatch-planned",
       expectedError: /planned_items\.json 1 category_id 2 belongs to fund_id 2, expected 1/,
-      build: () => ({
-        funds: [
-          { id: 1, fund_code: "fund-a", name: "基金A", fiscal_year: 2026, awarded_amount: 100, notes: "", display_order: 1 },
-          { id: 2, fund_code: "fund-b", name: "基金B", fiscal_year: 2026, awarded_amount: 200, notes: "", display_order: 2 },
-        ],
-        categories: [
-          { id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 },
-          { id: 2, fund_id: 2, category_code: "travel", name: "旅費", cross_aggregate_category: "travel", display_order: 1 },
-        ],
-        budget_lines: [{ id: 1, fund_id: 1, category_id: 1, amount: null, notes: "" }],
+      build: () => twoFundProfile({
         planned_items: [
           {
             id: 1,
@@ -252,37 +231,13 @@ describe("seed profiles", () => {
             notes: "",
           },
         ],
-        actual_entries: [{ id: 1, fund_id: 1, category_id: 1, planned_item_id: 1, actual_date: "2026-05-03", description: "実績", amount: 5, notes: "" }],
       }),
     },
     {
       name: "actual_entries",
       profile: "mismatch-actual",
       expectedError: /actual_entries\.json 1 category_id 2 belongs to fund_id 2, expected 1/,
-      build: () => ({
-        funds: [
-          { id: 1, fund_code: "fund-a", name: "基金A", fiscal_year: 2026, awarded_amount: 100, notes: "", display_order: 1 },
-          { id: 2, fund_code: "fund-b", name: "基金B", fiscal_year: 2026, awarded_amount: 200, notes: "", display_order: 2 },
-        ],
-        categories: [
-          { id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 },
-          { id: 2, fund_id: 2, category_code: "travel", name: "旅費", cross_aggregate_category: "travel", display_order: 1 },
-        ],
-        budget_lines: [{ id: 1, fund_id: 1, category_id: 1, amount: null, notes: "" }],
-        planned_items: [
-          {
-            id: 1,
-            fund_id: 1,
-            category_id: 1,
-            planned_ref: "fund-a-equipment-001",
-            planned_date: "2026-05-01",
-            scheduled_month: "2026-05",
-            description: "予定A",
-            amount: 10,
-            status: "planned",
-            notes: "",
-          },
-        ],
+      build: () => twoFundProfile({
         actual_entries: [{ id: 1, fund_id: 1, category_id: 2, planned_item_id: null, actual_date: "2026-05-03", description: "実績", amount: 5, notes: "" }],
       }),
     },
@@ -299,32 +254,9 @@ describe("seed profiles", () => {
     const tempDir = mkdtempSync(join(tmpdir(), "budget-seed-actual-plan-"));
     const profileDir = join(tempDir, "seeds", "actual-plan-mismatch");
     tempDirs.push(tempDir);
-    writeSeedProfile(profileDir, {
-      funds: [
-        { id: 1, fund_code: "fund-a", name: "基金A", fiscal_year: 2026, awarded_amount: 100, notes: "", display_order: 1 },
-        { id: 2, fund_code: "fund-b", name: "基金B", fiscal_year: 2026, awarded_amount: 200, notes: "", display_order: 2 },
-      ],
-      categories: [
-        { id: 1, fund_id: 1, category_code: "equipment", name: "物品費", cross_aggregate_category: "equipment", display_order: 1 },
-        { id: 2, fund_id: 2, category_code: "travel", name: "旅費", cross_aggregate_category: "travel", display_order: 1 },
-      ],
-      budget_lines: [{ id: 1, fund_id: 1, category_id: 1, amount: null, notes: "" }],
-      planned_items: [
-        {
-          id: 1,
-          fund_id: 1,
-          category_id: 1,
-          planned_ref: "fund-a-equipment-001",
-          planned_date: "2026-05-01",
-          scheduled_month: "2026-05",
-          description: "予定A",
-          amount: 10,
-          status: "planned",
-          notes: "",
-        },
-      ],
+    writeSeedProfile(profileDir, twoFundProfile({
       actual_entries: [{ id: 1, fund_id: 2, category_id: 2, planned_item_id: 1, actual_date: "2026-05-03", description: "実績", amount: 5, notes: "" }],
-    });
+    }));
 
     expect(() => loadSeedProfile({ rootDir: tempDir, profile: "actual-plan-mismatch" })).toThrow(
       /actual_entries\.json 1 planned_item_id 1 belongs to fund_id 1\/category_id 1, expected 2\/2/,

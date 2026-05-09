@@ -4,7 +4,7 @@ import { parsePositiveIntParam, sendNotFound } from "./routeHelpers";
 import {
   commitUploadedWorkbook,
   previewUploadedWorkbook,
-  WORKBOOK_UPLOAD_CONTENT_TYPE,
+  WORKBOOK_UPLOAD_CONTENT_TYPES,
 } from "../imports/uploadWorkbook";
 import { createSimpleWorkbookTemplateBuffer } from "../imports/simpleWorkbookTemplate";
 import { getImportReview, listImportReviews } from "../services/importReviews";
@@ -12,11 +12,13 @@ import { getImportReview, listImportReviews } from "../services/importReviews";
 const workbookFilenameSchema = z.string().trim().min(1);
 
 export function registerImportRoutes(app: FastifyInstance, { dbPath }: { dbPath: string }) {
-  app.addContentTypeParser(
-    WORKBOOK_UPLOAD_CONTENT_TYPE,
-    { parseAs: "buffer" },
-    (_request, body, done) => done(null, body),
-  );
+  for (const contentType of WORKBOOK_UPLOAD_CONTENT_TYPES) {
+    app.addContentTypeParser(
+      contentType,
+      { parseAs: "buffer" },
+      (_request, body, done) => done(null, body),
+    );
+  }
 
   app.get("/api/imports", () => listImportReviews(app.db));
 

@@ -230,55 +230,6 @@ describe("SettingsPage", () => {
     expect(within(customCard as HTMLElement).getByLabelText("研究室標準 の予算内訳")).toBeInTheDocument();
   });
 
-  it("drops invalid stored custom chart presets and falls back when the selected custom preset is missing", async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        funds: [],
-      }),
-    });
-    window.localStorage.setItem(
-      "budget-dashboard:settings",
-      storedSettings({
-        themePreset: "custom:missing",
-        customChartPresets: [
-          {
-            id: "bad-color",
-            label: "不正な色",
-            palette: {
-              actual: "#12345",
-              committed: "#f97316",
-              balance: "#fff7ed",
-              balanceBorder: "#c2410c",
-            },
-          },
-          {
-            id: "",
-            label: "ID なし",
-            palette: {
-              actual: "#7c3aed",
-              committed: "#f97316",
-              balance: "#fff7ed",
-              balanceBorder: "#c2410c",
-            },
-          },
-        ],
-      }),
-    );
-
-    renderAppRoute("/settings");
-
-    expect(await screen.findByRole("radio", { name: /青緑＋黄色系/ })).toBeChecked();
-    expect(screen.queryByRole("radio", { name: /不正な色/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole("radio", { name: /ID なし/ })).not.toBeInTheDocument();
-    const savedSettings = JSON.parse(window.localStorage.getItem("budget-dashboard:settings") ?? "{}") as {
-      themePreset?: string;
-      customChartPresets?: unknown[];
-    };
-    expect(savedSettings.themePreset).toBe("teal-yellow");
-    expect(savedSettings.customChartPresets).toEqual([]);
-  });
-
   it("creates, selects, edits, and deletes custom chart presets from the folded editor", async () => {
     const user = userEvent.setup();
 

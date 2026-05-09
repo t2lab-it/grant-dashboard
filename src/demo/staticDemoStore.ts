@@ -20,6 +20,7 @@ import type {
 import { toHeaderYearEndRisks } from "../contracts/headerAlerts";
 import {
   buildYearEndRiskSummary,
+  defaultYearEndRiskThresholds,
 } from "../contracts/yearEndRisk";
 
 const STORAGE_KEY = "budget-dashboard.static-demo.v1";
@@ -630,6 +631,7 @@ export function getStaticOverviewSnapshot(requestedFiscalYear?: number) {
       selectedFiscalYear === null
         ? new Map()
         : getStaticFundOverduePlannedAmountMap(state, selectedFiscalYear, new Date()),
+      defaultYearEndRiskThresholds,
     ),
     monthlyStatus: selectedFiscalYear === null ? [] : getOverviewMonthlyStatus(state, totals.assets, selectedFiscalYear),
     latestImport: {

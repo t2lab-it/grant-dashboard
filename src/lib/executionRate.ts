@@ -28,42 +28,6 @@ export const defaultBalanceRateThresholds: BalanceRateThresholds = {
   alert: 0,
 };
 
-function getFiniteThreshold(value: number | undefined, fallback: number) {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-}
-
-export function normalizeExecutionRateThresholds(
-  thresholds?: Partial<ExecutionRateThresholds> | null,
-): ExecutionRateThresholds {
-  const notice = getFiniteThreshold(thresholds?.notice, defaultExecutionRateThresholds.notice);
-  const warning = Math.max(
-    getFiniteThreshold(thresholds?.warning, defaultExecutionRateThresholds.warning),
-    notice,
-  );
-  const alert = Math.max(
-    getFiniteThreshold(thresholds?.alert, defaultExecutionRateThresholds.alert),
-    warning,
-  );
-
-  return { notice, warning, alert };
-}
-
-export function normalizeBalanceRateThresholds(
-  thresholds?: Partial<BalanceRateThresholds> | null,
-): BalanceRateThresholds {
-  const notice = getFiniteThreshold(thresholds?.notice, defaultBalanceRateThresholds.notice);
-  const warning = Math.min(
-    getFiniteThreshold(thresholds?.warning, defaultBalanceRateThresholds.warning),
-    notice,
-  );
-  const alert = Math.min(
-    getFiniteThreshold(thresholds?.alert, defaultBalanceRateThresholds.alert),
-    warning,
-  );
-
-  return { notice, warning, alert };
-}
-
 function getExecutionRateTone(
   percentage: number,
   thresholds: ExecutionRateThresholds,

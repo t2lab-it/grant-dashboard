@@ -19,7 +19,7 @@ import {
 } from "./financialAggregates";
 import { isDemoTutorialEligible } from "./demoMetadata";
 import { listAssignedClassifications } from "./classifications";
-import { buildYearEndRiskSummary } from "../../src/contracts/yearEndRisk";
+import { buildYearEndRiskSummary, defaultYearEndRiskThresholds } from "../../src/contracts/yearEndRisk";
 
 type OverviewTotalsRow = {
   assets: number;
@@ -189,6 +189,7 @@ export function getOverviewSnapshot(db: Database.Database, options: OverviewSnap
     selectedFiscalYear === null
       ? new Map()
       : getFundOverduePlannedAmountMap(db, selectedFiscalYear, options.today ?? new Date()),
+    defaultYearEndRiskThresholds,
   );
 
   const latestImportRow = db

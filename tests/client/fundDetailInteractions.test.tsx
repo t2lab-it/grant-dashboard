@@ -479,7 +479,9 @@ describe("Fund detail interactions", () => {
     window.localStorage.setItem(
       "budget-dashboard:settings",
       JSON.stringify({
+        appThemeMode: "system",
         themePreset: "teal-yellow",
+        customChartPresets: [],
         defaultRateMetric: "execution",
         defaultOverviewDisplayMode: "chart",
         notesDisplayMode: "hover",

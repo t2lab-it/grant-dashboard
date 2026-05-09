@@ -6,7 +6,7 @@ import type {
   HeaderAlertsResponse,
 } from "../../src/contracts/headerAlerts";
 import { toHeaderYearEndRisks } from "../../src/contracts/headerAlerts";
-import { buildYearEndRiskSummary } from "../../src/contracts/yearEndRisk";
+import { buildYearEndRiskSummary, defaultYearEndRiskThresholds } from "../../src/contracts/yearEndRisk";
 import {
   listFundAggregateRows,
   listFundCategoryAggregateRows,
@@ -312,7 +312,7 @@ function buildYearEndRiskCategory(db: Database.Database, fiscalYear: number, tod
       row.overduePlannedAmount,
     ]),
   );
-  const summary = buildYearEndRiskSummary(funds, overduePlannedAmountByFundId);
+  const summary = buildYearEndRiskSummary(funds, overduePlannedAmountByFundId, defaultYearEndRiskThresholds);
 
   return createCategory(
     "year_end_risk",

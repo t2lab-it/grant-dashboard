@@ -2,7 +2,6 @@ import { formatAmount, type AmountDisplayMode } from "../../lib/format";
 import {
   createOverviewChartSegments,
   getOverBudgetChartState,
-  getOverviewChartPresetKey,
   overviewChartPresets,
   type OverviewChartPalette,
   type OverviewChartPresetKey,
@@ -274,5 +273,3 @@ export function createFundDetailChartDataWithPalettes(
     accessibleSummary: accessibleSummaryParts.join("、"),
   };
 }
-
-export { getOverviewChartPresetKey };

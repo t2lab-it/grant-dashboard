@@ -79,17 +79,6 @@ export const overviewChartPresets: Record<
   },
 };
 
-export function getOverviewChartPresetKey(
-  value: string | null | undefined,
-  fallback: OverviewChartPresetKey = defaultOverviewChartPreset,
-): OverviewChartPresetKey {
-  if (value && value in overviewChartPresets) {
-    return value as OverviewChartPresetKey;
-  }
-
-  return fallback;
-}
-
 export function isOverviewChartPresetKey(value: string | null | undefined): value is OverviewChartPresetKey {
   return Boolean(value && value in overviewChartPresets);
 }
@@ -98,101 +87,12 @@ export function isValidChartHexColor(value: unknown): value is string {
   return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value);
 }
 
-function normalizeCustomPresetId(value: unknown) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  return /^[a-zA-Z0-9_-]{1,64}$/.test(trimmed) ? trimmed : null;
-}
-
-function normalizeCustomPresetLabel(value: unknown) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  return trimmed.length > 0 && trimmed.length <= 40 ? trimmed : null;
-}
-
-function normalizePalette(value: unknown): OverviewChartPalette | null {
-  if (typeof value !== "object" || value === null) {
-    return null;
-  }
-
-  const palette = value as Partial<Record<keyof OverviewChartPalette, unknown>>;
-  if (
-    !isValidChartHexColor(palette.actual) ||
-    !isValidChartHexColor(palette.committed) ||
-    !isValidChartHexColor(palette.balance) ||
-    !isValidChartHexColor(palette.balanceBorder)
-  ) {
-    return null;
-  }
-
-  return {
-    actual: palette.actual.toLowerCase(),
-    committed: palette.committed.toLowerCase(),
-    balance: palette.balance.toLowerCase(),
-    balanceBorder: palette.balanceBorder.toLowerCase(),
-  };
-}
-
-export function normalizeCustomOverviewChartPresets(value: unknown): CustomOverviewChartPreset[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  const seenIds = new Set<string>();
-  const presets: CustomOverviewChartPreset[] = [];
-  value.forEach((candidate) => {
-    if (typeof candidate !== "object" || candidate === null) {
-      return;
-    }
-
-    const rawPreset = candidate as {
-      id?: unknown;
-      label?: unknown;
-      palette?: unknown;
-    };
-    const id = normalizeCustomPresetId(rawPreset.id);
-    const label = normalizeCustomPresetLabel(rawPreset.label);
-    const palette = normalizePalette(rawPreset.palette);
-    if (!id || !label || !palette || seenIds.has(id)) {
-      return;
-    }
-
-    seenIds.add(id);
-    presets.push({ id, label, palette });
-  });
-
-  return presets;
-}
-
 export function customOverviewChartPresetRef(id: string): OverviewChartPresetRef {
   return `custom:${id}`;
 }
 
 export function getCustomOverviewChartPresetId(value: string | null | undefined) {
   return value?.startsWith("custom:") ? value.slice("custom:".length) : null;
-}
-
-export function getOverviewChartPresetRef(
-  value: string | null | undefined,
-  customPresets: CustomOverviewChartPreset[],
-  fallback: OverviewChartPresetKey = defaultOverviewChartPreset,
-): OverviewChartPresetRef {
-  if (isOverviewChartPresetKey(value)) {
-    return value;
-  }
-
-  const customId = getCustomOverviewChartPresetId(value);
-  if (customId && customPresets.some((preset) => preset.id === customId)) {
-    return customOverviewChartPresetRef(customId);
-  }
-
-  return fallback;
 }
 
 export function getOverviewChartPalette(
@@ -207,8 +107,7 @@ export function getOverviewChartPalette(
     return customPreset.palette;
   }
 
-  const presetKey = isOverviewChartPresetKey(presetRef) ? presetRef : defaultOverviewChartPreset;
-  return overviewChartPresets[presetKey].palette;
+  return overviewChartPresets[presetRef as OverviewChartPresetKey].palette;
 }
 
 function resolveOverviewChartPalette(value: OverviewChartPalette | OverviewChartPresetKey) {

@@ -35,6 +35,7 @@ export type FundDetailResponse = {
   actualEntries: Array<{
     id: number;
     actualDate: string;
+    categoryId: number;
     categoryName: string;
     description: string;
     amount: number;

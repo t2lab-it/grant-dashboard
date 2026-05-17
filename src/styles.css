@@ -2452,6 +2452,25 @@ a {
   background: rgba(146, 64, 14, 0.96);
 }
 
+.detail-action-button-duplicate {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.detail-action-button-duplicate:hover {
+  background: #ddd6fe;
+}
+
+:root[data-theme="dark"] .detail-action-button-duplicate {
+  border-color: rgba(167, 139, 250, 0.34);
+  background: rgba(76, 29, 149, 0.9);
+  color: #ddd6fe;
+}
+
+:root[data-theme="dark"] .detail-action-button-duplicate:hover {
+  background: rgba(91, 33, 182, 0.96);
+}
+
 .detail-action-button-danger {
   background: #fee2e2;
   color: #b91c1c;

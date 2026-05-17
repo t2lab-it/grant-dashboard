@@ -363,6 +363,7 @@ describe("dashboard calculations", () => {
     expect(fund.actualEntries[0]).toMatchObject({
       id: 3,
       actualDate: "2026-08-10",
+      categoryId: 2,
       categoryName: "旅費",
       description: "資料印刷",
       amount: 150,

@@ -653,9 +653,6 @@ describe("Fund detail interactions", () => {
     const fundPage = within(view.container);
     const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
 
-    expect(within(plannedTable).getByRole("button", { name: "精算" })).toBeInTheDocument();
-    expect(within(plannedTable).getByRole("button", { name: "削除" })).toBeInTheDocument();
-
     await user.click(within(plannedTable).getByRole("button", { name: "精算" }));
 
     const dialog = await screen.findByRole("dialog", { name: "計画項目を精算" });
@@ -687,6 +684,184 @@ describe("Fund detail interactions", () => {
     });
     expect(await fundPage.findByText("未精算の計画項目はまだありません。")).toBeInTheDocument();
     expect(fundPage.getByText("GPU サーバ保守更新")).toBeInTheDocument();
+  });
+
+  it("duplicates planned items from the planned list with today as the planned date", async () => {
+    const user = userEvent.setup();
+    const today = new Date().toISOString().slice(0, 10);
+    let currentFundDetail = {
+      fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
+      categories: [
+        {
+          id: 1,
+          categoryName: "物品費",
+          budgetAmount: 150000,
+          plannedAmount: 280000,
+          actualAmount: 0,
+        },
+      ],
+      monthlyStatus: [],
+      actualEntries: [],
+      plannedItems: [
+        {
+          id: 10,
+          plannedDate: "2026-07-10",
+          scheduledMonth: "2026-07",
+          categoryId: 1,
+          categoryName: "物品費",
+          description: "GPU サーバ保守更新",
+          amount: 280000,
+          notes: "未精算",
+          auxiliaryLabels: [{ id: 5, kind: "auxiliary", name: "要確認", color: "#16a34a" }],
+        },
+      ],
+    };
+
+    fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/funds/1" && method === "GET") {
+        return {
+          ok: true,
+          json: async () => currentFundDetail,
+        };
+      }
+
+      if (url === "/api/classifications" && method === "GET") {
+        return {
+          ok: true,
+          json: async () => ({
+            projectTags: [],
+            auxiliaryLabels: [{ id: 5, kind: "auxiliary", name: "要確認", color: "#16a34a" }],
+          }),
+        };
+      }
+
+      if (url === "/api/planned-items" && method === "POST") {
+        return {
+          ok: true,
+          json: async () => ({ warnings: [] }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch: ${method} ${url}`);
+    });
+
+    const view = renderAppRoute("/funds/1");
+    const fundPage = within(view.container);
+    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+
+    await user.click(within(plannedTable).getByRole("button", { name: "複製" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "計画項目を複製" });
+    await user.click(within(dialog).getByRole("button", { name: "複製を保存" }));
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/planned-items", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fundId: 1,
+        categoryId: 1,
+        plannedDate: today,
+        scheduledMonth: "2026-07",
+        description: "GPU サーバ保守更新",
+        amount: 280000,
+        notes: "未精算",
+        auxiliaryLabelIds: [5],
+      }),
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "計画項目を複製" })).not.toBeInTheDocument();
+    });
+  });
+
+  it("duplicates actual entries from the actual list without copying the planned item link", async () => {
+    const user = userEvent.setup();
+    const today = new Date().toISOString().slice(0, 10);
+    let currentFundDetail = {
+      fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
+      categories: [
+        {
+          id: 1,
+          categoryName: "物品費",
+          budgetAmount: 150000,
+          plannedAmount: 0,
+          actualAmount: 300000,
+        },
+      ],
+      monthlyStatus: [],
+      actualEntries: [
+        {
+          id: 8,
+          actualDate: "2026-06-20",
+          categoryId: 1,
+          categoryName: "物品費",
+          description: "GPU サーバ保守",
+          amount: 300000,
+          notes: "保守契約の更新費用",
+          auxiliaryLabels: [{ id: 5, kind: "auxiliary", name: "要確認", color: "#16a34a" }],
+        },
+      ],
+      plannedItems: [],
+    };
+
+    fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/funds/1" && method === "GET") {
+        return {
+          ok: true,
+          json: async () => currentFundDetail,
+        };
+      }
+
+      if (url === "/api/classifications" && method === "GET") {
+        return {
+          ok: true,
+          json: async () => ({
+            projectTags: [],
+            auxiliaryLabels: [{ id: 5, kind: "auxiliary", name: "要確認", color: "#16a34a" }],
+          }),
+        };
+      }
+
+      if (url === "/api/actual-entries" && method === "POST") {
+        return {
+          ok: true,
+          json: async () => ({ remainingPlannedAmount: null }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch: ${method} ${url}`);
+    });
+
+    const view = renderAppRoute("/funds/1");
+    const fundPage = within(view.container);
+    const actualTable = await fundPage.findByRole("table", { name: "Fund actual entries" });
+
+    await user.click(within(actualTable).getByRole("button", { name: "複製" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "精算項目を複製" });
+    await user.click(within(dialog).getByRole("button", { name: "複製を保存" }));
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/actual-entries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fundId: 1,
+        categoryId: 1,
+        actualDate: today,
+        description: "GPU サーバ保守",
+        amount: 300000,
+        notes: "保守契約の更新費用",
+        auxiliaryLabelIds: [5],
+      }),
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "精算項目を複製" })).not.toBeInTheDocument();
+    });
   });
 
   it("can cancel an actual entry from the edit modal", async () => {
@@ -1014,6 +1189,77 @@ describe("Fund detail interactions", () => {
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "計画項目を編集" })).not.toBeInTheDocument();
     });
+  });
+
+  it("deletes planned items from the edit modal after moving destructive actions out of the list", async () => {
+    const user = userEvent.setup();
+    let currentFundDetail = {
+      fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
+      categories: [],
+      monthlyStatus: [],
+      actualEntries: [],
+      plannedItems: [
+        {
+          id: 10,
+          plannedDate: "2026-07-10",
+          scheduledMonth: "2026-07",
+          categoryId: 1,
+          categoryName: "物品費",
+          description: "GPU サーバ保守更新",
+          amount: 280000,
+          notes: "未精算",
+        },
+      ],
+    };
+
+    fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/funds/1" && method === "GET") {
+        return {
+          ok: true,
+          json: async () => currentFundDetail,
+        };
+      }
+
+      if (url === "/api/overview" && method === "GET") {
+        return {
+          ok: true,
+          json: async () => ({ funds: [{ id: 1, name: "基盤研究費" }] }),
+        };
+      }
+
+      if (url === "/api/planned-items/10" && method === "DELETE") {
+        currentFundDetail = {
+          ...currentFundDetail,
+          plannedItems: [],
+        };
+
+        return {
+          ok: true,
+          json: async () => ({ success: true }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch: ${method} ${url}`);
+    });
+
+    const view = renderAppRoute("/funds/1");
+    const fundPage = within(view.container);
+    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+
+    expect(within(plannedTable).queryByRole("button", { name: "削除" })).not.toBeInTheDocument();
+    await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "計画項目を編集" });
+    expect(within(dialog).getByRole("button", { name: "取消" })).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "削除" }));
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/planned-items/10", {
+      method: "DELETE",
+    });
+    expect(await fundPage.findByText("未精算の計画項目はまだありません。")).toBeInTheDocument();
   });
 
   it("keeps destination fund options out of the fund detail query cache", async () => {

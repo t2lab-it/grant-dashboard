@@ -27,23 +27,40 @@ export type ActualEntryDialogProps =
       entry: ActualEntry;
       onClose: () => void;
       onSaved: () => Promise<void>;
+    }
+  | {
+      mode: "duplicate";
+      currentFundId: number;
+      entry: ActualEntry;
+      onClose: () => void;
+      onSaved: () => Promise<void>;
     };
 
 export function ActualEntryDialog(props: ActualEntryDialogProps) {
   const isEditMode = props.mode === "edit";
+  const isDuplicateMode = props.mode === "duplicate";
   const actualDateInitialValue = isEditMode
     ? props.entry.actualDate
     : new Date().toISOString().slice(0, 10);
-  const descriptionInitialValue = isEditMode ? props.entry.description : props.item.description;
-  const amountInitialValue = isEditMode ? String(props.entry.amount) : String(props.item.amount);
-  const notesInitialValue = isEditMode ? props.entry.notes : props.item.notes;
-  const auxiliaryLabelsInitialValue = isEditMode ? props.entry.auxiliaryLabels : [];
-  const dialogTitle = isEditMode ? "精算項目を編集" : "計画項目を精算";
-  const submitLabel = isEditMode ? "更新を保存" : "精算を登録";
-  const submittingLabel = isEditMode ? "保存中..." : "登録中...";
+  const descriptionInitialValue =
+    isEditMode || isDuplicateMode ? props.entry.description : props.item.description;
+  const amountInitialValue =
+    isEditMode || isDuplicateMode ? String(props.entry.amount) : String(props.item.amount);
+  const notesInitialValue = isEditMode || isDuplicateMode ? props.entry.notes : props.item.notes;
+  const auxiliaryLabelsInitialValue =
+    isEditMode || isDuplicateMode ? props.entry.auxiliaryLabels : [];
+  const dialogTitle = isEditMode
+    ? "精算項目を編集"
+    : isDuplicateMode
+      ? "精算項目を複製"
+      : "計画項目を精算";
+  const submitLabel = isEditMode ? "更新を保存" : isDuplicateMode ? "複製を保存" : "精算を登録";
+  const submittingLabel = isEditMode ? "保存中..." : isDuplicateMode ? "保存中..." : "登録中...";
   const submitErrorMessage = isEditMode
     ? "精算項目を更新できませんでした。"
-    : "精算を登録できませんでした。";
+    : isDuplicateMode
+      ? "精算項目を複製できませんでした。"
+      : "精算を登録できませんでした。";
   const [actualDate, setActualDate] = useState(formatDateForDisplay(actualDateInitialValue));
   const [description, setDescription] = useState(descriptionInitialValue);
   const [amount, setAmount] = useState(amountInitialValue);
@@ -52,7 +69,7 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
     auxiliaryLabelsInitialValue?.map((label) => label.id) ?? [],
   );
   const [selectedFundId, setSelectedFundId] = useState(
-    isEditMode ? String(props.currentFundId) : String(props.fundId),
+    isEditMode || isDuplicateMode ? String(props.currentFundId) : String(props.fundId),
   );
   const [selectedCategoryId, setSelectedCategoryId] = useState(
     isEditMode && props.currentCategoryId !== null ? String(props.currentCategoryId) : "",
@@ -107,6 +124,16 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
                 notes,
                 auxiliaryLabelIds: selectedAuxiliaryLabelIds,
               }
+            : isDuplicateMode
+              ? {
+                  fundId: props.currentFundId,
+                  categoryId: props.entry.categoryId,
+                  actualDate: normalizeDateForApi(actualDate),
+                  description,
+                  amount: Number(amount),
+                  notes,
+                  auxiliaryLabelIds: selectedAuxiliaryLabelIds,
+                }
             : {
                 fundId: props.fundId,
                 categoryId: props.item.categoryId,

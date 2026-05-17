@@ -8,12 +8,10 @@ type FundPlannedItemsSectionProps = {
   amountDisplayMode: FundDetailAmountDisplayMode;
   createHref: string;
   createState?: unknown;
-  deleteError?: string;
-  deletingItemId?: number | null;
   focusedItemId?: number | null;
   items: PlannedItem[];
   notes: FundDetailNoteController;
-  onDeleteItem: (item: PlannedItem) => void;
+  onDuplicateItem: (item: PlannedItem) => void;
   onEditItem: (item: PlannedItem) => void;
   onSettleItem: (item: PlannedItem) => void;
   sortControls: ReactNode;
@@ -24,12 +22,10 @@ export function FundPlannedItemsSection({
   amountDisplayMode,
   createHref,
   createState,
-  deleteError = "",
-  deletingItemId = null,
   focusedItemId,
   items,
   notes,
-  onDeleteItem,
+  onDuplicateItem,
   onEditItem,
   onSettleItem,
   sortControls,
@@ -54,11 +50,6 @@ export function FundPlannedItemsSection({
           </Link>
         </div>
       </div>
-      {deleteError ? (
-        <p className="budget-form-status budget-form-status-error" role="alert">
-          {deleteError}
-        </p>
-      ) : null}
       {totalItemCount === 0 ? (
         <p className="detail-empty-state">未精算の計画項目はまだありません。</p>
       ) : items.length === 0 ? (
@@ -97,6 +88,16 @@ export function FundPlannedItemsSection({
               </button>
               <button
                 type="button"
+                className="detail-action-button detail-action-button-duplicate"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDuplicateItem(item);
+                }}
+              >
+                複製
+              </button>
+              <button
+                type="button"
                 className="detail-action-button detail-action-button-edit"
                 onClick={(event) => {
                   event.stopPropagation();
@@ -104,17 +105,6 @@ export function FundPlannedItemsSection({
                 }}
               >
                 編集
-              </button>
-              <button
-                type="button"
-                className="detail-action-button detail-action-button-danger"
-                disabled={deletingItemId === item.id}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onDeleteItem(item);
-                }}
-              >
-                {deletingItemId === item.id ? "削除中..." : "削除"}
               </button>
             </FundHistoryEntry>
           ))}

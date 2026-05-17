@@ -11,6 +11,7 @@ import { readApiErrorMessage } from "../forms/useEntryForm";
 import { ActualEntryDialog } from "./ActualEntryDialog";
 import { useAppSettings } from "../settings/AppSettings";
 import { type FundDetailSectionKey } from "../settings/fundDetailSectionOrder";
+import { DuplicatePlannedItemDialog } from "./DuplicatePlannedItemDialog";
 import { EditFundDialog } from "./EditFundDialog";
 import { EditPlannedItemDialog } from "./EditPlannedItemDialog";
 import { FundActualEntriesSection } from "./FundActualEntriesSection";
@@ -81,14 +82,14 @@ export function FundDetailPage() {
     },
   } = useAppSettings();
   const [settlingItem, setSettlingItem] = useState<PlannedItem | null>(null);
+  const [duplicatingPlannedItem, setDuplicatingPlannedItem] = useState<PlannedItem | null>(null);
+  const [duplicatingActualEntry, setDuplicatingActualEntry] = useState<ActualEntry | null>(null);
   const [editingActualEntry, setEditingActualEntry] = useState<ActualEntry | null>(null);
   const [editingItem, setEditingItem] = useState<PlannedItem | null>(null);
   const [isEditingFund, setIsEditingFund] = useState(false);
   const [isCrossAggregateExpanded, setIsCrossAggregateExpanded] = useState(false);
-  const [deletingPlannedItemId, setDeletingPlannedItemId] = useState<number | null>(null);
   const [deletingPlannedHistoryItemId, setDeletingPlannedHistoryItemId] = useState<number | null>(null);
   const [restoringPlannedHistoryItemId, setRestoringPlannedHistoryItemId] = useState<number | null>(null);
-  const [plannedItemDeleteError, setPlannedItemDeleteError] = useState("");
   const [plannedHistoryDeleteError, setPlannedHistoryDeleteError] = useState("");
   const [plannedHistoryRestoreError, setPlannedHistoryRestoreError] = useState("");
   const [fiscalYearNotice, setFiscalYearNotice] = useState("");
@@ -368,6 +369,7 @@ export function FundDetailPage() {
         createState={{ backgroundLocation: location }}
         focusedEntryId={focusedActualEntryId}
         notes={actualNotes}
+        onDuplicateEntry={setDuplicatingActualEntry}
         onEditEntry={setEditingActualEntry}
         sortControls={
           <FundSortButtons
@@ -390,8 +392,6 @@ export function FundDetailPage() {
               : `/planned-items/new${setFiscalYearInSearch(`?fundId=${data.fund.id}`, fundFiscalYear)}`
           }
           createState={{ backgroundLocation: location }}
-          deleteError={plannedItemDeleteError}
-          deletingItemId={deletingPlannedItemId}
           focusedItemId={focusedPlannedItemId}
           sortControls={
             <FundSortButtons
@@ -402,7 +402,7 @@ export function FundDetailPage() {
           }
           items={sortedPlannedItems}
           notes={plannedNotes}
-          onDeleteItem={deletePlannedItem}
+          onDuplicateItem={setDuplicatingPlannedItem}
           onEditItem={setEditingItem}
           onSettleItem={setSettlingItem}
           totalItemCount={data.plannedItems.length}
@@ -431,34 +431,8 @@ export function FundDetailPage() {
     setSearchParams(nextParams, { replace: true });
   }
 
-  async function deletePlannedItem(item: PlannedItem) {
-    setDeletingPlannedItemId(item.id);
-    setPlannedItemDeleteError("");
-    setPlannedHistoryDeleteError("");
-    setPlannedHistoryRestoreError("");
-
-    try {
-      const response = await apiFetch(`/api/planned-items/${item.id}`, {
-        method: "DELETE",
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        setPlannedItemDeleteError(readApiErrorMessage(payload, "計画項目を削除できませんでした。"));
-        return;
-      }
-
-      await refreshFundDetail();
-    } catch {
-      setPlannedItemDeleteError("計画項目を削除できませんでした。");
-    } finally {
-      setDeletingPlannedItemId(null);
-    }
-  }
-
   async function deleteCancelledPlannedItem(item: PlannedItemHistory) {
     setDeletingPlannedHistoryItemId(item.id);
-    setPlannedItemDeleteError("");
     setPlannedHistoryDeleteError("");
     setPlannedHistoryRestoreError("");
 
@@ -483,7 +457,6 @@ export function FundDetailPage() {
 
   async function restoreCancelledPlannedItem(item: PlannedItemHistory) {
     setRestoringPlannedHistoryItemId(item.id);
-    setPlannedItemDeleteError("");
     setPlannedHistoryDeleteError("");
     setPlannedHistoryRestoreError("");
 
@@ -574,6 +547,16 @@ export function FundDetailPage() {
           onSaved={refreshFundDetail}
         />
       ) : null}
+      {duplicatingActualEntry ? (
+        <ActualEntryDialog
+          key={`duplicate-${duplicatingActualEntry.id}`}
+          mode="duplicate"
+          currentFundId={parsedFundId}
+          entry={duplicatingActualEntry}
+          onClose={() => setDuplicatingActualEntry(null)}
+          onSaved={refreshFundDetail}
+        />
+      ) : null}
       {editingActualEntry ? (
         <ActualEntryDialog
           key={editingActualEntry.id}
@@ -585,6 +568,15 @@ export function FundDetailPage() {
           currentFundId={parsedFundId}
           entry={editingActualEntry}
           onClose={() => setEditingActualEntry(null)}
+          onSaved={refreshFundDetail}
+        />
+      ) : null}
+      {duplicatingPlannedItem ? (
+        <DuplicatePlannedItemDialog
+          key={duplicatingPlannedItem.id}
+          fundId={parsedFundId}
+          item={duplicatingPlannedItem}
+          onClose={() => setDuplicatingPlannedItem(null)}
           onSaved={refreshFundDetail}
         />
       ) : null}

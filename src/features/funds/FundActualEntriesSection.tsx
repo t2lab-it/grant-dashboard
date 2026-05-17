@@ -11,6 +11,7 @@ type FundActualEntriesSectionProps = {
   entries: ActualEntry[];
   focusedEntryId?: number | null;
   notes: FundDetailNoteController;
+  onDuplicateEntry: (entry: ActualEntry) => void;
   onEditEntry: (entry: ActualEntry) => void;
   sortControls: ReactNode;
   totalEntryCount: number;
@@ -23,6 +24,7 @@ export function FundActualEntriesSection({
   entries,
   focusedEntryId,
   notes,
+  onDuplicateEntry,
   onEditEntry,
   sortControls,
   totalEntryCount,
@@ -79,6 +81,16 @@ export function FundActualEntriesSection({
                 }}
               >
                 編集
+              </button>
+              <button
+                type="button"
+                className="detail-action-button detail-action-button-duplicate"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDuplicateEntry(entry);
+                }}
+              >
+                複製
               </button>
             </FundHistoryEntry>
           ))}

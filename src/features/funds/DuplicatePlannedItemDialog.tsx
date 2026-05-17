@@ -1,31 +1,30 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
 import { apiFetch, apiGet } from "../../lib/api";
 import { ClassificationCheckboxGroup } from "../classifications/ClassificationCheckboxGroup";
 import type { ClassificationResponse } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
-import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
+import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { FormFeedback } from "../forms/FormFeedback";
 import { readApiErrorMessage } from "../forms/useEntryForm";
-import { useBudgetTargetOptions, useCloseOnEscape } from "./fundDetailDialogSupport";
+import { useCloseOnEscape } from "./fundDetailDialogSupport";
 import type { PlannedItem } from "./fundDetailTypes";
 
-export type EditPlannedItemDialogProps = {
+type DuplicatePlannedItemDialogProps = {
   fundId: number;
   item: PlannedItem;
   onClose: () => void;
   onSaved: () => Promise<void>;
 };
 
-export function EditPlannedItemDialog({
+export function DuplicatePlannedItemDialog({
   fundId,
   item,
   onClose,
   onSaved,
-}: EditPlannedItemDialogProps) {
-  const [selectedFundId, setSelectedFundId] = useState(String(fundId));
-  const [selectedCategoryId, setSelectedCategoryId] = useState(String(item.categoryId));
+}: DuplicatePlannedItemDialogProps) {
+  const [plannedDate, setPlannedDate] = useState(formatDateForDisplay(new Date().toISOString().slice(0, 10)));
   const [scheduledMonth, setScheduledMonth] = useState(item.scheduledMonth);
   const [description, setDescription] = useState(item.description);
   const [amount, setAmount] = useState(String(item.amount));
@@ -37,7 +36,6 @@ export function EditPlannedItemDialog({
   const [infoMessage, setInfoMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
-  const { funds, categories, hasSelectedFund } = useBudgetTargetOptions(selectedFundId, true);
   const { data: rawClassificationData } = useQuery({
     queryKey: ["classifications"],
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
@@ -45,16 +43,6 @@ export function EditPlannedItemDialog({
   const classificationData = normalizeClassifications(rawClassificationData);
 
   useCloseOnEscape(onClose, !isSubmitting);
-
-  useEffect(() => {
-    if (selectedCategoryId.length === 0) {
-      return;
-    }
-
-    if (!categories.some((category) => String(category.id) === selectedCategoryId)) {
-      setSelectedCategoryId("");
-    }
-  }, [categories, selectedCategoryId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,12 +52,13 @@ export function EditPlannedItemDialog({
     setWarnings([]);
 
     try {
-      const response = await apiFetch(`/api/planned-items/${item.id}`, {
-        method: "PUT",
+      const response = await apiFetch("/api/planned-items", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fundId: Number(selectedFundId),
-          categoryId: Number(selectedCategoryId),
+          fundId,
+          categoryId: item.categoryId,
+          plannedDate: normalizeDateForApi(plannedDate),
           scheduledMonth,
           description,
           amount: Number(amount),
@@ -80,7 +69,7 @@ export function EditPlannedItemDialog({
       const payload = await response.json();
 
       if (!response.ok) {
-        setBlockingMessage(readApiErrorMessage(payload, "計画項目を更新できませんでした。"));
+        setBlockingMessage(readApiErrorMessage(payload, "計画項目を複製できませんでした。"));
         return;
       }
 
@@ -90,66 +79,14 @@ export function EditPlannedItemDialog({
         : [];
 
       if (nextWarnings.length > 0) {
-        setInfoMessage("計画項目を保存しました。警告を確認してください。");
+        setInfoMessage("計画項目を複製しました。警告を確認してください。");
         setWarnings(nextWarnings);
         return;
       }
 
       onClose();
     } catch {
-      setBlockingMessage("計画項目を更新できませんでした。");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  async function handleCancel() {
-    setIsSubmitting(true);
-    setBlockingMessage("");
-    setInfoMessage("");
-    setWarnings([]);
-
-    try {
-      const response = await apiFetch(`/api/planned-items/${item.id}/cancel`, {
-        method: "POST",
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        setBlockingMessage(readApiErrorMessage(payload, "計画項目を取り消せませんでした。"));
-        return;
-      }
-
-      await onSaved();
-      onClose();
-    } catch {
-      setBlockingMessage("計画項目を取り消せませんでした。");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  async function handleDelete() {
-    setIsSubmitting(true);
-    setBlockingMessage("");
-    setInfoMessage("");
-    setWarnings([]);
-
-    try {
-      const response = await apiFetch(`/api/planned-items/${item.id}`, {
-        method: "DELETE",
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        setBlockingMessage(readApiErrorMessage(payload, "計画項目を削除できませんでした。"));
-        return;
-      }
-
-      await onSaved();
-      onClose();
-    } catch {
-      setBlockingMessage("計画項目を削除できませんでした。");
+      setBlockingMessage("計画項目を複製できませんでした。");
     } finally {
       setIsSubmitting(false);
     }
@@ -157,32 +94,27 @@ export function EditPlannedItemDialog({
 
   return (
     <ModalShell
-      ariaLabelledBy="edit-planned-item-dialog-title"
+      ariaLabelledBy="duplicate-planned-item-dialog-title"
       canCloseOnBackdrop={!isSubmitting}
       onRequestClose={onClose}
     >
       <>
         <div className="budget-modal-header">
           <div>
-            <h3 id="edit-planned-item-dialog-title">計画項目を編集</h3>
+            <h3 id="duplicate-planned-item-dialog-title">計画項目を複製</h3>
             <p className="budget-modal-description">{item.description}</p>
           </div>
         </div>
 
         <form className="budget-entry-form" onSubmit={handleSubmit}>
-          <FundCategorySelectFields
-            categories={categories}
-            categoryId={selectedCategoryId}
-            categoryLabel="費目ID"
-            fundId={selectedFundId}
-            fundLabel="資金ID"
-            funds={funds}
-            hasSelectedFund={hasSelectedFund}
-            onCategoryChange={setSelectedCategoryId}
-            onFundChange={(value) => {
-              setSelectedFundId(value);
-              setSelectedCategoryId("");
-            }}
+          <DateField
+            buttonAriaLabel="立案日カレンダーを開く"
+            calendarAriaLabel="立案日カレンダー"
+            label="立案日"
+            name="plannedDate"
+            onChange={setPlannedDate}
+            textAriaLabel="立案日"
+            value={plannedDate}
           />
           <label className="budget-entry-field">
             <span>執行予定月</span>
@@ -229,33 +161,13 @@ export function EditPlannedItemDialog({
             selectedIds={selectedAuxiliaryLabelIds}
             onChange={setSelectedAuxiliaryLabelIds}
           />
-          <div className="budget-modal-actions budget-modal-actions-between">
-            <div className="budget-modal-actions">
-              <button
-                type="button"
-                className="detail-action-button detail-action-button-danger"
-                disabled={isSubmitting}
-                onClick={handleCancel}
-              >
-                取消
-              </button>
-              <button
-                type="button"
-                className="detail-action-button detail-action-button-danger"
-                disabled={isSubmitting}
-                onClick={handleDelete}
-              >
-                削除
-              </button>
-            </div>
-            <div className="budget-modal-actions">
-              <button type="button" className="budget-modal-secondary" onClick={onClose}>
-                閉じる
-              </button>
-              <button className="budget-entry-submit" disabled={isSubmitting} type="submit">
-                {isSubmitting ? "保存中..." : "更新を保存"}
-              </button>
-            </div>
+          <div className="budget-modal-actions">
+            <button type="button" className="budget-modal-secondary" onClick={onClose}>
+              閉じる
+            </button>
+            <button className="budget-entry-submit" disabled={isSubmitting} type="submit">
+              {isSubmitting ? "保存中..." : "複製を保存"}
+            </button>
           </div>
         </form>
 

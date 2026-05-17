@@ -54,6 +54,7 @@ type FundRow = {
 type FundActualEntryRow = {
   id: number;
   actualDate: string;
+  categoryId: number;
   categoryName: string;
   description: string;
   amount: number;
@@ -256,6 +257,7 @@ export function getFundSnapshot(db: Database.Database, fundId: number) {
       SELECT
         ae.id,
         ae.actual_date AS actualDate,
+        ae.category_id AS categoryId,
         c.name AS categoryName,
         ae.description,
         ae.amount,

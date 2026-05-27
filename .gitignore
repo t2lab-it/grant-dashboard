@@ -1,6 +1,6 @@
 .superpowers/
 .worktrees/
-/docs/superpowers/plans/
+/docs/superpowers/
 *.db
 *.sqlite
 *.sqlite3

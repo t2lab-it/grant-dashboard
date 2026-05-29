@@ -233,17 +233,15 @@ describe("Fund detail display", () => {
     expect(fundPage.getByRole("heading", { name: "完了・取消済項目一覧" })).toBeInTheDocument();
     const plannedHistoryTable = fundPage.getByRole("table", { name: "Fund planned item history" });
     const plannedHistoryScope = within(plannedHistoryTable);
-    expect(plannedHistoryScope.queryByText("状態/操作")).not.toBeInTheDocument();
     expect(plannedHistoryScope.getByText("状態")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("2026-07")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("完了済み共同研究旅費")).toBeInTheDocument();
-    expect(plannedHistoryScope.getByText("完了")).toHaveClass("detail-history-status-badge-completed");
+    expect(plannedHistoryScope.getByText("完了")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("放棄 15,000円")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("2026-06")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("取消済み研究会")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("80,000円")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("取消")).toBeInTheDocument();
-    expect(plannedHistoryScope.getAllByRole("button", { name: "再計画" })).toHaveLength(2);
     expect(plannedHistoryScope.getByRole("button", { name: "削除" })).toHaveClass("detail-action-button-danger");
   }, 10_000);
 

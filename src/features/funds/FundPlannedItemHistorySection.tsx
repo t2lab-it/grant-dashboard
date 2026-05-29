@@ -50,7 +50,7 @@ export function FundPlannedItemHistorySection({
         <p className="detail-empty-state">条件に一致する項目はありません。</p>
       ) : (
         <div
-          className="detail-table detail-history-table detail-history-table-planned"
+          className="detail-table detail-history-table detail-history-table-planned detail-history-table-planned-archive"
           role="table"
           aria-label="Fund planned item history"
         >
@@ -59,7 +59,8 @@ export function FundPlannedItemHistorySection({
             <span>費目</span>
             <span>内容</span>
             <span className="detail-history-heading-amount">金額</span>
-            <span>状態/操作</span>
+            <span className="detail-history-heading-status">状態</span>
+            <span className="detail-history-heading-actions">操作</span>
           </div>
           {items.map((item) => (
             <FundHistoryEntry
@@ -70,14 +71,25 @@ export function FundPlannedItemHistorySection({
               item={item}
               noteController={notes}
               primaryText={item.scheduledMonth}
-              rowClassName="detail-planned-row"
+              rowClassName={"detail-planned-row detail-planned-history-row-" + item.status}
+              extraCells={
+                <span className="detail-history-status-cell">
+                  <span
+                    className={
+                      "detail-history-status-badge detail-history-status-badge-" +
+                      (item.status === "completed" ? "completed" : "cancelled")
+                    }
+                  >
+                    {item.status === "completed" ? "完了" : "取消"}
+                  </span>
+                  {item.status === "completed" && item.remainingAmount > 0 ? (
+                    <span className="detail-history-waived-amount">
+                      {"放棄 " + formatAmount(item.remainingAmount, amountDisplayMode)}
+                    </span>
+                  ) : null}
+                </span>
+              }
             >
-              <span className="detail-history-status">
-                <span>{item.status === "completed" ? "完了" : "取消"}</span>
-                {item.status === "completed" && item.remainingAmount > 0 ? (
-                  <span>{"放棄 " + formatAmount(item.remainingAmount, amountDisplayMode)}</span>
-                ) : null}
-              </span>
               {onRestoreCancelledItem ? (
                 <button
                   type="button"

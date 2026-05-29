@@ -2190,6 +2190,16 @@ a {
     minmax(220px, 1.5fr);
 }
 
+.detail-history-table-planned-archive {
+  --detail-history-columns:
+    minmax(112px, 0.85fr)
+    minmax(112px, 0.85fr)
+    minmax(260px, 2.7fr)
+    minmax(112px, 0.85fr)
+    minmax(104px, 0.8fr)
+    minmax(150px, 1.1fr);
+}
+
 .detail-history-table-actual .detail-history-head,
 .detail-history-table-actual .detail-history-row,
 .detail-history-table-planned .detail-history-head,
@@ -2335,6 +2345,20 @@ a {
   background: rgba(33, 49, 72, 0.98);
 }
 
+:root[data-theme="dark"] .detail-history-status-badge-completed {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+}
+
+:root[data-theme="dark"] .detail-history-status-badge-cancelled {
+  background: rgba(248, 113, 113, 0.18);
+  color: #fca5a5;
+}
+
+:root[data-theme="dark"] .detail-history-waived-amount {
+  color: #b4c1d2;
+}
+
 .detail-history-description {
   display: grid;
   gap: 4px;
@@ -2384,15 +2408,49 @@ a {
   gap: 8px;
 }
 
-.detail-history-status {
+.detail-history-heading-status,
+.detail-history-status-cell {
+  justify-self: start;
+  text-align: left;
+}
+
+.detail-history-status-cell {
   display: inline-flex;
   flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
-  gap: 2px;
+  gap: 4px;
+}
+
+.detail-history-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.2rem;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.detail-history-status-badge-completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.detail-history-status-badge-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.detail-history-waived-amount {
   color: #526174;
   font-size: 0.82rem;
   line-height: 1.2;
+  white-space: nowrap;
 }
+
 
 .detail-action-button {
   display: inline-flex;

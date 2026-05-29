@@ -247,46 +247,54 @@ export function applyActualEntry(
   db: Database.Database,
   input: ActualEntryInput,
 ): CreateActualEntryResponse {
-  assertCategoryBelongsToFund(db, input.fundId, input.categoryId);
+  const createActualEntry = db.transaction((): CreateActualEntryResponse => {
+    assertCategoryBelongsToFund(db, input.fundId, input.categoryId);
 
-  if (input.plannedItemId !== undefined) {
-    const planned = db
-      .prepare("SELECT fund_id, category_id, amount FROM planned_items WHERE id = ?")
-      .get(input.plannedItemId) as PlannedItemRow | undefined;
+    if (input.plannedItemId !== undefined) {
+      const planned = db
+        .prepare("SELECT fund_id, category_id, amount FROM planned_items WHERE id = ?")
+        .get(input.plannedItemId) as PlannedItemRow | undefined;
 
-    if (
-      planned === undefined ||
-      planned.fund_id !== input.fundId ||
-      planned.category_id !== input.categoryId
-    ) {
-      throwEntryWorkflowError("planned_item_mismatch");
+      if (
+        planned === undefined ||
+        planned.fund_id !== input.fundId ||
+        planned.category_id !== input.categoryId
+      ) {
+        throwEntryWorkflowError("planned_item_mismatch");
+      }
     }
-  }
 
-  db.prepare(
-    `
-    INSERT INTO actual_entries (fund_id, category_id, planned_item_id, actual_date, description, amount, notes)
-    VALUES (@fundId, @categoryId, @plannedItemId, @actualDate, @description, @amount, @notes)
-    `,
-  ).run({ plannedItemId: null, ...input });
-  const actualEntryId = insertAndReadId(db);
-  setAuxiliaryLabelAssignments(db, "actual_entry", actualEntryId, input.auxiliaryLabelIds ?? []);
+    db.prepare(
+      `
+      INSERT INTO actual_entries (fund_id, category_id, planned_item_id, actual_date, description, amount, notes)
+      VALUES (@fundId, @categoryId, @plannedItemId, @actualDate, @description, @amount, @notes)
+      `,
+    ).run({ plannedItemId: null, ...input });
+    const actualEntryId = insertAndReadId(db);
+    setAuxiliaryLabelAssignments(db, "actual_entry", actualEntryId, input.auxiliaryLabelIds ?? []);
 
-  let remainingPlannedAmount: number | null = null;
+    let remainingPlannedAmount: number | null = null;
 
-  if (input.plannedItemId) {
-    const planned = db
-      .prepare("SELECT amount FROM planned_items WHERE id = ?")
-      .get(input.plannedItemId) as { amount: number };
+    if (input.plannedItemId) {
+      const planned = db
+        .prepare("SELECT amount FROM planned_items WHERE id = ?")
+        .get(input.plannedItemId) as { amount: number };
 
-    const actualTotal = db
-      .prepare("SELECT COALESCE(SUM(amount), 0) AS total FROM actual_entries WHERE planned_item_id = ?")
-      .get(input.plannedItemId) as { total: number };
+      const actualTotal = db
+        .prepare("SELECT COALESCE(SUM(amount), 0) AS total FROM actual_entries WHERE planned_item_id = ?")
+        .get(input.plannedItemId) as { total: number };
 
-    remainingPlannedAmount = planned.amount - actualTotal.total;
-  }
+      remainingPlannedAmount = planned.amount - actualTotal.total;
 
-  return { remainingPlannedAmount };
+      if (remainingPlannedAmount > 0 && input.keepRemainingPlanned === false) {
+        db.prepare("UPDATE planned_items SET status = 'completed' WHERE id = ?").run(input.plannedItemId);
+      }
+    }
+
+    return { remainingPlannedAmount };
+  }) as () => CreateActualEntryResponse;
+
+  return createActualEntry();
 }
 
 export function cancelPlannedItem(db: Database.Database, plannedItemId: number) {

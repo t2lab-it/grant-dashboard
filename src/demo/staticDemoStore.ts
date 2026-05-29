@@ -79,9 +79,10 @@ export type ActualEntryInput = {
   amount: number;
   notes: string;
   auxiliaryLabelIds?: number[];
+  keepRemainingPlanned?: boolean;
 };
 
-export type ActualEntryEditInput = Omit<ActualEntryInput, "plannedItemId">;
+export type ActualEntryEditInput = Omit<ActualEntryInput, "plannedItemId" | "keepRemainingPlanned">;
 type StaticSearchTab = "all" | "overdue" | "unsettled" | "unlinked";
 type StaticSearchEntryType = "planned" | "actual";
 
@@ -1487,10 +1488,15 @@ export function createStaticActualEntry(input: ActualEntryInput) {
     const plannedItem = input.plannedItemId === undefined
       ? undefined
       : state.planned_items.find((item) => item.id === input.plannedItemId);
+    const remainingPlannedAmount = plannedItem === undefined
+      ? null
+      : plannedItem.amount - getLinkedActuals(state, plannedItem.id).reduce((sum, row) => sum + row.amount, 0);
 
-    return {
-      remainingPlannedAmount: plannedItem === undefined ? null : plannedItem.amount - getLinkedActuals(state, plannedItem.id).reduce((sum, row) => sum + row.amount, 0),
-    };
+    if (plannedItem !== undefined && remainingPlannedAmount !== null && remainingPlannedAmount > 0 && input.keepRemainingPlanned === false) {
+      plannedItem.status = "completed";
+    }
+
+    return { remainingPlannedAmount };
   });
 }
 

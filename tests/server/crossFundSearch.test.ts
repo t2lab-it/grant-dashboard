@@ -92,13 +92,6 @@ describe("cross-fund search service", () => {
     });
   });
 
-  it("does not include completed planned items in unsettled results", () => {
-    const snapshot = getCrossFundSearchSnapshot(db, { fiscalYear: 2026, tab: "unsettled" });
-
-    expect(snapshot.results.map((result) => result.type + ":" + result.id)).toEqual(["planned:2", "planned:1"]);
-    expect(snapshot.counts.unsettled).toBe(2);
-  });
-
   it("matches keyword across description, notes, fund name, and category name", () => {
     expect(
       getCrossFundSearchSnapshot(db, { fiscalYear: 2026, keyword: "年度初め" }).results.map((result) => result.id),

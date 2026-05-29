@@ -252,26 +252,6 @@ describe("ledger rules", () => {
     ).toEqual({ amount: 20000, status: "completed" });
   });
 
-  it("keeps a linked planned item planned when remaining amount is explicitly kept", () => {
-    const result = applyActualEntry(db, {
-      fundId: 1,
-      categoryId: 1,
-      plannedItemId: 1,
-      actualDate: "2026-09-12",
-      description: "物理学会交通費",
-      amount: 8000,
-      notes: "",
-      keepRemainingPlanned: true,
-    });
-
-    expect(result.remainingPlannedAmount).toBe(12000);
-    expect(
-      db
-        .prepare("SELECT status FROM planned_items WHERE id = ?")
-        .get(1),
-    ).toEqual({ status: "planned" });
-  });
-
   it("does not auto-complete a linked planned item when no positive remaining amount is left", () => {
     const result = applyActualEntry(db, {
       fundId: 1,

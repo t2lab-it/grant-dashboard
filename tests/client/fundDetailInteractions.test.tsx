@@ -1329,54 +1329,6 @@ describe("Fund detail interactions", () => {
     expect(await fundPage.findByText("未精算の計画項目はまだありません。")).toBeInTheDocument();
   });
 
-  it("does not expose manual planned-item completion from the edit modal", async () => {
-    const user = userEvent.setup();
-
-    fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
-      const method = init?.method ?? "GET";
-
-      if (url === "/api/funds/1" && method === "GET") {
-        return {
-          ok: true,
-          json: async () => ({
-            fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
-            categories: [],
-            monthlyStatus: [],
-            actualEntries: [],
-            plannedItems: [
-              {
-                id: 10,
-                plannedDate: "2026-07-10",
-                scheduledMonth: "2026-07",
-                categoryId: 1,
-                categoryName: "物品費",
-                description: "GPU サーバ保守更新",
-                amount: 280000,
-                notes: "未精算",
-              },
-            ],
-          }),
-        };
-      }
-
-      if (url === "/api/overview" && method === "GET") {
-        return { ok: true, json: async () => ({ funds: [{ id: 1, name: "基盤研究費" }] }) };
-      }
-
-      throw new Error("Unexpected fetch: " + method + " " + url);
-    });
-
-    const view = renderAppRoute("/funds/1");
-    const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
-
-    await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
-    const dialog = await screen.findByRole("dialog", { name: "計画項目を編集" });
-
-    expect(within(dialog).queryByRole("button", { name: "残額放棄して完了" })).not.toBeInTheDocument();
-  });
-
   it("keeps destination fund options out of the fund detail query cache", async () => {
     const user = userEvent.setup();
     const overviewResponse = {

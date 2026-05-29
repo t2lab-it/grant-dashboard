@@ -69,6 +69,7 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
   const [selectedAuxiliaryLabelIds, setSelectedAuxiliaryLabelIds] = useState<number[]>(
     auxiliaryLabelsInitialValue?.map((label) => label.id) ?? [],
   );
+  const [keepRemainingPlanned, setKeepRemainingPlanned] = useState(false);
   const [selectedFundId, setSelectedFundId] = useState(
     isEditMode || isDuplicateMode ? String(props.currentFundId) : String(props.fundId),
   );
@@ -153,6 +154,7 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
                 amount: parsedAmount,
                 notes,
                 auxiliaryLabelIds: selectedAuxiliaryLabelIds,
+                keepRemainingPlanned,
               },
         ),
       });
@@ -271,6 +273,17 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
               value={notes}
             />
           </label>
+          {!isEditMode && !isDuplicateMode ? (
+            <label className="budget-entry-checkbox">
+              <input
+                checked={keepRemainingPlanned}
+                name="keepRemainingPlanned"
+                onChange={(event) => setKeepRemainingPlanned(event.target.checked)}
+                type="checkbox"
+              />
+              <span>残額を予定として残す</span>
+            </label>
+          ) : null}
           <ClassificationCheckboxGroup
             title="補助ラベル"
             options={classificationData.auxiliaryLabels}

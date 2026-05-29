@@ -66,6 +66,7 @@ export type CreateActualEntryRequest = {
   amount: number;
   notes: string;
   auxiliaryLabelIds?: number[];
+  keepRemainingPlanned?: boolean;
 };
 
 export type CreateActualEntryResponse = {

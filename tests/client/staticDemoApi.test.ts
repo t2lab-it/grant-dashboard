@@ -165,6 +165,39 @@ describe("static demo API", () => {
     );
   });
 
+  test("auto-completes a linked planned item when static actual entry leaves unkept remaining amount", async () => {
+    const createResponse = await handleStaticDemoRequest("/api/actual-entries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fundId: 1,
+        categoryId: 1,
+        plannedItemId: 1,
+        actualDate: "2026-05-30",
+        description: "GPUサーバ更新精算",
+        amount: 100000,
+        notes: "静的デモ精算",
+        keepRemainingPlanned: false,
+      }),
+    });
+
+    expect(createResponse.ok).toBe(true);
+    expect(await readJson(createResponse)).toEqual({ remainingPlannedAmount: 300000 });
+
+    const fundResponse = await handleStaticDemoRequest("/api/funds/1", { method: "GET" });
+    const fund = await readJson(fundResponse) as {
+      plannedItems: Array<{ id: number }>;
+      plannedItemHistory: Array<{ id: number; status: string; remainingAmount: number }>;
+    };
+
+    expect(fund.plannedItems.some((item) => item.id === 1)).toBe(false);
+    expect(fund.plannedItemHistory).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 1, status: "completed", remainingAmount: 300000 }),
+      ]),
+    );
+  });
+
   test("completes and restores partially settled planned items in browser-local demo data", async () => {
     const completeResponse = await handleStaticDemoRequest("/api/planned-items/1/complete", { method: "POST" });
 

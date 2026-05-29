@@ -140,6 +140,7 @@ export const actualEntrySchema = z
     amount: positiveAmountSchema,
     notes: z.string(),
     auxiliaryLabelIds: classificationIdListSchema,
+    keepRemainingPlanned: z.boolean().default(true),
   })
   .strict();
 

@@ -151,11 +151,11 @@ describe("Fund detail interactions", () => {
     await user.type(within(dialog).getByLabelText("費目名"), "設備費");
     fireEvent.change(within(dialog).getByLabelText("横断集計カテゴリ"), { target: { value: "equipment" } });
     await user.clear(within(dialog).getByLabelText("予算額"));
-    await user.type(within(dialog).getByLabelText("予算額"), "700,000 * 2");
+    await user.type(within(dialog).getByLabelText("予算額"), "1400000");
     await user.click(within(dialog).getByRole("button", { name: "費目を追加" }));
     await user.type(within(dialog).getAllByLabelText("費目名")[1], "外注費");
     fireEvent.change(within(dialog).getAllByLabelText("横断集計カテゴリ")[1], { target: { value: "other" } });
-    await user.type(within(dialog).getAllByLabelText("予算額")[1], "500,000 / 2");
+    await user.type(within(dialog).getAllByLabelText("予算額")[1], "250000");
     expect(within(dialog).getByRole("region", { name: "費目予算の合計確認" })).toHaveTextContent(
       /差額\s*4,450,000円/,
     );
@@ -660,9 +660,6 @@ describe("Fund detail interactions", () => {
     expect(within(dialog).getByLabelText("実績日カレンダー")).toHaveAttribute("type", "date");
     expect(within(dialog).getByLabelText("説明")).toHaveValue("GPU サーバ保守更新");
     expect(within(dialog).getByLabelText("金額")).toHaveValue("280000");
-    fireEvent.change(within(dialog).getByLabelText("金額"), {
-      target: { value: "560,000 / 2" },
-    });
     expect(within(dialog).getByRole("button", { name: "閉じる" })).toBeInTheDocument();
     expect(within(dialog).queryByRole("button", { name: "キャンセル" })).not.toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText("実績日カレンダー"), {
@@ -758,9 +755,6 @@ describe("Fund detail interactions", () => {
     await user.click(within(plannedTable).getByRole("button", { name: "複製" }));
 
     const dialog = await screen.findByRole("dialog", { name: "計画項目を複製" });
-    fireEvent.change(within(dialog).getByLabelText("金額"), {
-      target: { value: "560,000 / 2" },
-    });
     await user.click(within(dialog).getByRole("button", { name: "複製を保存" }));
 
     expect(fetchMock).toHaveBeenCalledWith("/api/planned-items", {
@@ -851,7 +845,7 @@ describe("Fund detail interactions", () => {
 
     const dialog = await screen.findByRole("dialog", { name: "精算項目を複製" });
     fireEvent.change(within(dialog).getByLabelText("金額"), {
-      target: { value: "150,000 * 2" },
+      target: { value: "300000" },
     });
     await user.click(within(dialog).getByRole("button", { name: "複製を保存" }));
 
@@ -1175,7 +1169,7 @@ describe("Fund detail interactions", () => {
       target: { value: "GPU サーバ保守更新 改" },
     });
     fireEvent.change(within(dialog).getByLabelText("金額"), {
-      target: { value: "150,000 * 2" },
+      target: { value: "300000" },
     });
     fireEvent.change(within(dialog).getByLabelText("メモ"), {
       target: { value: "更新後メモ" },

@@ -278,6 +278,47 @@ describe("API planned-item routes", () => {
     });
   });
 
+  it("marks a partially settled planned item as completed through the API", async () => {
+    app.db.exec(`
+      INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount, status) VALUES
+        (2, 1, 1, '2026-10-20', '2026-10', '部分精算予定', 3000, 'planned');
+      INSERT INTO actual_entries (id, fund_id, category_id, planned_item_id, actual_date, description, amount, notes) VALUES
+        (10, 1, 1, 2, '2026-10-21', '部分精算', 1000, '');
+    `);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/planned-items/2/complete",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ success: true });
+    expect(
+      app.db
+        .prepare("SELECT amount, status FROM planned_items WHERE id = ?")
+        .get(2),
+    ).toEqual({ amount: 3000, status: "completed" });
+  });
+
+  it("returns 409 when completing a planned item with no linked actual entries", async () => {
+    app.db.exec(`
+      INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount, status) VALUES
+        (2, 1, 1, '2026-10-20', '2026-10', '未精算予定', 3000, 'planned');
+    `);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/planned-items/2/complete",
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({
+      code: "planned_item_complete_requires_actuals",
+      error: "Planned item is not partially settled",
+      message: "精算が紐づいている未精算の計画項目のみ完了にできます。",
+    });
+  });
+
   it("restores a cancelled planned item to planned status", async () => {
     app.db.exec(`
       INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount, status) VALUES
@@ -313,7 +354,7 @@ describe("API planned-item routes", () => {
     expect(response.json()).toEqual({
       code: "planned_item_not_cancelled_for_restore",
       error: "Planned item is not cancelled",
-      message: "取消済みの計画項目のみ計画に戻せます。",
+      message: "完了または取消済みの計画項目のみ計画に戻せます。",
     });
   });
 

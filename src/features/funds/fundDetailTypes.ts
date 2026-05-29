@@ -39,6 +39,8 @@ export type FundDetailResponse = {
     categoryName: string;
     description: string;
     amount: number;
+    remainingAmount: number;
+    status: "completed" | "cancelled";
     notes: string;
     auxiliaryLabels?: Array<{ id: number; kind: "auxiliary"; name: string; color: string }>;
   }>;
@@ -61,6 +63,8 @@ export type FundDetailResponse = {
     categoryName: string;
     description: string;
     amount: number;
+    remainingAmount: number;
+    status: "completed" | "cancelled";
     notes: string;
     auxiliaryLabels?: Array<{ id: number; kind: "auxiliary"; name: string; color: string }>;
   }>;

@@ -9,6 +9,8 @@ import {
 import {
   applyActualEntry,
   cancelPlannedItem,
+  completePlannedItem,
+  restorePlannedItem,
   upsertPlannedItem,
 } from "../../server/services/ledger";
 
@@ -258,6 +260,77 @@ describe("ledger rules", () => {
       .get(1) as { status: string };
 
     expect(unchanged.status).toBe("planned");
+  });
+
+  it("marks a partially settled planned item as completed without changing the original amount", () => {
+    applyActualEntry(db, {
+      fundId: 1,
+      categoryId: 1,
+      plannedItemId: 1,
+      actualDate: "2026-09-12",
+      description: "物理学会交通費",
+      amount: 8000,
+      notes: "",
+    });
+
+    completePlannedItem(db, 1);
+
+    expect(
+      db
+        .prepare("SELECT amount, status FROM planned_items WHERE id = ?")
+        .get(1),
+    ).toEqual({ amount: 20000, status: "completed" });
+  });
+
+  it("rejects completing a planned item with no linked actual entries", () => {
+    expectEntryWorkflowError(() => completePlannedItem(db, 1), "planned_item_complete_requires_actuals");
+
+    expect(
+      db
+        .prepare("SELECT status FROM planned_items WHERE id = ?")
+        .get(1),
+    ).toEqual({ status: "planned" });
+  });
+
+  it("rejects completing a planned item when no positive amount remains", () => {
+    applyActualEntry(db, {
+      fundId: 1,
+      categoryId: 1,
+      plannedItemId: 1,
+      actualDate: "2026-09-12",
+      description: "物理学会交通費",
+      amount: 20000,
+      notes: "",
+    });
+
+    expectEntryWorkflowError(() => completePlannedItem(db, 1), "planned_item_complete_requires_remaining");
+
+    expect(
+      db
+        .prepare("SELECT status FROM planned_items WHERE id = ?")
+        .get(1),
+    ).toEqual({ status: "planned" });
+  });
+
+  it("restores a completed planned item to planned status", () => {
+    applyActualEntry(db, {
+      fundId: 1,
+      categoryId: 1,
+      plannedItemId: 1,
+      actualDate: "2026-09-12",
+      description: "物理学会交通費",
+      amount: 8000,
+      notes: "",
+    });
+    completePlannedItem(db, 1);
+
+    restorePlannedItem(db, 1);
+
+    expect(
+      db
+        .prepare("SELECT status FROM planned_items WHERE id = ?")
+        .get(1),
+    ).toEqual({ status: "planned" });
   });
 
   it("rejects a linked actual entry when the planned item does not match the entry fund or category", () => {

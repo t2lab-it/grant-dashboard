@@ -69,6 +69,8 @@ type FundPlannedItemHistoryRow = {
   categoryName: string;
   description: string;
   amount: number;
+  remainingAmount: number;
+  status: "completed" | "cancelled";
   notes: string;
 };
 
@@ -274,6 +276,12 @@ export function getFundSnapshot(db: Database.Database, fundId: number) {
   const plannedItemHistoryRows = db
     .prepare(
       `
+      WITH linked_actuals AS (
+        SELECT planned_item_id, SUM(amount) AS linked_amount
+        FROM actual_entries
+        WHERE planned_item_id IS NOT NULL
+        GROUP BY planned_item_id
+      )
       SELECT
         p.id,
         p.planned_date AS plannedDate,
@@ -282,10 +290,16 @@ export function getFundSnapshot(db: Database.Database, fundId: number) {
         c.name AS categoryName,
         p.description,
         p.amount,
+        CASE
+          WHEN p.status = 'completed' AND p.amount - COALESCE(la.linked_amount, 0) > 0 THEN p.amount - COALESCE(la.linked_amount, 0)
+          ELSE 0
+        END AS remainingAmount,
+        p.status,
         p.notes
       FROM planned_items p
       INNER JOIN categories c ON c.id = p.category_id
-      WHERE p.fund_id = ? AND p.status = 'cancelled'
+      LEFT JOIN linked_actuals la ON la.planned_item_id = p.id
+      WHERE p.fund_id = ? AND p.status IN ('cancelled', 'completed')
       ORDER BY p.scheduled_month DESC, c.display_order, c.id, p.id DESC
       `,
     )

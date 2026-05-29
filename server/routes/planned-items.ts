@@ -3,6 +3,7 @@ import { handlePlannedItemRouteError } from "./formErrors";
 import { parsePositiveIntParam } from "./routeHelpers";
 import {
   cancelPlannedItem,
+  completePlannedItem,
   createPlannedItemsBulk,
   deletePlannedItem,
   restoreCancelledPlannedItem,
@@ -75,6 +76,28 @@ export function registerPlannedItemRoutes(app: FastifyInstance) {
 
     try {
       const result = cancelPlannedItem(app.db, plannedItemId);
+      reply.code(200).send(result);
+    } catch (error) {
+      if (handlePlannedItemRouteError(reply, error)) {
+        return;
+      }
+
+      throw error;
+    }
+  });
+
+  app.post("/api/planned-items/:plannedItemId/complete", (request, reply) => {
+    const plannedItemId = parsePositiveIntParam(
+      reply,
+      (request.params as { plannedItemId?: string }).plannedItemId,
+      "Invalid planned item id",
+    );
+    if (plannedItemId === undefined) {
+      return;
+    }
+
+    try {
+      const result = completePlannedItem(app.db, plannedItemId);
       reply.code(200).send(result);
     } catch (error) {
       if (handlePlannedItemRouteError(reply, error)) {

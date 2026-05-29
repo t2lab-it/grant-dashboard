@@ -7,6 +7,7 @@ import { apiFetch } from "../../lib/api";
 import { apiGet } from "../../lib/api";
 import type { ClassificationResponse } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
+import { parseNonnegativeAmountExpression, parsePositiveAmountExpression } from "../forms/amountExpression";
 import { readApiErrorMessage, useEntryForm } from "../forms/useEntryForm";
 import { buildFundBudgetSummary, FundBudgetSummary } from "./FundBudgetSummary";
 import { createFundCategoryDraft, nextFundCategoryDraftId, type FundCategoryDraft } from "./FundFormFields";
@@ -85,21 +86,32 @@ export function NewFundForm() {
         };
       }
 
+      let awardedAmount: number;
+      let parsedCategories: Array<{ name: string; amount: number; crossAggregateCategory: string }>;
+      try {
+        awardedAmount = parsePositiveAmountExpression(values.awardedAmount, "交付額");
+        parsedCategories = categories.map((category) => ({
+          name: category.name,
+          amount: parseNonnegativeAmountExpression(category.amount, "予算額"),
+          crossAggregateCategory: category.crossAggregateCategory || "unset",
+        }));
+      } catch (error) {
+        return {
+          blockingMessage: error instanceof Error ? error.message : "金額を確認してください。",
+        };
+      }
+
       const response = await apiFetch("/api/funds", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: values.name,
           fiscalYear: Number(values.fiscalYear),
-          awardedAmount: Number(values.awardedAmount),
+          awardedAmount,
           notes: values.notes,
           projectTagIds: selectedProjectTagIds,
           auxiliaryLabelIds: selectedAuxiliaryLabelIds,
-          categories: categories.map((category) => ({
-            name: category.name,
-            amount: category.amount.trim().length > 0 ? Number(category.amount) : Number.NaN,
-            crossAggregateCategory: category.crossAggregateCategory || "unset",
-          })),
+          categories: parsedCategories,
         }),
       });
 

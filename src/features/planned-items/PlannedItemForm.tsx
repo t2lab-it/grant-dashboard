@@ -18,6 +18,7 @@ import { apiGet, apiPostJson } from "../../lib/api";
 import { FormFeedback } from "../forms/FormFeedback";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
+import { parsePositiveAmountExpression } from "../forms/amountExpression";
 import { readApiErrorMessage, useEntryForm } from "../forms/useEntryForm";
 import { useAppSettings } from "../settings/AppSettings";
 
@@ -168,7 +169,14 @@ export function PlannedItemForm() {
     const startIndex = parseYearMonth(bulkStartMonth);
     const endIndex = parseYearMonth(bulkEndMonth);
     const baseDescription = bulkBaseDescription.trim();
-    const amount = Number(bulkBaseAmount);
+    let amount = 0;
+    try {
+      amount = parsePositiveAmountExpression(bulkBaseAmount, "基準金額");
+    } catch (error) {
+      setBulkPreviewError(error instanceof Error ? error.message : "基準金額は有効な数式で入力してください。");
+      setBulkPreviewRows([]);
+      return;
+    }
 
     if (startIndex === null || endIndex === null) {
       setBulkPreviewError("開始月と終了月は YYYY-MM 形式で入力してください。");
@@ -184,12 +192,6 @@ export function PlannedItemForm() {
 
     if (baseDescription.length === 0) {
       setBulkPreviewError("基準説明を入力してください。");
-      setBulkPreviewRows([]);
-      return;
-    }
-
-    if (!Number.isInteger(amount) || amount <= 0) {
-      setBulkPreviewError("基準金額は1以上の整数で入力してください。");
       setBulkPreviewRows([]);
       return;
     }
@@ -221,6 +223,14 @@ export function PlannedItemForm() {
 
   async function submitSinglePlannedItem() {
     await submit(async () => {
+      let amount: number;
+      try {
+        amount = parsePositiveAmountExpression(values.amount, "金額");
+      } catch (error) {
+        return {
+          blockingMessage: error instanceof Error ? error.message : "金額を確認してください。",
+        };
+      }
       const result = await apiPostJson<CreatePlannedItemRequest, CreatePlannedItemResponse>(
         "/api/planned-items",
         {
@@ -229,7 +239,7 @@ export function PlannedItemForm() {
           plannedDate: normalizeDateForApi(values.plannedDate),
           scheduledMonth: values.scheduledMonth,
           description: values.description,
-          amount: Number(values.amount),
+          amount,
           notes: values.notes,
           auxiliaryLabelIds: selectedAuxiliaryLabelIds,
         },
@@ -261,6 +271,19 @@ export function PlannedItemForm() {
     }
 
     await submit(async () => {
+      let items: CreateBulkPlannedItemsRequest["items"];
+      try {
+        items = bulkPreviewRows.map((row) => ({
+          scheduledMonth: row.scheduledMonth,
+          description: row.description,
+          amount: parsePositiveAmountExpression(row.amount, "金額 " + row.scheduledMonth),
+        }));
+      } catch (error) {
+        return {
+          blockingMessage: error instanceof Error ? error.message : "金額を確認してください。",
+        };
+      }
+
       const result = await apiPostJson<CreateBulkPlannedItemsRequest, CreateBulkPlannedItemsResponse>(
         "/api/planned-items/bulk",
         {
@@ -269,11 +292,7 @@ export function PlannedItemForm() {
           plannedDate: normalizeDateForApi(values.plannedDate),
           notes: values.notes,
           auxiliaryLabelIds: selectedAuxiliaryLabelIds,
-          items: bulkPreviewRows.map((row) => ({
-            scheduledMonth: row.scheduledMonth,
-            description: row.description,
-            amount: Number(row.amount),
-          })),
+          items,
         },
       );
 
@@ -398,7 +417,8 @@ export function PlannedItemForm() {
                 data-direct-number-input="true"
                 name="amount"
                 onChange={(event) => setValue("amount", event.target.value)}
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={values.amount}
               />
             </label>
@@ -442,7 +462,8 @@ export function PlannedItemForm() {
                   data-direct-number-input="true"
                   name="bulkBaseAmount"
                   onChange={(event) => setBulkBaseAmount(event.target.value)}
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={bulkBaseAmount}
                 />
               </label>
@@ -477,7 +498,8 @@ export function PlannedItemForm() {
                     <input
                       aria-label={`金額 ${row.scheduledMonth}`}
                       data-direct-number-input="true"
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       value={row.amount}
                       onChange={(event) =>
                         updateBulkPreviewRow(row.scheduledMonth, "amount", event.target.value)

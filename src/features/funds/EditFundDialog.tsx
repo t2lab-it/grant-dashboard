@@ -5,6 +5,7 @@ import { apiFetch, apiGet } from "../../lib/api";
 import type { ClassificationResponse, ClassificationTag } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import { FormFeedback } from "../forms/FormFeedback";
+import { parseNonnegativeAmountExpression, parsePositiveAmountExpression } from "../forms/amountExpression";
 import { readApiErrorMessage } from "../forms/useEntryForm";
 import { buildFundBudgetSummary, FundBudgetSummary } from "./FundBudgetSummary";
 import {
@@ -117,6 +118,21 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
       return;
     }
 
+    let awardedAmount: number;
+    let parsedCategories: Array<{ id?: number; name: string; amount: number; crossAggregateCategory: string }>;
+    try {
+      awardedAmount = parsePositiveAmountExpression(values.awardedAmount, "交付額");
+      parsedCategories = categories.map((category) => ({
+        ...(category.categoryId === undefined ? {} : { id: category.categoryId }),
+        name: category.name,
+        amount: parseNonnegativeAmountExpression(category.amount, "予算額"),
+        crossAggregateCategory: category.crossAggregateCategory || "unset",
+      }));
+    } catch (error) {
+      setBlockingMessage(error instanceof Error ? error.message : "金額を確認してください。");
+      return;
+    }
+
     setIsSubmitting(true);
     setBlockingMessage("");
 
@@ -127,16 +143,11 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
         body: JSON.stringify({
           name: values.name,
           fiscalYear: Number(values.fiscalYear),
-          awardedAmount: Number(values.awardedAmount),
+          awardedAmount,
           notes: values.notes,
           projectTagIds: selectedProjectTagIds,
           auxiliaryLabelIds: selectedAuxiliaryLabelIds,
-          categories: categories.map((category) => ({
-            ...(category.categoryId === undefined ? {} : { id: category.categoryId }),
-            name: category.name,
-            amount: category.amount.trim().length > 0 ? Number(category.amount) : Number.NaN,
-            crossAggregateCategory: category.crossAggregateCategory || "unset",
-          })),
+          categories: parsedCategories,
         }),
       });
       const payload = await response.json();

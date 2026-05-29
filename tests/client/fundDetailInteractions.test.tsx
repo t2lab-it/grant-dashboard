@@ -120,7 +120,7 @@ describe("Fund detail interactions", () => {
     );
     expect(within(dialog).getByLabelText("予算名")).toHaveValue("基盤研究費");
     expect(within(dialog).getByLabelText("年度")).toHaveValue(2026);
-    expect(within(dialog).getByLabelText("交付額")).toHaveValue(5080000);
+    expect(within(dialog).getByLabelText("交付額")).toHaveValue("5080000");
     expect(within(dialog).getByLabelText("予算メモ")).toHaveValue("初期メモ");
     expect(within(dialog).getAllByLabelText("費目名")).toHaveLength(1);
     expect(within(dialog).getByLabelText("横断集計カテゴリ")).toHaveValue("equipment");
@@ -141,7 +141,7 @@ describe("Fund detail interactions", () => {
       /差額\s*-100,000円/,
     );
     await user.clear(within(dialog).getByLabelText("交付額"));
-    await user.type(within(dialog).getByLabelText("交付額"), "6100000");
+    await user.type(within(dialog).getByLabelText("交付額"), "6,000,000 + 100,000");
     expect(within(dialog).queryByText("費目予算の合計が交付額を超えています。")).not.toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: "保存" })).toBeEnabled();
     expect(within(dialog).getByRole("button", { name: "保存" })).not.toHaveClass("budget-entry-submit-disabled");
@@ -659,7 +659,7 @@ describe("Fund detail interactions", () => {
     expect(within(dialog).getByLabelText("実績日")).toHaveValue(today);
     expect(within(dialog).getByLabelText("実績日カレンダー")).toHaveAttribute("type", "date");
     expect(within(dialog).getByLabelText("説明")).toHaveValue("GPU サーバ保守更新");
-    expect(within(dialog).getByLabelText("金額")).toHaveValue(280000);
+    expect(within(dialog).getByLabelText("金額")).toHaveValue("280000");
     expect(within(dialog).getByRole("button", { name: "閉じる" })).toBeInTheDocument();
     expect(within(dialog).queryByRole("button", { name: "キャンセル" })).not.toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText("実績日カレンダー"), {
@@ -844,6 +844,9 @@ describe("Fund detail interactions", () => {
     await user.click(within(actualTable).getByRole("button", { name: "複製" }));
 
     const dialog = await screen.findByRole("dialog", { name: "精算項目を複製" });
+    fireEvent.change(within(dialog).getByLabelText("金額"), {
+      target: { value: "300000" },
+    });
     await user.click(within(dialog).getByRole("button", { name: "複製を保存" }));
 
     expect(fetchMock).toHaveBeenCalledWith("/api/actual-entries", {

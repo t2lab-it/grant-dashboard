@@ -99,6 +99,8 @@ describe("NewFundForm", () => {
     const view = renderAppRoute("/funds/new");
 
     await fillRequiredFields();
+    fireEvent.change(screen.getByLabelText("交付額"), { target: { value: "900,000 * 2" } });
+    fireEvent.change(screen.getByLabelText("予算額"), { target: { value: "350,000 * 2" } });
     fireEvent.change(screen.getByLabelText("横断集計カテゴリ"), { target: { value: "travel" } });
     await user.click(await screen.findByRole("checkbox", { name: "CREST 量子" }));
     await user.click(screen.getByRole("checkbox", { name: "学生支援" }));

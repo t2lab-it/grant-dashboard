@@ -133,6 +133,29 @@ describe("API planned-item routes", () => {
     ).toEqual({ count: 0 });
   });
 
+  it("returns 400 when planned-item amount exceeds the safe integer limit", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/planned-items",
+      payload: {
+        fundId: 1,
+        categoryId: 1,
+        plannedDate: "2026-10-01",
+        scheduledMonth: "2026-10",
+        description: "巨大な支出",
+        amount: Number.MAX_SAFE_INTEGER + 1,
+        notes: "",
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      code: "invalid_payload",
+      error: "Invalid request payload",
+      message: "入力内容を確認してください。",
+    });
+  });
+
   it("returns 400 for invalid planned-item input", async () => {
     const response = await app.inject({
       method: "POST",

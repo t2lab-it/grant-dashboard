@@ -8,6 +8,7 @@ import { normalizeClassifications } from "../classifications/classificationTypes
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { FormFeedback } from "../forms/FormFeedback";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
+import { parsePositiveAmountExpression } from "../forms/amountExpression";
 import { readApiErrorMessage } from "../forms/useEntryForm";
 import { useBudgetTargetOptions, useCloseOnEscape } from "./fundDetailDialogSupport";
 import type { ActualEntry, PlannedItem } from "./fundDetailTypes";
@@ -109,6 +110,15 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
     setIsSubmitting(true);
     setBlockingMessage("");
 
+    let parsedAmount: number;
+    try {
+      parsedAmount = parsePositiveAmountExpression(amount, "金額");
+    } catch (error) {
+      setBlockingMessage(error instanceof Error ? error.message : "金額を確認してください。");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const response = await apiFetch(isEditMode ? `/api/actual-entries/${props.entry.id}` : "/api/actual-entries", {
         method: isEditMode ? "PUT" : "POST",
@@ -120,7 +130,7 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
                 categoryId: Number(selectedCategoryId),
                 actualDate: normalizeDateForApi(actualDate),
                 description,
-                amount: Number(amount),
+                amount: parsedAmount,
                 notes,
                 auxiliaryLabelIds: selectedAuxiliaryLabelIds,
               }
@@ -130,7 +140,7 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
                   categoryId: props.entry.categoryId,
                   actualDate: normalizeDateForApi(actualDate),
                   description,
-                  amount: Number(amount),
+                  amount: parsedAmount,
                   notes,
                   auxiliaryLabelIds: selectedAuxiliaryLabelIds,
                 }
@@ -140,7 +150,7 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
                 plannedItemId: props.item.id,
                 actualDate: normalizeDateForApi(actualDate),
                 description,
-                amount: Number(amount),
+                amount: parsedAmount,
                 notes,
                 auxiliaryLabelIds: selectedAuxiliaryLabelIds,
               },
@@ -246,7 +256,8 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
               data-direct-number-input="true"
               name="amount"
               onChange={(event) => setAmount(event.target.value)}
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={amount}
             />
           </label>

@@ -60,9 +60,11 @@ const actualDateSchema = createIsoDateSchema("実績日");
 const scheduledMonthSchema = createYearMonthSchema("予定月");
 const classificationIdListSchema = z.array(z.number().int().positive()).default([]);
 const crossAggregateCategorySchema = z.enum(CROSS_AGGREGATE_CATEGORY_CODES);
+const positiveAmountSchema = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
+const nonnegativeAmountSchema = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const fundCategoryBaseSchema = z.object({
   name: z.string().trim().min(1),
-  amount: z.number().int().nonnegative(),
+  amount: nonnegativeAmountSchema,
   crossAggregateCategory: crossAggregateCategorySchema,
 });
 
@@ -89,7 +91,7 @@ export const plannedItemSchema = z
     plannedDate: plannedDateSchema,
     scheduledMonth: scheduledMonthSchema,
     description: z.string().min(1),
-    amount: z.number().int().positive(),
+    amount: positiveAmountSchema,
     notes: z.string(),
     auxiliaryLabelIds: classificationIdListSchema,
   })
@@ -108,7 +110,7 @@ export const plannedItemsBulkSchema = z
           .object({
             scheduledMonth: scheduledMonthSchema,
             description: z.string().min(1),
-            amount: z.number().int().positive(),
+            amount: positiveAmountSchema,
           })
           .strict(),
       )
@@ -122,7 +124,7 @@ export const plannedItemEditSchema = z
     categoryId: z.number().int(),
     scheduledMonth: scheduledMonthSchema,
     description: z.string().min(1),
-    amount: z.number().int().positive(),
+    amount: positiveAmountSchema,
     notes: z.string(),
     auxiliaryLabelIds: classificationIdListSchema,
   })
@@ -135,7 +137,7 @@ export const actualEntrySchema = z
     plannedItemId: z.number().int().optional(),
     actualDate: actualDateSchema,
     description: z.string().min(1),
-    amount: z.number().int().positive(),
+    amount: positiveAmountSchema,
     notes: z.string(),
     auxiliaryLabelIds: classificationIdListSchema,
   })
@@ -147,7 +149,7 @@ export const actualEntryEditSchema = z
     categoryId: z.number().int(),
     actualDate: actualDateSchema,
     description: z.string().min(1),
-    amount: z.number().int().positive(),
+    amount: positiveAmountSchema,
     notes: z.string(),
     auxiliaryLabelIds: classificationIdListSchema,
   })
@@ -156,7 +158,7 @@ export const actualEntryEditSchema = z
 export const fundCreationSchema = z.object({
   name: z.string().trim().min(1),
   fiscalYear: z.number().int().positive(),
-  awardedAmount: z.number().int().positive(),
+  awardedAmount: positiveAmountSchema,
   notes: z.string(),
   projectTagIds: classificationIdListSchema,
   auxiliaryLabelIds: classificationIdListSchema,
@@ -168,7 +170,7 @@ export const fundCreationSchema = z.object({
 export const fundUpdateSchema = z.object({
   name: z.string().trim().min(1),
   fiscalYear: z.number().int().positive(),
-  awardedAmount: z.number().int().positive(),
+  awardedAmount: positiveAmountSchema,
   notes: z.string(),
   projectTagIds: classificationIdListSchema,
   auxiliaryLabelIds: classificationIdListSchema,

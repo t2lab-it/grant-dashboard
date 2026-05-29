@@ -1,12 +1,12 @@
 import { formatYen } from "../../lib/format";
+import { parseAmountExpressionForPreview } from "../forms/amountExpression";
 
 export function parseBudgetAmount(value: string) {
   if (value.trim().length === 0) {
     return 0;
   }
 
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
+  return parseAmountExpressionForPreview(value);
 }
 
 export function buildFundBudgetSummary(amounts: string[], awardedAmount: string): FundBudgetSummaryValues {

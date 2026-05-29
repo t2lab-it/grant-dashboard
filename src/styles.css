@@ -2798,6 +2798,19 @@ a {
   resize: vertical;
 }
 
+.budget-entry-checkbox {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.budget-entry-checkbox input {
+  height: 18px;
+  width: 18px;
+}
+
 .planned-item-mode-toggle {
   justify-self: start;
 }

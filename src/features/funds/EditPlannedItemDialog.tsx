@@ -129,6 +129,32 @@ export function EditPlannedItemDialog({
     }
   }
 
+  async function handleComplete() {
+    setIsSubmitting(true);
+    setBlockingMessage("");
+    setInfoMessage("");
+    setWarnings([]);
+
+    try {
+      const response = await apiFetch("/api/planned-items/" + item.id + "/complete", {
+        method: "POST",
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        setBlockingMessage(readApiErrorMessage(payload, "計画項目を完了にできませんでした。"));
+        return;
+      }
+
+      await onSaved();
+      onClose();
+    } catch {
+      setBlockingMessage("計画項目を完了にできませんでした。");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   async function handleDelete() {
     setIsSubmitting(true);
     setBlockingMessage("");
@@ -238,6 +264,14 @@ export function EditPlannedItemDialog({
                 onClick={handleCancel}
               >
                 取消
+              </button>
+              <button
+                type="button"
+                className="detail-action-button detail-action-button-settle"
+                disabled={isSubmitting}
+                onClick={handleComplete}
+              >
+                残額放棄して完了
               </button>
               <button
                 type="button"

@@ -43,7 +43,7 @@ export type StaticDemoPlannedItem = {
   scheduled_month: string;
   description: string;
   amount: number;
-  status: "planned" | "cancelled";
+  status: "planned" | "completed" | "cancelled";
   notes: string;
 };
 

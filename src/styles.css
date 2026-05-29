@@ -2384,6 +2384,16 @@ a {
   gap: 8px;
 }
 
+.detail-history-status {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  color: #526174;
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
 .detail-action-button {
   display: inline-flex;
   align-items: center;

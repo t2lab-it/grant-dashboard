@@ -499,6 +499,10 @@ function getPlannedStatusLabel(status: StaticDemoPlannedItem["status"], remainin
     return "取消";
   }
 
+  if (status === "completed") {
+    return "完了";
+  }
+
   return remainingAmount > 0 ? `未精算 ${formatYen(remainingAmount)}` : "精算済み";
 }
 
@@ -718,7 +722,7 @@ export function getStaticSearchSnapshot(options: StaticSearchOptions = {}) {
           auxiliaryLabels: auxiliaryLabelsForSearchResult(state, "actual_entry", entry.id, entry.fund_id),
         };
       }),
-  ].filter((result) => result.type === "actual" || (result.remainingAmount ?? 0) > 0);
+  ].filter((result) => result.type === "actual" || result.statusLabel === "完了" || (result.remainingAmount ?? 0) > 0);
   const tab = options.tab ?? "all";
   const comparisonMonth = currentMonth(options.today);
   const filteredForCounts = results.filter((result) => matchesSearchFilters(result, options));
@@ -1082,7 +1086,7 @@ export function getStaticFundSnapshot(fundId: number) {
   );
   const monthlyStatus = getFundMonthlyStatus(state, fundId);
   const plannedItemHistory = state.planned_items
-    .filter((item) => item.fund_id === fundId && item.status === "cancelled")
+    .filter((item) => item.fund_id === fundId && (item.status === "cancelled" || item.status === "completed"))
     .map((item) => ({
       id: item.id,
       plannedDate: item.planned_date,
@@ -1091,6 +1095,8 @@ export function getStaticFundSnapshot(fundId: number) {
       categoryName: state.categories.find((category) => category.id === item.category_id)?.name ?? "",
       description: item.description,
       amount: item.amount,
+      remainingAmount: item.status === "completed" ? getRemainingPlannedAmount(state, item) : 0,
+      status: item.status,
       notes: item.notes,
       auxiliaryLabels: assignedStaticTags(state, "planned_item", item.id).filter((tag) => tag.kind === "auxiliary"),
     }))
@@ -1390,6 +1396,27 @@ export function cancelStaticPlannedItem(plannedItemId: number) {
   });
 }
 
+export function completeStaticPlannedItem(plannedItemId: number) {
+  return mutateStaticDemoState((state) => {
+    const plannedItem = state.planned_items.find((item) => item.id === plannedItemId);
+    if (plannedItem === undefined) {
+      throw new Error("Planned item not found");
+    }
+
+    const linkedActuals = getLinkedActuals(state, plannedItemId);
+    if (plannedItem.status !== "planned" || linkedActuals.length === 0) {
+      throw new Error("Planned item is not partially settled");
+    }
+
+    if (plannedItem.amount - linkedActuals.reduce((sum, row) => sum + row.amount, 0) <= 0) {
+      throw new Error("Planned item has no remaining amount");
+    }
+
+    plannedItem.status = "completed";
+    return { success: true };
+  });
+}
+
 export function deleteStaticPlannedItem(plannedItemId: number) {
   return mutateStaticDemoState((state) => {
     const plannedItem = state.planned_items.find((item) => item.id === plannedItemId);
@@ -1420,8 +1447,8 @@ export function restoreStaticCancelledPlannedItem(plannedItemId: number) {
       throw new Error("Planned item not found");
     }
 
-    if (plannedItem.status !== "cancelled") {
-      throw new Error("Planned item is not cancelled");
+    if (plannedItem.status !== "cancelled" && plannedItem.status !== "completed") {
+      throw new Error("Planned item is not restorable");
     }
 
     plannedItem.status = "planned";

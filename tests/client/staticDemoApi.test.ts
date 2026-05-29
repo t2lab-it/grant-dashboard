@@ -144,6 +144,38 @@ describe("static demo API", () => {
     );
   });
 
+  test("completes and restores partially settled planned items in browser-local demo data", async () => {
+    const completeResponse = await handleStaticDemoRequest("/api/planned-items/1/complete", { method: "POST" });
+
+    expect(completeResponse.ok).toBe(true);
+    expect(await readJson(completeResponse)).toEqual({ success: true });
+
+    const completedResponse = await handleStaticDemoRequest("/api/funds/1", { method: "GET" });
+    const completedFund = await readJson(completedResponse) as {
+      plannedItems: Array<{ id: number }>;
+      plannedItemHistory: Array<{ id: number; status: string; remainingAmount: number }>;
+    };
+
+    expect(completedFund.plannedItems.some((item) => item.id === 1)).toBe(false);
+    expect(completedFund.plannedItemHistory).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 1, status: "completed", remainingAmount: 400000 }),
+      ]),
+    );
+
+    const restoreResponse = await handleStaticDemoRequest("/api/planned-items/1/restore", { method: "POST" });
+
+    expect(restoreResponse.ok).toBe(true);
+    const restoredResponse = await handleStaticDemoRequest("/api/funds/1", { method: "GET" });
+    const restoredFund = await readJson(restoredResponse) as {
+      plannedItems: Array<{ id: number; amount: number }>;
+    };
+
+    expect(restoredFund.plannedItems).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: 1, amount: 400000 })]),
+    );
+  });
+
   test("deletes cancelled planned items from browser-local demo data", async () => {
     const beforeResponse = await handleStaticDemoRequest("/api/funds/1", { method: "GET" });
     const before = await readJson(beforeResponse) as {

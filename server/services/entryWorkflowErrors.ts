@@ -7,6 +7,8 @@ export type EntryWorkflowErrorCode =
   | "planned_item_delete_has_actuals"
   | "planned_item_not_deletable"
   | "planned_item_not_cancelled_for_restore"
+  | "planned_item_complete_requires_actuals"
+  | "planned_item_complete_requires_remaining"
   | "actual_entry_not_found";
 
 export class EntryWorkflowDomainError extends Error {

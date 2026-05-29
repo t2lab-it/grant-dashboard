@@ -28,12 +28,14 @@ describe("cross-fund search service", () => {
         (1, 1, 1, '2026-04-01', '2026-04', 'GPU サーバ購入', 200000, 'planned', '年度初めに確認'),
         (2, 1, 2, '2026-08-01', '2026-08', '国際会議旅費', 150000, 'planned', ''),
         (3, 2, 3, '2026-06-01', '2026-06', '実験ノート', 50000, 'cancelled', ''),
-        (4, 3, 4, '2027-04-01', '2027-04', '翌年度 GPU', 300000, 'planned', '');
+        (4, 3, 4, '2027-04-01', '2027-04', '翌年度 GPU', 300000, 'planned', ''),
+        (5, 1, 1, '2026-05-01', '2026-05', '完了済み GPU 周辺機器', 50000, 'completed', '残額放棄済み');
 
       INSERT INTO actual_entries (
         id, fund_id, category_id, planned_item_id, actual_date, description, amount, notes
       ) VALUES
         (1, 1, 1, 1, '2026-04-15', 'GPU 着手金', 80000, ''),
+        (5, 1, 1, 5, '2026-05-15', 'GPU 周辺機器', 30000, ''),
         (2, 1, 2, NULL, '2026-07-02', '学会参加費', 90000, '未連携の実績'),
         (3, 2, 3, NULL, '2026-05-10', 'ノート購入', 10000, ''),
         (4, 3, 4, NULL, '2027-04-10', '翌年度支払い', 120000, '');
@@ -62,7 +64,9 @@ describe("cross-fund search service", () => {
     expect(snapshot.results.map((result) => `${result.type}:${result.id}`)).toEqual([
       "planned:2",
       "actual:2",
+      "actual:5",
       "actual:3",
+      "planned:5",
       "actual:1",
       "planned:1",
     ]);
@@ -74,6 +78,12 @@ describe("cross-fund search service", () => {
       remainingAmount: 120000,
       statusLabel: "未精算 120,000円",
       detailHref: "/funds/1?year=2026&focus=planned-1",
+    });
+    expect(snapshot.results.find((result) => result.type === "planned" && result.id === 5)).toMatchObject({
+      amount: 50000,
+      remainingAmount: 0,
+      statusLabel: "完了",
+      detailHref: "/funds/1?year=2026&focus=planned-5",
     });
     expect(snapshot.results.find((result) => result.type === "actual" && result.id === 2)).toMatchObject({
       remainingAmount: null,
@@ -130,6 +140,8 @@ describe("cross-fund search service", () => {
     expect(inheritedSnapshot.results.map((result) => `${result.type}:${result.id}`)).toEqual([
       "planned:2",
       "actual:2",
+      "actual:5",
+      "planned:5",
       "actual:1",
       "planned:1",
     ]);
@@ -169,7 +181,7 @@ describe("cross-fund search service", () => {
       ),
     ).toEqual(["actual:2", "actual:3"]);
     expect(getCrossFundSearchSnapshot(db, common).counts).toEqual({
-      all: 5,
+      all: 7,
       overdue: 1,
       unsettled: 2,
       unlinked: 2,
@@ -191,7 +203,7 @@ describe("cross-fund search service", () => {
 
     const snapshot = getCrossFundSearchSnapshot(db, { fiscalYear: 2026 });
 
-    expect(snapshot.totalResultCount).toBe(255);
+    expect(snapshot.totalResultCount).toBe(257);
     expect(snapshot.resultLimit).toBe(200);
     expect(snapshot.results).toHaveLength(200);
   });

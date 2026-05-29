@@ -89,11 +89,25 @@ function sendEntryWorkflowError(reply: FastifyReply, code: EntryWorkflowErrorCod
         message: "この計画項目は削除できません。",
       });
       return true;
+    case "planned_item_complete_requires_actuals":
+      sendApiError(reply, 409, {
+        code: "planned_item_complete_requires_actuals",
+        error: "Planned item is not partially settled",
+        message: "精算が紐づいている未精算の計画項目のみ完了にできます。",
+      });
+      return true;
+    case "planned_item_complete_requires_remaining":
+      sendApiError(reply, 409, {
+        code: "planned_item_complete_requires_remaining",
+        error: "Planned item has no remaining amount",
+        message: "残予定額がある計画項目のみ完了にできます。",
+      });
+      return true;
     case "planned_item_not_cancelled_for_restore":
       sendApiError(reply, 409, {
         code: "planned_item_not_cancelled_for_restore",
         error: "Planned item is not cancelled",
-        message: "取消済みの計画項目のみ計画に戻せます。",
+        message: "完了または取消済みの計画項目のみ計画に戻せます。",
       });
       return true;
     case "actual_entry_not_found":

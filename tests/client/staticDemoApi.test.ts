@@ -25,8 +25,8 @@ describe("static demo API", () => {
     expect(data.totals).toMatchObject({
       assets: 4200000,
       committed: 1455000,
-      actual: 1085000,
-      freeBalance: 1660000,
+      actual: 1210000,
+      freeBalance: 1535000,
     });
     expect(data.crossAggregateCategories).toEqual(
       expect.arrayContaining([
@@ -37,7 +37,7 @@ describe("static demo API", () => {
       ]),
     );
     expect(data.yearEndRisk).toMatchObject({
-      plannedBalance: 1660000,
+      plannedBalance: 1535000,
     });
     expect((data.monthlyStatus as unknown[]).length).toBeGreaterThan(0);
     expect(data.funds).toEqual(
@@ -105,6 +105,27 @@ describe("static demo API", () => {
     ]);
   });
 
+  test("includes a completed planned item in the seeded fund history", async () => {
+    const response = await handleStaticDemoRequest("/api/funds/1", { method: "GET" });
+    const fund = await readJson(response) as {
+      plannedItems: Array<{ id: number }>;
+      plannedItemHistory: Array<{ id: number; description: string; status: string; remainingAmount: number }>;
+    };
+
+    expect(response.ok).toBe(true);
+    expect(fund.plannedItems.some((item) => item.id === 10)).toBe(false);
+    expect(fund.plannedItemHistory).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 10,
+          description: "完了済み共同研究旅費",
+          status: "completed",
+          remainingAmount: 55000,
+        }),
+      ]),
+    );
+  });
+
   test("persists planned item changes and reflects them in overview", async () => {
     const createResponse = await handleStaticDemoRequest("/api/planned-items", {
       method: "POST",
@@ -127,7 +148,7 @@ describe("static demo API", () => {
 
     expect(overview.totals).toMatchObject({
       committed: 1505000,
-      freeBalance: 1610000,
+      freeBalance: 1485000,
     });
 
     const fundResponse = await handleStaticDemoRequest("/api/funds/1", { method: "GET" });
@@ -141,6 +162,38 @@ describe("static demo API", () => {
           categoryName: "旅費",
         }),
       ]),
+    );
+  });
+
+  test("completes and restores partially settled planned items in browser-local demo data", async () => {
+    const completeResponse = await handleStaticDemoRequest("/api/planned-items/1/complete", { method: "POST" });
+
+    expect(completeResponse.ok).toBe(true);
+    expect(await readJson(completeResponse)).toEqual({ success: true });
+
+    const completedResponse = await handleStaticDemoRequest("/api/funds/1", { method: "GET" });
+    const completedFund = await readJson(completedResponse) as {
+      plannedItems: Array<{ id: number }>;
+      plannedItemHistory: Array<{ id: number; status: string; remainingAmount: number }>;
+    };
+
+    expect(completedFund.plannedItems.some((item) => item.id === 1)).toBe(false);
+    expect(completedFund.plannedItemHistory).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 1, status: "completed", remainingAmount: 400000 }),
+      ]),
+    );
+
+    const restoreResponse = await handleStaticDemoRequest("/api/planned-items/1/restore", { method: "POST" });
+
+    expect(restoreResponse.ok).toBe(true);
+    const restoredResponse = await handleStaticDemoRequest("/api/funds/1", { method: "GET" });
+    const restoredFund = await readJson(restoredResponse) as {
+      plannedItems: Array<{ id: number; amount: number }>;
+    };
+
+    expect(restoredFund.plannedItems).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: 1, amount: 400000 })]),
     );
   });
 

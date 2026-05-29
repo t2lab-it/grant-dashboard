@@ -370,9 +370,9 @@ describe("dashboard calculations", () => {
     });
   });
 
-  it("hides non-planned planned items while preserving linked actual totals", () => {
+  it("hides completed planned items from active commitments while preserving history and linked actual totals", () => {
     db.exec(`
-      UPDATE planned_items SET status = 'cancelled' WHERE id = 1;
+      UPDATE planned_items SET status = 'completed' WHERE id = 1;
     `);
 
     expect(getOverviewSnapshot(db)).toMatchObject({
@@ -382,6 +382,18 @@ describe("dashboard calculations", () => {
 
     const fund = getFundSnapshot(db, 1);
 
+    expect(fund.categories.find((category) => category.id === 1)).toMatchObject({
+      plannedAmount: 320000,
+      actualAmount: 647590,
+    });
     expect(fund.plannedItems.map((item) => item.id)).not.toContain(1);
+    expect(fund.plannedItemHistory).toEqual([
+      expect.objectContaining({
+        id: 1,
+        status: "completed",
+        amount: 2000000,
+        remainingAmount: 1400000,
+      }),
+    ]);
   });
 });

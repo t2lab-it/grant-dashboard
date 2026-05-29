@@ -346,7 +346,44 @@ export function deletePlannedItem(db: Database.Database, plannedItemId: number) 
   })();
 }
 
-export function restoreCancelledPlannedItem(db: Database.Database, plannedItemId: number) {
+export function completePlannedItem(db: Database.Database, plannedItemId: number) {
+  const plannedItem = db
+    .prepare(
+      `
+      SELECT
+        p.id,
+        p.status,
+        p.amount,
+        COALESCE(SUM(ae.amount), 0) AS linkedAmount,
+        COUNT(ae.id) AS linkedCount
+      FROM planned_items p
+      LEFT JOIN actual_entries ae ON ae.planned_item_id = p.id
+      WHERE p.id = ?
+      GROUP BY p.id
+      `,
+    )
+    .get(plannedItemId) as
+    | { id: number; status: string; amount: number; linkedAmount: number; linkedCount: number }
+    | undefined;
+
+  if (plannedItem === undefined) {
+    throwEntryWorkflowError("planned_item_not_found");
+  }
+
+  if (plannedItem.status !== "planned" || plannedItem.linkedCount === 0) {
+    throwEntryWorkflowError("planned_item_complete_requires_actuals");
+  }
+
+  if (plannedItem.amount - plannedItem.linkedAmount <= 0) {
+    throwEntryWorkflowError("planned_item_complete_requires_remaining");
+  }
+
+  db.prepare("UPDATE planned_items SET status = 'completed' WHERE id = ?").run(plannedItemId);
+
+  return { success: true };
+}
+
+export function restorePlannedItem(db: Database.Database, plannedItemId: number) {
   const plannedItem = db
     .prepare("SELECT id, status FROM planned_items WHERE id = ?")
     .get(plannedItemId) as { id: number; status: string } | undefined;
@@ -355,7 +392,7 @@ export function restoreCancelledPlannedItem(db: Database.Database, plannedItemId
     throwEntryWorkflowError("planned_item_not_found");
   }
 
-  if (plannedItem.status !== "cancelled") {
+  if (plannedItem.status !== "cancelled" && plannedItem.status !== "completed") {
     throwEntryWorkflowError("planned_item_not_cancelled_for_restore");
   }
 
@@ -363,6 +400,8 @@ export function restoreCancelledPlannedItem(db: Database.Database, plannedItemId
 
   return { success: true };
 }
+
+export const restoreCancelledPlannedItem = restorePlannedItem;
 
 export function updateActualEntry(
   db: Database.Database,

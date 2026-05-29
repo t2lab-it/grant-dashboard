@@ -113,12 +113,25 @@ describe("Fund detail display", () => {
         ],
         plannedItemHistory: [
           {
+            id: 13,
+            plannedDate: "2026-07-01",
+            scheduledMonth: "2026-07",
+            categoryName: "旅費",
+            description: "完了済み共同研究旅費",
+            amount: 95000,
+            remainingAmount: 15000,
+            status: "completed",
+            notes: "差額を放棄",
+          },
+          {
             id: 12,
             plannedDate: "2026-06-01",
             scheduledMonth: "2026-06",
             categoryName: "旅費",
             description: "取消済み研究会",
             amount: 80000,
+            remainingAmount: 0,
+            status: "cancelled",
             notes: "日程変更で取消",
           },
         ],
@@ -217,13 +230,18 @@ describe("Fund detail display", () => {
     expect(plannedScope.getByText("GPU サーバ保守更新")).toBeInTheDocument();
     expect(plannedScope.getByText("出張")).toBeInTheDocument();
     expect(plannedScope.getByText("280,000円")).toBeInTheDocument();
-    expect(fundPage.getByRole("heading", { name: "取消済項目一覧" })).toBeInTheDocument();
+    expect(fundPage.getByRole("heading", { name: "完了・取消済項目一覧" })).toBeInTheDocument();
     const plannedHistoryTable = fundPage.getByRole("table", { name: "Fund planned item history" });
     const plannedHistoryScope = within(plannedHistoryTable);
+    expect(plannedHistoryScope.getByText("状態")).toBeInTheDocument();
+    expect(plannedHistoryScope.getByText("2026-07")).toBeInTheDocument();
+    expect(plannedHistoryScope.getByText("完了済み共同研究旅費")).toBeInTheDocument();
+    expect(plannedHistoryScope.getByText("完了")).toBeInTheDocument();
+    expect(plannedHistoryScope.getByText("放棄 15,000円")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("2026-06")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("取消済み研究会")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("80,000円")).toBeInTheDocument();
-    expect(plannedHistoryScope.getByRole("button", { name: "再計画" })).toBeInTheDocument();
+    expect(plannedHistoryScope.getByText("取消")).toBeInTheDocument();
     expect(plannedHistoryScope.getByRole("button", { name: "削除" })).toHaveClass("detail-action-button-danger");
   }, 10_000);
 

@@ -308,7 +308,7 @@ describe("Fund detail interactions", () => {
     const fundPage = within(view.container);
     const actualSection = (await fundPage.findByRole("heading", { name: "精算項目一覧" })).closest(".detail-panel");
     const plannedSection = fundPage.getByRole("heading", { name: "計画項目一覧" }).closest(".detail-panel");
-    const plannedHistorySection = fundPage.getByRole("heading", { name: "取消済項目一覧" }).closest(".detail-panel");
+    const plannedHistorySection = fundPage.getByRole("heading", { name: "完了・取消済項目一覧" }).closest(".detail-panel");
 
     expect(actualSection).not.toBeNull();
     expect(plannedSection).not.toBeNull();
@@ -339,7 +339,7 @@ describe("Fund detail interactions", () => {
     await user.selectOptions(within(filterPanel).getByRole("combobox", { name: "費目" }), "物品費");
 
     expect(screen.getAllByText("条件に一致する項目はありません。")).toHaveLength(3);
-    expect(fundPage.getByRole("heading", { name: "取消済項目一覧" })).toBeInTheDocument();
+    expect(fundPage.getByRole("heading", { name: "完了・取消済項目一覧" })).toBeInTheDocument();
   });
 
   it("sorts monthly status, actual entries, and planned items from section controls", async () => {
@@ -1265,6 +1265,80 @@ describe("Fund detail interactions", () => {
     expect(await fundPage.findByText("未精算の計画項目はまだありません。")).toBeInTheDocument();
   });
 
+  it("completes a partially settled planned item from the edit modal and moves it to history", async () => {
+    const user = userEvent.setup();
+    let currentFundDetail = {
+      fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
+      categories: [],
+      monthlyStatus: [],
+      actualEntries: [],
+      plannedItems: [
+        {
+          id: 10,
+          plannedDate: "2026-07-10",
+          scheduledMonth: "2026-07",
+          categoryId: 1,
+          categoryName: "物品費",
+          description: "GPU サーバ保守更新",
+          amount: 280000,
+          notes: "未精算",
+        },
+      ],
+      plannedItemHistory: [] as Array<{
+        id: number;
+        plannedDate: string;
+        scheduledMonth: string;
+        categoryId: number;
+        categoryName: string;
+        description: string;
+        amount: number;
+        remainingAmount: number;
+        status: "completed" | "cancelled";
+        notes: string;
+      }>,
+    };
+
+    fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/funds/1" && method === "GET") {
+        return { ok: true, json: async () => currentFundDetail };
+      }
+
+      if (url === "/api/overview" && method === "GET") {
+        return { ok: true, json: async () => ({ funds: [{ id: 1, name: "基盤研究費" }] }) };
+      }
+
+      if (url === "/api/planned-items/10/complete" && method === "POST") {
+        const [completedItem] = currentFundDetail.plannedItems;
+        currentFundDetail = {
+          ...currentFundDetail,
+          plannedItems: [],
+          plannedItemHistory: [{ ...completedItem, amount: 280000, remainingAmount: 120000, status: "completed" }],
+        };
+        return { ok: true, json: async () => ({ success: true }) };
+      }
+
+      throw new Error("Unexpected fetch: " + method + " " + url);
+    });
+
+    const view = renderAppRoute("/funds/1");
+    const fundPage = within(view.container);
+    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+
+    await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
+    const dialog = await screen.findByRole("dialog", { name: "計画項目を編集" });
+    await user.click(within(dialog).getByRole("button", { name: "残額放棄して完了" }));
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/planned-items/10/complete", { method: "POST" });
+    expect(await fundPage.findByText("未精算の計画項目はまだありません。")).toBeInTheDocument();
+    const historyTable = await fundPage.findByRole("table", { name: "Fund planned item history" });
+    expect(within(historyTable).getByText("GPU サーバ保守更新")).toBeInTheDocument();
+    expect(within(historyTable).getByText("完了")).toBeInTheDocument();
+    expect(within(historyTable).getByText("放棄 120,000円")).toBeInTheDocument();
+  });
+
   it("keeps destination fund options out of the fund detail query cache", async () => {
     const user = userEvent.setup();
     const overviewResponse = {
@@ -1475,6 +1549,8 @@ describe("Fund detail interactions", () => {
           categoryName: "物品費",
           description: "取消済み研究会",
           amount: 280000,
+          remainingAmount: 0,
+          status: "cancelled" as const,
           notes: "",
         },
       ],

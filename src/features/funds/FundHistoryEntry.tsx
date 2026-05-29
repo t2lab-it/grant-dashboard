@@ -11,8 +11,15 @@ type FundHistoryItem = {
 };
 
 type FundHistoryEntryProps = {
-  amountDisplayMode: FundDetailAmountDisplayMode; children: ReactNode; entryId: string; focused?: boolean;
-  item: FundHistoryItem; noteController: FundDetailNoteController; primaryText: string; rowClassName: string;
+  amountDisplayMode: FundDetailAmountDisplayMode;
+  children: ReactNode;
+  entryId: string;
+  extraCells?: ReactNode;
+  focused?: boolean;
+  item: FundHistoryItem;
+  noteController: FundDetailNoteController;
+  primaryText: string;
+  rowClassName: string;
 };
 
 function FundHistoryNoteIndicator() {
@@ -32,6 +39,7 @@ export function FundHistoryEntry({
   amountDisplayMode,
   children,
   entryId,
+  extraCells,
   focused = false,
   item,
   noteController,
@@ -68,6 +76,7 @@ export function FundHistoryEntry({
           <FundAuxiliaryLabelChips labels={item.auxiliaryLabels} />
         </span>
         <span className="detail-history-amount">{formatAmount(item.amount, amountDisplayMode)}</span>
+        {extraCells}
         <span className="detail-history-actions">{children}</span>
       </div>
       {hasNotes && isExpanded ? (

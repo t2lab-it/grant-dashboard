@@ -367,6 +367,10 @@ function plannedStatusLabel(status: string, remainingAmount: number) {
     return "取消";
   }
 
+  if (status === "completed") {
+    return "完了";
+  }
+
   return remainingAmount > 0 ? `未精算 ${formatYen(remainingAmount)}` : "精算済み";
 }
 
@@ -508,7 +512,7 @@ export function getCrossFundSearchSnapshot(
         auxiliaryLabelLookup.forResult("actual_entry", row.id, row.fundId),
       ),
     ),
-  ].filter((result) => result.type === "actual" || (result.remainingAmount ?? 0) > 0);
+  ].filter((result) => result.type === "actual" || result.statusLabel === "完了" || (result.remainingAmount ?? 0) > 0);
   const filteredForCounts = allResults.filter((result) => matchesNonTabFilters(result, options));
   const counts = Object.fromEntries(
     SEARCH_TABS.map((searchTab) => [

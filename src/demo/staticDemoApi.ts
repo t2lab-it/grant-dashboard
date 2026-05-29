@@ -1,6 +1,7 @@
 import {
   cancelStaticActualEntry,
   cancelStaticPlannedItem,
+  completeStaticPlannedItem,
   createStaticClassification,
   createStaticActualEntry,
   createStaticFund,
@@ -234,6 +235,13 @@ export async function handleStaticDemoRequest(path: string, init: StaticDemoRequ
       const plannedItemId = parseId(pathname, /^\/api\/planned-items\/(\d+)\/cancel$/);
       if (plannedItemId !== null) {
         return jsonResponse(cancelStaticPlannedItem(plannedItemId));
+      }
+    }
+
+    if (method === "POST") {
+      const plannedItemId = parseId(pathname, /^\/api\/planned-items\/(\d+)\/complete$/);
+      if (plannedItemId !== null) {
+        return jsonResponse(completeStaticPlannedItem(plannedItemId));
       }
     }
 

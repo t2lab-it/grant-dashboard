@@ -16,6 +16,7 @@ import { apiGet, apiPostJson } from "../../lib/api";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { FormFeedback } from "../forms/FormFeedback";
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
+import { parsePositiveAmountExpression } from "../forms/amountExpression";
 import { readApiErrorMessage, useEntryForm } from "../forms/useEntryForm";
 import { useAppSettings } from "../settings/AppSettings";
 
@@ -140,6 +141,15 @@ export function ActualEntryForm() {
     const plannedItemId = values.plannedItemId.trim();
 
     await submit(async () => {
+      let amount: number;
+      try {
+        amount = parsePositiveAmountExpression(values.amount, "金額");
+      } catch (error) {
+        return {
+          blockingMessage: error instanceof Error ? error.message : "金額を確認してください。",
+        };
+      }
+
       const result = await apiPostJson<CreateActualEntryRequest, CreateActualEntryResponse>(
         "/api/actual-entries",
         {
@@ -147,7 +157,7 @@ export function ActualEntryForm() {
           categoryId: Number(values.categoryId),
           actualDate: normalizeDateForApi(values.actualDate),
           description: values.description,
-          amount: Number(values.amount),
+          amount,
           notes: values.notes,
           ...(plannedItemId ? { plannedItemId: Number(plannedItemId) } : {}),
           auxiliaryLabelIds: selectedAuxiliaryLabelIds,
@@ -262,7 +272,8 @@ export function ActualEntryForm() {
             data-direct-number-input="true"
             name="amount"
             onChange={(event) => setValue("amount", event.target.value)}
-            type="number"
+            type="text"
+            inputMode="decimal"
             value={values.amount}
           />
         </label>

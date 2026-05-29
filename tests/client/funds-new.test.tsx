@@ -22,9 +22,9 @@ describe("NewFundForm", () => {
   async function fillRequiredFields() {
     fireEvent.change(await screen.findByLabelText("予算名"), { target: { value: "次年度予算" } });
     fireEvent.change(screen.getByLabelText("年度"), { target: { value: "2027" } });
-    fireEvent.change(screen.getByLabelText("交付額"), { target: { value: "1800000" } });
+    fireEvent.change(screen.getByLabelText("交付額"), { target: { value: "900,000 * 2" } });
     fireEvent.change(screen.getByLabelText("費目名"), { target: { value: "出張" } });
-    fireEvent.change(screen.getByLabelText("予算額"), { target: { value: "700000" } });
+    fireEvent.change(screen.getByLabelText("予算額"), { target: { value: "350,000 * 2" } });
   }
 
   it("lets the user add and remove category rows before saving", async () => {

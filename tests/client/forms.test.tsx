@@ -133,7 +133,7 @@ describe("PlannedItemForm", () => {
     fireEvent.change(screen.getByLabelText("立案日"), { target: { value: "2026/10/01" } });
     fireEvent.change(screen.getByLabelText("執行予定月"), { target: { value: "2026-10" } });
     fireEvent.change(screen.getByLabelText("説明"), { target: { value: "追加出張" } });
-    fireEvent.change(screen.getByLabelText("金額"), { target: { value: "50000" } });
+    fireEvent.change(screen.getByLabelText("金額"), { target: { value: "25,000 * 2" } });
     fireEvent.change(screen.getByLabelText("メモ"), { target: { value: "学会対応" } });
   }
 
@@ -218,7 +218,7 @@ describe("PlannedItemForm", () => {
 
     expect(await screen.findByText("選択した費目が資金に紐づいていません。")).toBeInTheDocument();
     expect(screen.getByLabelText("説明")).toHaveValue("追加出張");
-    expect(screen.getByLabelText("金額")).toHaveValue(50000);
+    expect(screen.getByLabelText("金額")).toHaveValue("25,000 * 2");
     expect(screen.getByLabelText("メモ")).toHaveValue("学会対応");
   });
 
@@ -444,7 +444,7 @@ describe("ActualEntryForm", () => {
   function fillActualEntryDetails({ withPlannedItemId = true }: { withPlannedItemId?: boolean } = {}) {
     fireEvent.change(screen.getByLabelText("実績日"), { target: { value: "2026/09/12" } });
     fireEvent.change(screen.getByLabelText("説明"), { target: { value: "試薬購入" } });
-    fireEvent.change(screen.getByLabelText("金額"), { target: { value: "30000" } });
+    fireEvent.change(screen.getByLabelText("金額"), { target: { value: "60,000 / 2" } });
     fireEvent.change(screen.getByLabelText("メモ"), { target: { value: "第2便" } });
     if (withPlannedItemId) {
       fireEvent.change(screen.getByLabelText("予定項目"), { target: { value: "31" } });

@@ -7,6 +7,7 @@ import type { ClassificationResponse } from "../classifications/classificationTy
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { FormFeedback } from "../forms/FormFeedback";
+import { parsePositiveAmountExpression } from "../forms/amountExpression";
 import { readApiErrorMessage } from "../forms/useEntryForm";
 import { useBudgetTargetOptions, useCloseOnEscape } from "./fundDetailDialogSupport";
 import type { PlannedItem } from "./fundDetailTypes";
@@ -63,6 +64,15 @@ export function EditPlannedItemDialog({
     setInfoMessage("");
     setWarnings([]);
 
+    let parsedAmount: number;
+    try {
+      parsedAmount = parsePositiveAmountExpression(amount, "金額");
+    } catch (error) {
+      setBlockingMessage(error instanceof Error ? error.message : "金額を確認してください。");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const response = await apiFetch(`/api/planned-items/${item.id}`, {
         method: "PUT",
@@ -72,7 +82,7 @@ export function EditPlannedItemDialog({
           categoryId: Number(selectedCategoryId),
           scheduledMonth,
           description,
-          amount: Number(amount),
+          amount: parsedAmount,
           notes,
           auxiliaryLabelIds: selectedAuxiliaryLabelIds,
         }),
@@ -209,7 +219,8 @@ export function EditPlannedItemDialog({
               data-direct-number-input="true"
               name="amount"
               onChange={(event) => setAmount(event.target.value)}
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={amount}
             />
           </label>

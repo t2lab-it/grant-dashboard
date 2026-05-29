@@ -106,7 +106,8 @@ export function FundFormFields({
           data-direct-number-input="true"
           name="awardedAmount"
           onChange={(event) => setValue("awardedAmount", event.target.value)}
-          type="number"
+          type="text"
+          inputMode="decimal"
           value={values.awardedAmount}
         />
       </label>
@@ -162,7 +163,8 @@ export function FundFormFields({
                   aria-label="予算額"
                   data-direct-number-input="true"
                   onChange={(event) => updateCategory(category.id, "amount", event.target.value)}
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={category.amount}
                 />
               </label>

@@ -244,7 +244,7 @@ export function buildWorkbookRows(db: Database.Database): WorkbookRows {
         ae.actual_date,
         ae.description,
         ae.amount,
-        p.planned_ref,
+        CASE WHEN p.status = 'planned' THEN p.planned_ref ELSE NULL END AS planned_ref,
         ae.notes
       FROM actual_entries ae
       INNER JOIN funds f ON f.id = ae.fund_id

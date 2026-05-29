@@ -7,5 +7,6 @@
   { "id": 6, "fund_id": 3, "category_id": 5, "planned_ref": "demo-c-personnel-202606-001", "planned_date": "2026-06-01", "scheduled_month": "2026-06", "description": "RA謝金", "amount": 180000, "status": "planned", "notes": "実験補助RAの夏学期分として計画" },
   { "id": 7, "fund_id": 1, "category_id": 1, "planned_ref": "demo-a-equipment-202604-archived-001", "planned_date": "2026-04-05", "scheduled_month": "2026-04", "description": "取消済み計測部材", "amount": 80000, "status": "cancelled", "notes": "年度初めの手配を取り消し" },
   { "id": 8, "fund_id": 1, "category_id": 2, "planned_ref": "demo-a-travel-202606-archived-001", "planned_date": "2026-06-20", "scheduled_month": "2026-06", "description": "取消済み国内研究会", "amount": 90000, "status": "cancelled", "notes": "日程変更で参加を取りやめ" },
-  { "id": 9, "fund_id": 4, "category_id": 6, "planned_ref": "demo-d-low-balance-202610-001", "planned_date": "2026-10-01", "scheduled_month": "2026-10", "description": "年度末調整用消耗品", "amount": 470000, "status": "planned", "notes": "残高率が低い状態を確認するための予定" }
+  { "id": 9, "fund_id": 4, "category_id": 6, "planned_ref": "demo-d-low-balance-202610-001", "planned_date": "2026-10-01", "scheduled_month": "2026-10", "description": "年度末調整用消耗品", "amount": 470000, "status": "planned", "notes": "残高率が低い状態を確認するための予定" },
+  { "id": 10, "fund_id": 1, "category_id": 2, "planned_ref": "demo-a-travel-202607-completed-001", "planned_date": "2026-07-15", "scheduled_month": "2026-07", "description": "完了済み共同研究旅費", "amount": 180000, "status": "completed", "notes": "精算額が計画額を下回ったため残額を放棄" }
 ]

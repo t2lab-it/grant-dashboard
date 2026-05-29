@@ -93,7 +93,7 @@ describe("seed profiles", () => {
     const plannedRefs = db.prepare("SELECT planned_ref FROM planned_items ORDER BY id").all();
 
     expect(overview.totals.assets).toBe(4200000);
-    expect(overview.totals.actual).toBe(1085000);
+    expect(overview.totals.actual).toBe(1210000);
     expect(overview.funds).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -112,12 +112,22 @@ describe("seed profiles", () => {
         expect.objectContaining({ name: "デモ研究費D", freeBalance: 30000, projectTags: [] }),
       ]),
     );
-    expect(plannedRefs).toHaveLength(9);
+    expect(plannedRefs).toHaveLength(10);
     expect(plannedRefs).toEqual(
       expect.arrayContaining([
         { planned_ref: "demo-a-equipment-202605-001" },
         { planned_ref: "demo-a-equipment-202604-archived-001" },
         { planned_ref: "demo-d-low-balance-202610-001" },
+        { planned_ref: "demo-a-travel-202607-completed-001" },
+      ]),
+    );
+    expect(fundSnapshot.plannedItemHistory).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          description: "完了済み共同研究旅費",
+          status: "completed",
+          remainingAmount: 55000,
+        }),
       ]),
     );
     expect(fundSnapshot.categories).toEqual(

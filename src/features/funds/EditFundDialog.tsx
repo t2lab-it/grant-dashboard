@@ -7,7 +7,7 @@ import { normalizeClassifications } from "../classifications/classificationTypes
 import { FormFeedback } from "../forms/FormFeedback";
 import { parseNonnegativeAmountExpression, parsePositiveAmountExpression } from "../forms/amountExpression";
 import { readApiErrorMessage } from "../forms/useEntryForm";
-import { buildFundBudgetSummary, FundBudgetSummary } from "./FundBudgetSummary";
+import { buildFundBudgetSummary } from "./FundBudgetSummary";
 import {
   FundFormFields,
   createFundCategoryDraft,
@@ -61,7 +61,7 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
   );
   const [blockingMessage, setBlockingMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { awardedAmount, categoryTotal, balance } = buildFundBudgetSummary(
+  const { awardedAmount, categoryTotal } = buildFundBudgetSummary(
     categories.map((category) => category.amount),
     values.awardedAmount,
   );
@@ -201,7 +201,6 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
             updateCategory={updateCategory}
             values={values}
           />
-          <FundBudgetSummary balance={balance} />
           <div className="budget-modal-actions">
             <button
               type="button"

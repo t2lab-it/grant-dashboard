@@ -40,6 +40,36 @@ describe("NewFundForm", () => {
     expect(screen.getAllByLabelText("費目名")).toHaveLength(1);
   });
 
+  it("updates the cross-aggregate budget chart while editing category rows", async () => {
+    const user = userEvent.setup();
+
+    renderAppRoute("/funds/new");
+
+    await fillRequiredFields();
+    fireEvent.change(screen.getByLabelText("横断集計カテゴリ"), { target: { value: "travel" } });
+
+    const chart = screen.getByRole("region", { name: "横断カテゴリ別の予算配分" });
+    expect(chart).toHaveTextContent("旅費系");
+    expect(chart).toHaveTextContent("700,000円");
+    expect(chart).toHaveTextContent("差額");
+    expect(chart).toHaveTextContent("1,100,000円");
+
+    await user.click(screen.getByRole("button", { name: "費目を追加" }));
+    fireEvent.change(screen.getAllByLabelText("費目名")[1], { target: { value: "物品" } });
+    fireEvent.change(screen.getAllByLabelText("予算額")[1], { target: { value: "300000" } });
+    fireEvent.change(screen.getAllByLabelText("横断集計カテゴリ")[1], { target: { value: "equipment" } });
+
+    expect(chart).toHaveTextContent("物品系");
+    expect(chart).toHaveTextContent("300,000円");
+    expect(chart).toHaveTextContent("800,000円");
+
+    await user.click(screen.getAllByRole("button", { name: "削除" })[1]);
+
+    expect(chart).not.toHaveTextContent("物品系");
+    expect(chart).toHaveTextContent("旅費系");
+    expect(chart).toHaveTextContent("1,100,000円");
+  });
+
   it("shows a close button and returns to overview when clicked", async () => {
     const user = userEvent.setup();
 
@@ -228,6 +258,8 @@ describe("NewFundForm", () => {
     fireEvent.change(screen.getAllByLabelText("予算額")[1], { target: { value: "400000" } });
 
     expect(screen.getByText("費目予算の合計が交付額を超えています。")).toBeInTheDocument();
+    const chart = screen.getByRole("region", { name: "横断カテゴリ別の予算配分" });
+    expect(chart.querySelector(".budget-category-over-budget-ring")).not.toBeNull();
     expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "保存" })).toHaveClass("budget-entry-submit-disabled");
 

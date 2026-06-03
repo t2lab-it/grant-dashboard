@@ -9,7 +9,7 @@ import type { ClassificationResponse } from "../classifications/classificationTy
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import { parseNonnegativeAmountExpression, parsePositiveAmountExpression } from "../forms/amountExpression";
 import { readApiErrorMessage, useEntryForm } from "../forms/useEntryForm";
-import { buildFundBudgetSummary, FundBudgetSummary } from "./FundBudgetSummary";
+import { buildFundBudgetSummary } from "./FundBudgetSummary";
 import { createFundCategoryDraft, nextFundCategoryDraftId, type FundCategoryDraft } from "./FundFormFields";
 import { FundFormFields } from "./FundFormFields";
 
@@ -33,7 +33,7 @@ export function NewFundForm() {
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
-  const { awardedAmount, categoryTotal, balance } = buildFundBudgetSummary(
+  const { awardedAmount, categoryTotal } = buildFundBudgetSummary(
     categories.map((category) => category.amount),
     values.awardedAmount,
   );
@@ -156,8 +156,6 @@ export function NewFundForm() {
           updateCategory={updateCategory}
           values={values}
         />
-
-        <FundBudgetSummary balance={balance} />
 
         <div className="budget-form-actions">
           <button

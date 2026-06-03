@@ -124,9 +124,11 @@ describe("Fund detail interactions", () => {
     expect(within(dialog).getByLabelText("予算メモ")).toHaveValue("初期メモ");
     expect(within(dialog).getAllByLabelText("費目名")).toHaveLength(1);
     expect(within(dialog).getByLabelText("横断集計カテゴリ")).toHaveValue("equipment");
-    expect(within(dialog).getByRole("region", { name: "費目予算の合計確認" })).toHaveTextContent(
-      /差額\s*4,080,000円/,
-    );
+    const categoryChart = within(dialog).getByRole("region", { name: "横断カテゴリ別の予算配分" });
+    expect(categoryChart).toHaveTextContent("物品系");
+    expect(categoryChart).toHaveTextContent("1,000,000円");
+    expect(categoryChart).toHaveTextContent("差額");
+    expect(categoryChart).toHaveTextContent("4,080,000円");
 
     await user.clear(within(dialog).getByLabelText("予算名"));
     await user.type(within(dialog).getByLabelText("予算名"), "基盤研究費 改");
@@ -137,12 +139,11 @@ describe("Fund detail interactions", () => {
     expect(within(dialog).getByRole("button", { name: "保存" })).toBeDisabled();
     expect(within(dialog).getByRole("button", { name: "保存" })).toHaveClass("budget-entry-submit-disabled");
     expect(within(dialog).getByText("費目予算の合計が交付額を超えています。")).toBeInTheDocument();
-    expect(within(dialog).getByRole("region", { name: "費目予算の合計確認" })).toHaveTextContent(
-      /差額\s*-100,000円/,
-    );
+    expect(categoryChart.querySelector(".budget-category-over-budget-ring")).not.toBeNull();
     await user.clear(within(dialog).getByLabelText("交付額"));
     await user.type(within(dialog).getByLabelText("交付額"), "6,000,000 + 100,000");
     expect(within(dialog).queryByText("費目予算の合計が交付額を超えています。")).not.toBeInTheDocument();
+    expect(categoryChart.querySelector(".budget-category-over-budget-ring")).toBeNull();
     expect(within(dialog).getByRole("button", { name: "保存" })).toBeEnabled();
     expect(within(dialog).getByRole("button", { name: "保存" })).not.toHaveClass("budget-entry-submit-disabled");
     await user.clear(within(dialog).getByLabelText("予算メモ"));
@@ -156,9 +157,9 @@ describe("Fund detail interactions", () => {
     await user.type(within(dialog).getAllByLabelText("費目名")[1], "外注費");
     fireEvent.change(within(dialog).getAllByLabelText("横断集計カテゴリ")[1], { target: { value: "other" } });
     await user.type(within(dialog).getAllByLabelText("予算額")[1], "250000");
-    expect(within(dialog).getByRole("region", { name: "費目予算の合計確認" })).toHaveTextContent(
-      /差額\s*4,450,000円/,
-    );
+    expect(categoryChart).toHaveTextContent("その他");
+    expect(categoryChart).toHaveTextContent("250,000円");
+    expect(categoryChart).toHaveTextContent("4,450,000円");
     await user.click(within(dialog).getByRole("button", { name: "保存" }));
 
     expect(fetchMock).toHaveBeenCalledWith("/api/funds/1", {

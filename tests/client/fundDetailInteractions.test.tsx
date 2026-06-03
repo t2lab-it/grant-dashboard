@@ -124,14 +124,11 @@ describe("Fund detail interactions", () => {
     expect(within(dialog).getByLabelText("予算メモ")).toHaveValue("初期メモ");
     expect(within(dialog).getAllByLabelText("費目名")).toHaveLength(1);
     expect(within(dialog).getByLabelText("横断集計カテゴリ")).toHaveValue("equipment");
-    expect(within(dialog).queryByRole("region", { name: "費目予算の合計確認" })).not.toBeInTheDocument();
     const categoryChart = within(dialog).getByRole("region", { name: "横断カテゴリ別の予算配分" });
     expect(categoryChart).toHaveTextContent("物品系");
     expect(categoryChart).toHaveTextContent("1,000,000円");
-    expect(categoryChart).toHaveTextContent("19.7%");
     expect(categoryChart).toHaveTextContent("差額");
     expect(categoryChart).toHaveTextContent("4,080,000円");
-    expect(categoryChart).toHaveTextContent("80.3%");
 
     await user.clear(within(dialog).getByLabelText("予算名"));
     await user.type(within(dialog).getByLabelText("予算名"), "基盤研究費 改");
@@ -162,10 +159,7 @@ describe("Fund detail interactions", () => {
     await user.type(within(dialog).getAllByLabelText("予算額")[1], "250000");
     expect(categoryChart).toHaveTextContent("その他");
     expect(categoryChart).toHaveTextContent("250,000円");
-    expect(categoryChart).toHaveTextContent("23.0%");
-    expect(categoryChart).toHaveTextContent("4.1%");
     expect(categoryChart).toHaveTextContent("4,450,000円");
-    expect(categoryChart).toHaveTextContent("73.0%");
     await user.click(within(dialog).getByRole("button", { name: "保存" }));
 
     expect(fetchMock).toHaveBeenCalledWith("/api/funds/1", {

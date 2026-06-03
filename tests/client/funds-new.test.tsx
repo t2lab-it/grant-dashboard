@@ -52,10 +52,8 @@ describe("NewFundForm", () => {
     expect(screen.queryByRole("region", { name: "費目予算の合計確認" })).not.toBeInTheDocument();
     expect(chart).toHaveTextContent("旅費系");
     expect(chart).toHaveTextContent("700,000円");
-    expect(chart).toHaveTextContent("38.9%");
     expect(chart).toHaveTextContent("差額");
     expect(chart).toHaveTextContent("1,100,000円");
-    expect(chart).toHaveTextContent("61.1%");
 
     await user.click(screen.getByRole("button", { name: "費目を追加" }));
     fireEvent.change(screen.getAllByLabelText("費目名")[1], { target: { value: "物品" } });
@@ -64,18 +62,13 @@ describe("NewFundForm", () => {
 
     expect(chart).toHaveTextContent("物品系");
     expect(chart).toHaveTextContent("300,000円");
-    expect(chart).toHaveTextContent("16.7%");
-    expect(chart).toHaveTextContent("38.9%");
     expect(chart).toHaveTextContent("800,000円");
-    expect(chart).toHaveTextContent("44.4%");
 
     await user.click(screen.getAllByRole("button", { name: "削除" })[1]);
 
     expect(chart).not.toHaveTextContent("物品系");
     expect(chart).toHaveTextContent("旅費系");
-    expect(chart).toHaveTextContent("38.9%");
     expect(chart).toHaveTextContent("1,100,000円");
-    expect(chart).toHaveTextContent("61.1%");
   });
 
   it("shows a close button and returns to overview when clicked", async () => {

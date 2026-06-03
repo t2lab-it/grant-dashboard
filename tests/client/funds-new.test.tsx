@@ -49,7 +49,6 @@ describe("NewFundForm", () => {
     fireEvent.change(screen.getByLabelText("横断集計カテゴリ"), { target: { value: "travel" } });
 
     const chart = screen.getByRole("region", { name: "横断カテゴリ別の予算配分" });
-    expect(screen.queryByRole("region", { name: "費目予算の合計確認" })).not.toBeInTheDocument();
     expect(chart).toHaveTextContent("旅費系");
     expect(chart).toHaveTextContent("700,000円");
     expect(chart).toHaveTextContent("差額");

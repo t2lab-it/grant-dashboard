@@ -1,4 +1,5 @@
 import { ClassificationCheckboxGroup } from "../classifications/ClassificationCheckboxGroup";
+import { FundCategoryBudgetChart } from "./FundCategoryBudgetChart";
 import type { ClassificationTag } from "../classifications/classificationTypes";
 import {
   CROSS_AGGREGATE_CATEGORY_CODES,
@@ -203,6 +204,8 @@ export function FundFormFields({
           </p>
         ) : null}
       </section>
+
+      <FundCategoryBudgetChart awardedAmount={values.awardedAmount} categories={categories} />
     </>
   );
 }

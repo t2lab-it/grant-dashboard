@@ -898,19 +898,21 @@ export function OverviewSummaryPanel({
         )}
       </section>
 
-      <section className="overview-context-panel-section" aria-labelledby={`${id}-cross-aggregate-heading`}>
-        <div className="overview-context-panel-section-header">
-          <h3 id={`${id}-cross-aggregate-heading`}>大費目別内訳</h3>
-          <span>{`${copy.label}（パーセント）`}</span>
-        </div>
-        <OverviewCrossAggregateDonut
-          amountDisplayMode={amountDisplayMode}
-          colors={crossAggregateChartColors}
-          metric={metric}
-          rows={crossAggregateCategories}
-          totalValue={totalValue}
-        />
-      </section>
+      {metric !== "balance" ? (
+        <section className="overview-context-panel-section" aria-labelledby={`${id}-cross-aggregate-heading`}>
+          <div className="overview-context-panel-section-header">
+            <h3 id={`${id}-cross-aggregate-heading`}>大費目別内訳</h3>
+            <span>{`${copy.label}（パーセント）`}</span>
+          </div>
+          <OverviewCrossAggregateDonut
+            amountDisplayMode={amountDisplayMode}
+            colors={crossAggregateChartColors}
+            metric={metric}
+            rows={crossAggregateCategories}
+            totalValue={totalValue}
+          />
+        </section>
+      ) : null}
 
       <section className="overview-context-panel-section" aria-labelledby={`${id}-trend-heading`}>
         <div className="overview-context-panel-section-header">

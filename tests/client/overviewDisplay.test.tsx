@@ -427,6 +427,7 @@ describe("Overview display", () => {
       expect(panelScope.getByRole("heading", { name: "残高の分析" })).toBeInTheDocument();
       expect(panelScope.getByText("未計画率")).toBeInTheDocument();
       expect(panelScope.getByText("60.0%")).toBeInTheDocument();
+      expect(panelScope.queryByRole("heading", { name: "大費目別内訳" })).not.toBeInTheDocument();
       expect(panelScope.getByLabelText("残高の月次推移グラフ")).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole("button", { name: /^残高 600,000円$/ }));

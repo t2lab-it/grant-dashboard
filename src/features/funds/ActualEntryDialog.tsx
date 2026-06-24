@@ -79,7 +79,10 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
   const currentCategoryName = isEditMode ? props.entry.categoryName : "";
   const [blockingMessage, setBlockingMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { funds, categories, hasSelectedFund } = useBudgetTargetOptions(selectedFundId, isEditMode);
+  const { funds, categories, areCategoriesLoaded, hasSelectedFund } = useBudgetTargetOptions(
+    selectedFundId,
+    isEditMode,
+  );
   const { data: rawClassificationData } = useQuery({
     queryKey: ["classifications"],
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
@@ -90,6 +93,10 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
 
   useEffect(() => {
     if (!isEditMode) {
+      return;
+    }
+
+    if (!areCategoriesLoaded) {
       return;
     }
 
@@ -104,7 +111,7 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
     if (!categories.some((category) => String(category.id) === selectedCategoryId)) {
       setSelectedCategoryId("");
     }
-  }, [categories, currentCategoryName, isEditMode, selectedCategoryId]);
+  }, [areCategoriesLoaded, categories, currentCategoryName, isEditMode, selectedCategoryId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

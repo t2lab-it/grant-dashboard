@@ -38,7 +38,10 @@ export function EditPlannedItemDialog({
   const [infoMessage, setInfoMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
-  const { funds, categories, hasSelectedFund } = useBudgetTargetOptions(selectedFundId, true);
+  const { funds, categories, areCategoriesLoaded, hasSelectedFund } = useBudgetTargetOptions(
+    selectedFundId,
+    true,
+  );
   const { data: rawClassificationData } = useQuery({
     queryKey: ["classifications"],
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
@@ -48,14 +51,14 @@ export function EditPlannedItemDialog({
   useCloseOnEscape(onClose, !isSubmitting);
 
   useEffect(() => {
-    if (selectedCategoryId.length === 0) {
+    if (selectedCategoryId.length === 0 || !areCategoriesLoaded) {
       return;
     }
 
     if (!categories.some((category) => String(category.id) === selectedCategoryId)) {
       setSelectedCategoryId("");
     }
-  }, [categories, selectedCategoryId]);
+  }, [areCategoriesLoaded, categories, selectedCategoryId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

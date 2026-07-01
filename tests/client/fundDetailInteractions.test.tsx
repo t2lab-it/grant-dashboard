@@ -1259,6 +1259,88 @@ describe("Fund detail interactions", () => {
     });
   });
 
+  it("preserves the planned item category when editing non-ID fields", async () => {
+    const user = userEvent.setup();
+    let submittedPayload: unknown;
+    const currentFundDetail = {
+      fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
+      categories: [
+        {
+          id: 1,
+          categoryName: "物品費",
+          budgetAmount: 1000000,
+          plannedAmount: 280000,
+          actualAmount: 0,
+        },
+      ],
+      monthlyStatus: [],
+      actualEntries: [],
+      plannedItems: [
+        {
+          id: 10,
+          plannedDate: "2026-07-10",
+          scheduledMonth: "2026-07",
+          categoryId: 1,
+          categoryName: "物品費",
+          description: "GPU サーバ保守更新",
+          amount: 280000,
+          notes: "未精算",
+        },
+      ],
+    };
+
+    fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/funds/1" && method === "GET") {
+        return {
+          ok: true,
+          json: async () => currentFundDetail,
+        };
+      }
+
+      if (url === "/api/overview" && method === "GET") {
+        return {
+          ok: true,
+          json: async () => ({ funds: [{ id: 1, name: "基盤研究費" }] }),
+        };
+      }
+
+      if (url === "/api/planned-items/10" && method === "PUT") {
+        submittedPayload = JSON.parse(String(init?.body));
+        return {
+          ok: true,
+          json: async () => ({ warnings: [] }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch: ${method} ${url}`);
+    });
+
+    const view = renderAppRoute("/funds/1");
+    const fundPage = within(view.container);
+    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+
+    await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "計画項目を編集" });
+    fireEvent.change(within(dialog).getByLabelText("説明"), {
+      target: { value: "GPU サーバ保守更新 改" },
+    });
+    await user.click(within(dialog).getByRole("button", { name: "更新を保存" }));
+
+    expect(submittedPayload).toMatchObject({
+      fundId: 1,
+      categoryId: 1,
+      scheduledMonth: "2026-07",
+      description: "GPU サーバ保守更新 改",
+      amount: 280000,
+      notes: "未精算",
+      auxiliaryLabelIds: [],
+    });
+  });
+
   it("deletes planned items from the edit modal after moving destructive actions out of the list", async () => {
     const user = userEvent.setup();
     let currentFundDetail = {

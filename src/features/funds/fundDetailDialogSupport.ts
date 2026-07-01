@@ -44,7 +44,7 @@ export function useBudgetTargetOptions(selectedFundId: string, enabled: boolean)
     queryFn: () => apiGet<OverviewResponse>("/api/overview"),
     enabled,
   });
-  const { data: fundDetailData } = useQuery({
+  const categoryOptionsQuery = useQuery({
     queryKey: ["fund-category-options", parsedFundId],
     queryFn: () => apiGet<FundCategoryOptionsResponse>(`/api/funds/${parsedFundId}`),
     enabled: enabled && hasSelectedFund,
@@ -52,7 +52,8 @@ export function useBudgetTargetOptions(selectedFundId: string, enabled: boolean)
 
   return {
     funds: overviewData?.funds ?? [],
-    categories: fundDetailData?.categories ?? [],
+    categories: categoryOptionsQuery.data?.categories ?? [],
+    areCategoriesLoaded: !enabled || !hasSelectedFund || categoryOptionsQuery.isSuccess,
     hasSelectedFund,
   };
 }

@@ -14,6 +14,7 @@ import type { PlannedItem } from "./fundDetailTypes";
 
 export type EditPlannedItemDialogProps = {
   fundId: number;
+  fiscalYear: number;
   item: PlannedItem;
   onClose: () => void;
   onSaved: () => Promise<void>;
@@ -21,6 +22,7 @@ export type EditPlannedItemDialogProps = {
 
 export function EditPlannedItemDialog({
   fundId,
+  fiscalYear,
   item,
   onClose,
   onSaved,
@@ -40,6 +42,7 @@ export function EditPlannedItemDialog({
   const [warnings, setWarnings] = useState<string[]>([]);
   const { funds, categories, areCategoriesLoaded, hasSelectedFund } = useBudgetTargetOptions(
     selectedFundId,
+    fiscalYear,
     true,
   );
   const { data: rawClassificationData } = useQuery({

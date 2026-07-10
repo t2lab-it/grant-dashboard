@@ -28,7 +28,7 @@ function parsePositiveIntQuery(value: unknown) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 }
 
-export function registerExportRoutes(app: FastifyInstance) {
+export function registerExportRoutes(app: FastifyInstance, { now }: { now: () => Date }) {
   app.get("/api/exports/json", () => {
     return buildJsonExportPayload(app.db);
   });
@@ -39,6 +39,7 @@ export function registerExportRoutes(app: FastifyInstance) {
       const exportResult = buildLedgerWorkbookExport(app.db, {
         fiscalYear: parseFiscalYear(query.year),
         fundId: parsePositiveIntQuery(query.fundId),
+        exportedAt: now(),
       });
       reply.header("Content-Disposition", `attachment; filename="${exportResult.filename}"`);
       reply.type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

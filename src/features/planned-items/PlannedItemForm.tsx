@@ -15,6 +15,7 @@ import type {
   OverviewFundOptionsResponse,
 } from "../../contracts/entries";
 import { apiGet, apiPostJson } from "../../lib/api";
+import { formatTokyoDateKey } from "../../lib/calendar";
 import { FormFeedback } from "../forms/FormFeedback";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
@@ -66,7 +67,7 @@ function formatYearMonth(monthIndex: number) {
 }
 
 export function PlannedItemForm() {
-  const today = formatDateForDisplay(new Date().toISOString().slice(0, 10));
+  const today = formatDateForDisplay(formatTokyoDateKey(new Date()));
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

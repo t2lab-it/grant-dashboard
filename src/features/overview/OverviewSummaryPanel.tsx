@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { formatAmount, type AmountDisplayMode } from "../../lib/format";
+import { formatTokyoDateKey, formatTokyoMonthKey, getTokyoCalendarDate } from "../../lib/calendar";
 import { type BalanceRateThresholds } from "../../lib/executionRate";
 import {
   CROSS_AGGREGATE_CATEGORY_LABELS,
@@ -223,15 +224,7 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function getCurrentMonthKey() {
-  return formatMonthKey(new Date());
-}
-
-function formatMonthKey(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function formatDateKey(date: Date) {
-  return `${formatMonthKey(date)}-${String(date.getDate()).padStart(2, "0")}`;
+  return formatTokyoMonthKey(new Date());
 }
 
 function getTodayProgressLabel(metric: OverviewSummaryMetricKey, points: OverviewTrendPoint[], targetValue: number) {
@@ -417,7 +410,7 @@ function getTodayMarker(
   paddingLeft: number,
 ): { dateLabel: string; x: number } | null {
   const today = new Date();
-  const monthKey = formatMonthKey(today);
+  const monthKey = formatTokyoMonthKey(today);
   const monthIndex = points.findIndex((point) => point.month === monthKey);
 
   if (monthIndex === -1 || points.length === 0) {
@@ -425,11 +418,12 @@ function getTodayMarker(
   }
 
   const bandWidth = chartWidth / points.length;
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const dayPosition = (today.getDate() - 0.5) / Math.max(daysInMonth, 1);
+  const { year, month, day } = getTokyoCalendarDate(today);
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const dayPosition = (day - 0.5) / Math.max(daysInMonth, 1);
 
   return {
-    dateLabel: formatDateKey(today),
+    dateLabel: formatTokyoDateKey(today),
     x: paddingLeft + bandWidth * (monthIndex + dayPosition),
   };
 }

@@ -552,6 +552,7 @@ export function FundDetailPage() {
           key={`duplicate-${duplicatingActualEntry.id}`}
           mode="duplicate"
           currentFundId={parsedFundId}
+          fiscalYear={data.fund.fiscalYear}
           entry={duplicatingActualEntry}
           onClose={() => setDuplicatingActualEntry(null)}
           onSaved={refreshFundDetail}
@@ -566,6 +567,7 @@ export function FundDetailPage() {
             null
           }
           currentFundId={parsedFundId}
+          fiscalYear={data.fund.fiscalYear}
           entry={editingActualEntry}
           onClose={() => setEditingActualEntry(null)}
           onSaved={refreshFundDetail}
@@ -584,6 +586,7 @@ export function FundDetailPage() {
         <EditPlannedItemDialog
           key={editingItem.id}
           fundId={parsedFundId}
+          fiscalYear={data.fund.fiscalYear}
           item={editingItem}
           onClose={() => setEditingItem(null)}
           onSaved={refreshFundDetail}

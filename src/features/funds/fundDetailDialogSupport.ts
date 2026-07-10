@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "../../lib/api";
+import { buildOverviewApiPath } from "../../app/fiscalYear";
 
 type OverviewResponse = {
   funds: Array<{
@@ -36,12 +37,12 @@ export function useCloseOnEscape(onClose: () => void, enabled: boolean) {
   }, [enabled, onClose]);
 }
 
-export function useBudgetTargetOptions(selectedFundId: string, enabled: boolean) {
+export function useBudgetTargetOptions(selectedFundId: string, fiscalYear: number, enabled: boolean) {
   const parsedFundId = selectedFundId.trim().length > 0 ? Number(selectedFundId) : Number.NaN;
   const hasSelectedFund = Number.isInteger(parsedFundId) && parsedFundId > 0;
   const { data: overviewData } = useQuery({
-    queryKey: ["overview"],
-    queryFn: () => apiGet<OverviewResponse>("/api/overview"),
+    queryKey: ["overview", fiscalYear],
+    queryFn: () => apiGet<OverviewResponse>(buildOverviewApiPath(fiscalYear)),
     enabled,
   });
   const categoryOptionsQuery = useQuery({

@@ -22,6 +22,11 @@ import {
   buildYearEndRiskSummary,
   defaultYearEndRiskThresholds,
 } from "../contracts/yearEndRisk";
+import {
+  formatTokyoMonthKey,
+  inferJapaneseFiscalYear,
+  listFiscalYearMonths,
+} from "../lib/calendar";
 
 const STORAGE_KEY = "budget-dashboard.static-demo.v1";
 const DEMO_IMPORTED_AT = "2026-04-23T00:00:00.000Z";
@@ -375,18 +380,13 @@ function listAvailableFiscalYears(state: StaticDemoState) {
   return Array.from(new Set(state.funds.map((fund) => fund.fiscal_year))).sort((a, b) => a - b);
 }
 
-function inferJapaneseFiscalYear(today = new Date()) {
-  const month = today.getMonth() + 1;
-  return month >= 4 ? today.getFullYear() : today.getFullYear() - 1;
-}
-
 function resolveFiscalYear(state: StaticDemoState, requestedFiscalYear?: number) {
   const availableFiscalYears = listAvailableFiscalYears(state);
   if (availableFiscalYears.length === 0) {
     return null;
   }
 
-  const targetFiscalYear = requestedFiscalYear ?? inferJapaneseFiscalYear();
+  const targetFiscalYear = requestedFiscalYear ?? inferJapaneseFiscalYear(new Date());
   if (availableFiscalYears.includes(targetFiscalYear)) {
     return targetFiscalYear;
   }
@@ -409,10 +409,6 @@ function resolveFiscalYear(state: StaticDemoState, requestedFiscalYear?: number)
 
 function formatYen(amount: number) {
   return `${new Intl.NumberFormat("ja-JP").format(amount)}円`;
-}
-
-function currentMonth(today = new Date()) {
-  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function normalizeText(value: string) {
@@ -507,16 +503,6 @@ function getPlannedStatusLabel(status: StaticDemoPlannedItem["status"], remainin
   return remainingAmount > 0 ? `未精算 ${formatYen(remainingAmount)}` : "精算済み";
 }
 
-function listFiscalYearMonths(fiscalYear: number) {
-  return Array.from({ length: 12 }, (_, index) => {
-    const fiscalMonth = index + 4;
-    const year = fiscalMonth <= 12 ? fiscalYear : fiscalYear + 1;
-    const month = fiscalMonth <= 12 ? fiscalMonth : fiscalMonth - 12;
-
-    return `${year}-${String(month).padStart(2, "0")}`;
-  });
-}
-
 function getOverviewMonthlyStatus(state: StaticDemoState, totalAssets: number, fiscalYear: number) {
   const byMonth = new Map<string, { month: string; committed: number; actual: number }>();
   const matchingFundIds = new Set(
@@ -557,12 +543,8 @@ function getOverviewMonthlyStatus(state: StaticDemoState, totalAssets: number, f
     });
 }
 
-function formatMonthKey(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
 function getStaticFundOverduePlannedAmountMap(state: StaticDemoState, fiscalYear: number, today: Date) {
-  const currentMonth = formatMonthKey(today);
+  const currentMonth = formatTokyoMonthKey(today);
   const scopedFundIds = new Set(
     state.funds.filter((fund) => fund.fiscal_year === fiscalYear).map((fund) => fund.id),
   );
@@ -725,7 +707,7 @@ export function getStaticSearchSnapshot(options: StaticSearchOptions = {}) {
       }),
   ].filter((result) => result.type === "actual" || result.statusLabel === "完了" || (result.remainingAmount ?? 0) > 0);
   const tab = options.tab ?? "all";
-  const comparisonMonth = currentMonth(options.today);
+  const comparisonMonth = formatTokyoMonthKey(options.today ?? new Date());
   const filteredForCounts = results.filter((result) => matchesSearchFilters(result, options));
   const counts = {
     all: filteredForCounts.filter((result) => matchesSearchTab(result, "all", comparisonMonth)).length,

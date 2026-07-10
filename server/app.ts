@@ -15,7 +15,8 @@ import { ensureDefaultAuxiliaryLabels } from "./services/classifications";
 export async function buildServer({
   dbPath = "app.db",
   seedDefaultClassifications = true,
-}: { dbPath?: string; seedDefaultClassifications?: boolean } = {}) {
+  now = () => new Date(),
+}: { dbPath?: string; seedDefaultClassifications?: boolean; now?: () => Date } = {}) {
   const db = createDb(dbPath);
   runMigrations(db);
   if (seedDefaultClassifications) {
@@ -28,14 +29,14 @@ export async function buildServer({
     db.close();
   });
 
-  registerOverviewRoutes(app);
-  registerHeaderAlertRoutes(app);
-  registerSearchRoutes(app);
+  registerOverviewRoutes(app, { now });
+  registerHeaderAlertRoutes(app, { now });
+  registerSearchRoutes(app, { now });
   registerClassificationRoutes(app);
   registerFundRoutes(app);
   registerPlannedItemRoutes(app);
   registerActualEntryRoutes(app);
-  registerExportRoutes(app);
+  registerExportRoutes(app, { now });
   registerImportRoutes(app, { dbPath });
 
   return app;

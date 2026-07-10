@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
 import { apiFetch, apiGet } from "../../lib/api";
+import { formatTokyoDateKey } from "../../lib/calendar";
 import { ClassificationCheckboxGroup } from "../classifications/ClassificationCheckboxGroup";
 import type { ClassificationResponse } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
@@ -25,7 +26,7 @@ export function DuplicatePlannedItemDialog({
   onClose,
   onSaved,
 }: DuplicatePlannedItemDialogProps) {
-  const [plannedDate, setPlannedDate] = useState(formatDateForDisplay(new Date().toISOString().slice(0, 10)));
+  const [plannedDate, setPlannedDate] = useState(formatDateForDisplay(formatTokyoDateKey(new Date())));
   const [scheduledMonth, setScheduledMonth] = useState(item.scheduledMonth);
   const [description, setDescription] = useState(item.description);
   const [amount, setAmount] = useState(String(item.amount));

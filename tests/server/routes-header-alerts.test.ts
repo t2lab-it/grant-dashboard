@@ -4,7 +4,11 @@ import { buildServer } from "../../server/app";
 
 async function createEmptyServer(dbPath: string) {
   rmSync(dbPath, { force: true });
-  const app = await buildServer({ dbPath, seedDefaultClassifications: false });
+  const app = await buildServer({
+    dbPath,
+    seedDefaultClassifications: false,
+    now: () => new Date("2026-05-15T00:00:00+09:00"),
+  });
 
   return {
     app,

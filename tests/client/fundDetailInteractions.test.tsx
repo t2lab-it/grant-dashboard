@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { formatTokyoDateKey } from "../../src/lib/calendar";
 import { fetchMock, renderAppRoute, resetOverviewTestState, setHoverCapablePointer } from "./overviewTestUtils";
 import { storedAppSettings } from "./testUtils";
 
@@ -841,11 +842,11 @@ describe("Fund detail interactions", () => {
     });
   });
 
-  it("duplicates actual entries from the actual list without copying the planned item link", async () => {
+  it("scopes actual-entry duplicate destinations to the displayed historical fiscal year", async () => {
     const user = userEvent.setup();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = formatTokyoDateKey(new Date());
     let currentFundDetail = {
-      fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
+      fund: { id: 1, name: "基盤研究費", fiscalYear: 2024, awarded_amount: 5080000 },
       categories: [
         {
           id: 1,
@@ -882,6 +883,25 @@ describe("Fund detail interactions", () => {
         };
       }
 
+      if (url === "/api/overview?year=2024" && method === "GET") {
+        return {
+          ok: true,
+          json: async () => ({
+            funds: [
+              { id: 1, name: "基盤研究費" },
+              { id: 2, name: "歴史年度共同研究費" },
+            ],
+          }),
+        };
+      }
+
+      if (url === "/api/funds/2" && method === "GET") {
+        return {
+          ok: true,
+          json: async () => ({ categories: [{ id: 2, categoryName: "旅費" }] }),
+        };
+      }
+
       if (url === "/api/classifications" && method === "GET") {
         return {
           ok: true,
@@ -909,6 +929,15 @@ describe("Fund detail interactions", () => {
     await user.click(within(actualTable).getByRole("button", { name: "複製" }));
 
     const dialog = await screen.findByRole("dialog", { name: "精算項目を複製" });
+    expect(within(dialog).getByLabelText("資金ID")).toHaveValue("1");
+    expect(within(dialog).getByLabelText("費目ID")).toHaveValue("1");
+    fireEvent.change(within(dialog).getByLabelText("資金ID"), {
+      target: { value: "2" },
+    });
+    await screen.findByRole("option", { name: "旅費" });
+    fireEvent.change(within(dialog).getByLabelText("費目ID"), {
+      target: { value: "2" },
+    });
     fireEvent.change(within(dialog).getByLabelText("金額"), {
       target: { value: "300000" },
     });
@@ -918,8 +947,8 @@ describe("Fund detail interactions", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        fundId: 1,
-        categoryId: 1,
+        fundId: 2,
+        categoryId: 2,
         actualDate: today,
         description: "GPU サーバ保守",
         amount: 300000,
@@ -1099,7 +1128,7 @@ describe("Fund detail interactions", () => {
     expect(fundPage.queryByText("未精算")).not.toBeInTheDocument();
   });
 
-  it("opens an edit modal for planned items and saves the edited fields", async () => {
+  it("scopes planned-item destination choices to the displayed historical fiscal year", async () => {
     const user = userEvent.setup();
     const overviewResponse = {
       funds: [
@@ -1108,7 +1137,7 @@ describe("Fund detail interactions", () => {
       ],
     };
     let currentFundDetail: {
-      fund: { id: number; name: string; awarded_amount: number };
+      fund: { id: number; name: string; fiscalYear: number; awarded_amount: number };
       categories: Array<{
         id: number;
         categoryName: string;
@@ -1141,7 +1170,7 @@ describe("Fund detail interactions", () => {
         notes: string;
       }>;
     } = {
-      fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
+      fund: { id: 1, name: "基盤研究費", fiscalYear: 2024, awarded_amount: 5080000 },
       categories: [],
       monthlyStatus: [],
       actualEntries: [
@@ -1188,7 +1217,7 @@ describe("Fund detail interactions", () => {
         };
       }
 
-      if (url === "/api/overview" && method === "GET") {
+      if (url === "/api/overview?year=2024" && method === "GET") {
         return {
           ok: true,
           json: async () => overviewResponse,

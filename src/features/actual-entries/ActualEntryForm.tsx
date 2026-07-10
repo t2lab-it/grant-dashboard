@@ -18,7 +18,7 @@ import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/D
 import { FormFeedback } from "../forms/FormFeedback";
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
-import { readApiErrorMessage, useEntryForm } from "../forms/useEntryForm";
+import { useEntryForm } from "../forms/useEntryForm";
 import { useAppSettings } from "../settings/AppSettings";
 
 function parsePositiveFundId(value: string | null) {
@@ -167,7 +167,7 @@ export function ActualEntryForm() {
 
       if (!result.ok) {
         return {
-          blockingMessage: readApiErrorMessage(result.data, "実績を保存できませんでした。"),
+          blockingMessage: result.error.message,
         };
       }
 

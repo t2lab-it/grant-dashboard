@@ -3,12 +3,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getFiscalYearFromSearch, setFiscalYearInSearch } from "../../app/fiscalYear";
 import { FormFeedback } from "../forms/FormFeedback";
-import { apiFetch } from "../../lib/api";
-import { apiGet } from "../../lib/api";
+import { apiGet, apiMutateJson } from "../../lib/api";
 import type { ClassificationResponse } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import { parseNonnegativeAmountExpression, parsePositiveAmountExpression } from "../forms/amountExpression";
-import { readApiErrorMessage, useEntryForm } from "../forms/useEntryForm";
+import { useEntryForm } from "../forms/useEntryForm";
 import { buildFundBudgetSummary } from "./FundBudgetSummary";
 import { createFundCategoryDraft, nextFundCategoryDraftId, type FundCategoryDraft } from "./FundFormFields";
 import { FundFormFields } from "./FundFormFields";
@@ -101,10 +100,7 @@ export function NewFundForm() {
         };
       }
 
-      const response = await apiFetch("/api/funds", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const result = await apiMutateJson<{ fundId: number }>("/api/funds", "POST", {
           name: values.name,
           fiscalYear: Number(values.fiscalYear),
           awardedAmount,
@@ -112,19 +108,17 @@ export function NewFundForm() {
           projectTagIds: selectedProjectTagIds,
           auxiliaryLabelIds: selectedAuxiliaryLabelIds,
           categories: parsedCategories,
-        }),
       });
 
-      const payload = await response.json();
-      if (!response.ok) {
+      if (!result.ok) {
         return {
-          blockingMessage: readApiErrorMessage(payload, "予算を保存できませんでした。"),
+          blockingMessage: result.error.message,
         };
       }
 
       await queryClient.invalidateQueries({ queryKey: ["overview"] });
       await queryClient.invalidateQueries({ queryKey: ["overview", Number(values.fiscalYear)] });
-      await navigate(`/funds/${payload.fundId}${setFiscalYearInSearch("", Number(values.fiscalYear))}`);
+      await navigate(`/funds/${result.data.fundId}${setFiscalYearInSearch("", Number(values.fiscalYear))}`);
 
       return {
         infoMessage: "予算を保存しました。",

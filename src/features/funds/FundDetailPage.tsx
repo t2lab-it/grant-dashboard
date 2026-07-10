@@ -3,11 +3,10 @@ import { useLocation, useNavigate, useParams, useSearchParams } from "react-rout
 import { getFiscalYearFromSearch, setFiscalYearInSearch } from "../../app/fiscalYear";
 import { PageStatusMessage } from "../../app/PageStatusMessage";
 import { isStaticDemoMode } from "../../demo/staticDemoMode";
-import { apiFetch } from "../../lib/api";
+import { apiMutateJson } from "../../lib/api";
 import { getRateMetric, getRateMetricKey, getRateMetricLabel } from "../../lib/executionRate";
 import { formatAmount } from "../../lib/format";
 import { CROSS_AGGREGATE_CATEGORY_LABELS } from "../../contracts/crossAggregateCategory";
-import { readApiErrorMessage } from "../forms/useEntryForm";
 import { ActualEntryDialog } from "./ActualEntryDialog";
 import { useAppSettings } from "../settings/AppSettings";
 import { type FundDetailSectionKey } from "../settings/fundDetailSectionOrder";
@@ -437,13 +436,10 @@ export function FundDetailPage() {
     setPlannedHistoryRestoreError("");
 
     try {
-      const response = await apiFetch(`/api/planned-items/${item.id}`, {
-        method: "DELETE",
-      });
-      const payload = await response.json();
+      const result = await apiMutateJson(`/api/planned-items/${item.id}`, "DELETE");
 
-      if (!response.ok) {
-        setPlannedHistoryDeleteError(readApiErrorMessage(payload, "計画項目を削除できませんでした。"));
+      if (!result.ok) {
+        setPlannedHistoryDeleteError(result.error.message);
         return;
       }
 
@@ -461,13 +457,10 @@ export function FundDetailPage() {
     setPlannedHistoryRestoreError("");
 
     try {
-      const response = await apiFetch(`/api/planned-items/${item.id}/restore`, {
-        method: "POST",
-      });
-      const payload = await response.json();
+      const result = await apiMutateJson(`/api/planned-items/${item.id}/restore`, "POST");
 
-      if (!response.ok) {
-        setPlannedHistoryRestoreError(readApiErrorMessage(payload, "計画項目を計画に戻せませんでした。"));
+      if (!result.ok) {
+        setPlannedHistoryRestoreError(result.error.message);
         return;
       }
 

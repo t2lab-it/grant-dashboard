@@ -2,7 +2,7 @@ import { useEffect, useId, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { buildOverviewApiPath, getFiscalYearFromSearch } from "../../app/fiscalYear";
-import { apiFetch, apiGet, apiPostJson } from "../../lib/api";
+import { apiGet, apiMutateJson, apiPostJson } from "../../lib/api";
 import type { ClassificationKind, ClassificationResponse, ClassificationTag } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import {
@@ -379,12 +379,11 @@ function ClassificationEditRow({
 
     setIsSubmitting(true);
     try {
-      const response = await apiFetch(`/api/classifications/${tag.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmedName, color }),
+      const result = await apiMutateJson(`/api/classifications/${tag.id}`, "PUT", {
+        name: trimmedName,
+        color,
       });
-      if (response.ok) {
+      if (result.ok) {
         await onChanged();
         setIsEditing(false);
       }
@@ -396,8 +395,8 @@ function ClassificationEditRow({
   async function handleDelete() {
     setIsSubmitting(true);
     try {
-      const response = await apiFetch(`/api/classifications/${tag.id}`, { method: "DELETE" });
-      if (response.ok) {
+      const result = await apiMutateJson(`/api/classifications/${tag.id}`, "DELETE");
+      if (result.ok) {
         await onChanged();
       }
     } finally {

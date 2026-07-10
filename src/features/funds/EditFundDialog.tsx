@@ -1,12 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
-import { apiFetch, apiGet } from "../../lib/api";
+import { apiGet, apiMutateJson } from "../../lib/api";
 import type { ClassificationResponse, ClassificationTag } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import { FormFeedback } from "../forms/FormFeedback";
 import { parseNonnegativeAmountExpression, parsePositiveAmountExpression } from "../forms/amountExpression";
-import { readApiErrorMessage } from "../forms/useEntryForm";
 import { buildFundBudgetSummary } from "./FundBudgetSummary";
 import {
   FundFormFields,
@@ -137,10 +136,7 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
     setBlockingMessage("");
 
     try {
-      const response = await apiFetch(`/api/funds/${fundId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const result = await apiMutateJson(`/api/funds/${fundId}`, "PUT", {
           name: values.name,
           fiscalYear: Number(values.fiscalYear),
           awardedAmount,
@@ -148,12 +144,10 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
           projectTagIds: selectedProjectTagIds,
           auxiliaryLabelIds: selectedAuxiliaryLabelIds,
           categories: parsedCategories,
-        }),
       });
-      const payload = await response.json();
 
-      if (!response.ok) {
-        setBlockingMessage(readApiErrorMessage(payload, "予算を保存できませんでした。"));
+      if (!result.ok) {
+        setBlockingMessage(result.error.message);
         return;
       }
 

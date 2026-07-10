@@ -4,16 +4,6 @@ import { ModalShell } from "../../app/ModalShell";
 import type { WorkbookImportPreview, WorkbookImportResult } from "../../contracts/imports";
 import { apiPostFile } from "../../lib/api";
 
-function readApiMessage(payload: unknown, fallback: string) {
-  if (typeof payload === "object" && payload !== null) {
-    if (typeof (payload as { message?: unknown }).message === "string") {
-      return (payload as { message: string }).message;
-    }
-  }
-
-  return fallback;
-}
-
 export function WorkbookImportControl() {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
@@ -47,7 +37,7 @@ export function WorkbookImportControl() {
     const result = await apiPostFile<WorkbookImportPreview | WorkbookImportResult>(endpoint, selectedFile);
 
     if (!result.ok) {
-      throw new Error(readApiMessage(result.data, "workbook を処理できませんでした。"));
+      throw result.error;
     }
 
     return result.data;

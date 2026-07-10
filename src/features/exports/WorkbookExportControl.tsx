@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ModalShell } from "../../app/ModalShell";
+import { apiGet, apiMutateJson } from "../../lib/api";
 import { useWorkbookExportStatus } from "./WorkbookExportStatus";
 
 type WorkbookChangeRow = {
@@ -43,20 +44,6 @@ const SHEET_LABELS: Record<WorkbookSheetName, string> = {
   actual_entries: "実績項目",
 };
 
-function readApiMessage(payload: unknown, fallback: string) {
-  if (typeof payload === "object" && payload !== null) {
-    if (typeof (payload as { message?: unknown }).message === "string") {
-      return (payload as { message: string }).message;
-    }
-
-    if (typeof (payload as { reason?: unknown }).reason === "string") {
-      return (payload as { reason: string }).reason;
-    }
-  }
-
-  return fallback;
-}
-
 export function WorkbookExportControl() {
   const { setStatus } = useWorkbookExportStatus();
   const [isOpen, setIsOpen] = useState(false);
@@ -95,20 +82,14 @@ export function WorkbookExportControl() {
 
     void (async () => {
       try {
-        const response = await fetch("/api/exports/workbook/preview");
-        const payload = (await response.json()) as WorkbookExportPreview;
+        const payload = await apiGet<WorkbookExportPreview>("/api/exports/workbook/preview");
 
         if (!cancelled) {
-          if (!response.ok) {
-            setDialogError(readApiMessage(payload, "workbook プレビューを取得できませんでした。"));
-            return;
-          }
-
           setPreview(payload);
         }
-      } catch {
+      } catch (error) {
         if (!cancelled) {
-          setDialogError("workbook プレビューを取得できませんでした。");
+          setDialogError(error instanceof Error ? error.message : "workbook プレビューを取得できませんでした。");
         }
       } finally {
         if (!cancelled) {
@@ -142,23 +123,19 @@ export function WorkbookExportControl() {
     setIsSaving(true);
 
     try {
-      const response = await fetch("/api/exports/workbook", {
-        method: "POST",
-      });
-      const payload = (await response.json()) as WorkbookExportPreview;
+      const result = await apiMutateJson<WorkbookExportPreview>("/api/exports/workbook", "POST");
 
-      if (!response.ok) {
-        setDialogError(readApiMessage(payload, "workbook を保存できませんでした。"));
-        setPreview(payload);
+      if (!result.ok) {
+        setDialogError(result.error.message);
         return;
       }
 
       setStatus({
-        workbookPath: payload.workbook_path,
-        exportedAt: payload.exported_at ?? "",
+        workbookPath: result.data.workbook_path,
+        exportedAt: result.data.exported_at ?? "",
       });
       setIsOpen(false);
-      setPreview(payload);
+      setPreview(result.data);
     } catch {
       setDialogError("workbook を保存できませんでした。");
     } finally {

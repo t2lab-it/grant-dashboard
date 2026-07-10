@@ -227,7 +227,9 @@ describe("NewFundForm", () => {
 
     fetchMock.mockResolvedValue({
       ok: false,
+      status: 400,
       json: async () => ({
+        code: "invalid_payload",
         message: "入力内容を確認してください。",
       }),
     });

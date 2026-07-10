@@ -20,7 +20,7 @@ import { FormFeedback } from "../forms/FormFeedback";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
-import { readApiErrorMessage, useEntryForm } from "../forms/useEntryForm";
+import { useEntryForm } from "../forms/useEntryForm";
 import { useAppSettings } from "../settings/AppSettings";
 
 function getScheduledMonthFromDisplayDate(value: string) {
@@ -248,7 +248,7 @@ export function PlannedItemForm() {
 
       if (!result.ok) {
         return {
-          blockingMessage: readApiErrorMessage(result.data, "予定項目を保存できませんでした。"),
+          blockingMessage: result.error.message,
         };
       }
 
@@ -299,7 +299,7 @@ export function PlannedItemForm() {
 
       if (!result.ok) {
         return {
-          blockingMessage: readApiErrorMessage(result.data, "予定項目を保存できませんでした。"),
+          blockingMessage: result.error.message,
         };
       }
 

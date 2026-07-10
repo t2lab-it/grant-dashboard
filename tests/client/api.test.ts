@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { apiPostFile, apiPostJson } from "../../src/lib/api";
+import { ApiError, apiGet, apiMutateJson, apiPostFile, apiPostJson, parseApiError } from "../../src/lib/api";
 import { resetStaticDemoStore } from "../../src/demo/staticDemoApi";
 
 const fetchMock = vi.fn();
@@ -42,6 +42,24 @@ describe("client api helpers", () => {
     });
   });
 
+  it("sends PUT and DELETE mutations through the shared JSON helper", async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ success: true }) })
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ success: true }) });
+
+    await apiMutateJson("/api/funds/1", "PUT", { name: "更新後" });
+    await apiMutateJson("/api/planned-items/1", "DELETE");
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/funds/1", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "更新後" }),
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/planned-items/1", {
+      method: "DELETE",
+    });
+  });
+
   it("returns the parsed error payload for failed POST requests", async () => {
     fetchMock.mockResolvedValue({
       ok: false,
@@ -56,12 +74,36 @@ describe("client api helpers", () => {
 
     expect(result).toEqual({
       ok: false,
-      status: 409,
-      data: {
-        code: "planned_item_mismatch",
-        message: "予定項目IDが選択した資金または費目と一致していません。",
-      },
+      error: new ApiError(
+        409,
+        "planned_item_mismatch",
+        "予定項目IDが選択した資金または費目と一致していません。",
+      ),
     });
+  });
+
+  it("throws a typed API error for failed GET requests", async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({
+        code: "fund_not_found",
+        message: "対象の予算が見つかりません。",
+      }),
+    });
+
+    await expect(apiGet("/api/funds/999")).rejects.toEqual(
+      new ApiError(404, "fund_not_found", "対象の予算が見つかりません。"),
+    );
+  });
+
+  it.each([
+    ["invalid JSON", async () => { throw new SyntaxError("invalid JSON"); }],
+    ["an invalid payload", async () => ({ error: "legacy failure" })],
+  ])("safely falls back when an error response contains %s", async (_label, json) => {
+    const error = await parseApiError({ status: 502, json } as Response);
+
+    expect(error).toEqual(new ApiError(502, "unknown_error", "Request failed: 502"));
   });
 
   it("uploads file payloads with the provided content type and filename headers", async () => {

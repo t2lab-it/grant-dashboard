@@ -151,7 +151,6 @@ describe("API planned-item routes", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "invalid_payload",
-      error: "Invalid request payload",
       message: "入力内容を確認してください。",
     });
   });
@@ -174,7 +173,6 @@ describe("API planned-item routes", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "invalid_payload",
-      error: "Invalid request payload",
       message: "入力内容を確認してください。",
     });
   });
@@ -197,7 +195,6 @@ describe("API planned-item routes", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "invalid_reference",
-      error: "Invalid request payload",
       message: "選択した資金IDまたは費目IDを確認してください。",
     });
   });
@@ -225,7 +222,6 @@ describe("API planned-item routes", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "category_fund_mismatch",
-      error: "Invalid request payload",
       message: "選択した費目が資金に紐づいていません。",
     });
   });
@@ -296,7 +292,6 @@ describe("API planned-item routes", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "planned_item_delete_has_actuals",
-      error: "Planned item already has actual entries",
       message: "精算が紐づいている計画項目は削除できません。",
     });
   });
@@ -337,7 +332,6 @@ describe("API planned-item routes", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "planned_item_complete_requires_actuals",
-      error: "Planned item is not partially settled",
       message: "精算が紐づいている未精算の計画項目のみ完了にできます。",
     });
   });
@@ -376,7 +370,6 @@ describe("API planned-item routes", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "planned_item_not_cancelled_for_restore",
-      error: "Planned item is not cancelled",
       message: "完了または取消済みの計画項目のみ計画に戻せます。",
     });
   });
@@ -444,7 +437,6 @@ describe("API planned-item routes", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "planned_item_has_actuals",
-      error: "Planned item already has actual entries",
       message: "精算が紐づいている計画項目は取り消せません。",
     });
   });

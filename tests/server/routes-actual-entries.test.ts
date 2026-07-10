@@ -192,7 +192,10 @@ describe("API actual-entry routes", () => {
     const response = await app.inject(request);
 
     expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({ error: "Invalid actual entry id" });
+    expect(response.json()).toEqual({
+      code: "invalid_actual_entry_id",
+      message: "精算項目IDを確認してください。",
+    });
   });
 
   it("returns 400 for mismatched-but-existing actual-entry fund and category references", async () => {
@@ -217,7 +220,6 @@ describe("API actual-entry routes", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "category_fund_mismatch",
-      error: "Invalid request payload",
       message: "選択した費目が資金に紐づいていません。",
     });
   });

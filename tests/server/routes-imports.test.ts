@@ -123,6 +123,27 @@ describe("API import routes", () => {
     });
   });
 
+  it("accepts an uppercase XLSX filename extension", async () => {
+    const fixture = createSimpleWorkbookFixture();
+    cleanups.push(fixture.cleanup);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/imports/workbook/preview",
+      payload: readFileSync(fixture.workbookPath),
+      headers: {
+        "content-type": "application/octet-stream",
+        "x-workbook-filename": "simple-budget.XLSX",
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      source_filename: "simple-budget.XLSX",
+      replace: true,
+    });
+  });
+
   it("rejects octet-stream workbook previews when the filename is not an xlsx file", async () => {
     const fixture = createSimpleWorkbookFixture();
     cleanups.push(fixture.cleanup);
@@ -138,7 +159,10 @@ describe("API import routes", () => {
     });
 
     expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({ message: "`.xlsx` ファイルを選択してください。" });
+    expect(response.json()).toEqual({
+      code: "invalid_workbook_file",
+      message: "`.xlsx` ファイルを選択してください。",
+    });
   });
 
   it("returns demo import metadata for the repository demo workbook preview", async () => {
@@ -263,13 +287,19 @@ describe("API import routes", () => {
     const response = await app.inject({ method: "GET", url: "/api/imports/not-a-number" });
 
     expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({ error: "Invalid import id" });
+    expect(response.json()).toEqual({
+      code: "invalid_import_id",
+      message: "インポートIDを確認してください。",
+    });
   });
 
   it("returns 404 for a missing import run", async () => {
     const response = await app.inject({ method: "GET", url: "/api/imports/999" });
 
     expect(response.statusCode).toBe(404);
-    expect(response.json()).toEqual({ error: "Import not found" });
+    expect(response.json()).toEqual({
+      code: "import_not_found",
+      message: "対象のインポート履歴が見つかりません。",
+    });
   });
 });

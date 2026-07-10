@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { parsePositiveIntParam, sendNotFound } from "./routeHelpers";
+import { parsePositiveIntParam, sendApiError, sendNotFound } from "./routeHelpers";
 import {
   commitUploadedWorkbook,
   previewUploadedWorkbook,
@@ -9,7 +9,11 @@ import {
 import { createSimpleWorkbookTemplateBuffer } from "../imports/simpleWorkbookTemplate";
 import { getImportReview, listImportReviews } from "../services/importReviews";
 
-const workbookFilenameSchema = z.string().trim().min(1);
+const workbookFilenameSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine((name) => name.toLowerCase().endsWith(".xlsx"));
 
 export function registerImportRoutes(app: FastifyInstance, { dbPath }: { dbPath: string }) {
   for (const contentType of WORKBOOK_UPLOAD_CONTENT_TYPES) {
@@ -35,7 +39,10 @@ export function registerImportRoutes(app: FastifyInstance, { dbPath }: { dbPath:
   app.post("/api/imports/workbook/preview", (request, reply) => {
     const filename = workbookFilenameSchema.safeParse(request.headers["x-workbook-filename"]);
     if (!filename.success || !Buffer.isBuffer(request.body)) {
-      reply.code(400).send({ message: "`.xlsx` ファイルを選択してください。" });
+      sendApiError(reply, 400, {
+        code: "invalid_workbook_file",
+        message: "`.xlsx` ファイルを選択してください。",
+      });
       return;
     }
 
@@ -45,8 +52,9 @@ export function registerImportRoutes(app: FastifyInstance, { dbPath }: { dbPath:
         sourceFilename: filename.data,
       });
     } catch (error) {
-      reply.code(400).send({
-        message: error instanceof Error ? error.message : "workbook をプレビューできませんでした。",
+      sendApiError(reply, 400, {
+        code: "workbook_preview_failed",
+        message: "workbookをプレビューできませんでした。",
       });
     }
   });
@@ -54,7 +62,10 @@ export function registerImportRoutes(app: FastifyInstance, { dbPath }: { dbPath:
   app.post("/api/imports/workbook", (request, reply) => {
     const filename = workbookFilenameSchema.safeParse(request.headers["x-workbook-filename"]);
     if (!filename.success || !Buffer.isBuffer(request.body)) {
-      reply.code(400).send({ message: "`.xlsx` ファイルを選択してください。" });
+      sendApiError(reply, 400, {
+        code: "invalid_workbook_file",
+        message: "`.xlsx` ファイルを選択してください。",
+      });
       return;
     }
 
@@ -68,8 +79,9 @@ export function registerImportRoutes(app: FastifyInstance, { dbPath }: { dbPath:
       });
       reply.code(201).send(payload);
     } catch (error) {
-      reply.code(400).send({
-        message: error instanceof Error ? error.message : "workbook を取り込めませんでした。",
+      sendApiError(reply, 400, {
+        code: "workbook_import_failed",
+        message: "workbookを取り込めませんでした。",
       });
     }
   });
@@ -78,7 +90,8 @@ export function registerImportRoutes(app: FastifyInstance, { dbPath }: { dbPath:
     const importId = parsePositiveIntParam(
       reply,
       (request.params as { importId?: string }).importId,
-      "Invalid import id",
+      "invalid_import_id",
+      "インポートIDを確認してください。",
     );
     if (importId === undefined) {
       return;
@@ -86,7 +99,7 @@ export function registerImportRoutes(app: FastifyInstance, { dbPath }: { dbPath:
 
     const review = getImportReview(app.db, importId);
     if (!review) {
-      sendNotFound(reply, "Import not found");
+      sendNotFound(reply, "import_not_found", "対象のインポート履歴が見つかりません。");
       return;
     }
 

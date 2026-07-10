@@ -45,7 +45,8 @@ export function registerPlannedItemRoutes(app: FastifyInstance) {
     const plannedItemId = parsePositiveIntParam(
       reply,
       (request.params as { plannedItemId?: string }).plannedItemId,
-      "Invalid planned item id",
+      "invalid_planned_item_id",
+      "計画項目IDを確認してください。",
     );
     if (plannedItemId === undefined) {
       return;
@@ -68,7 +69,8 @@ export function registerPlannedItemRoutes(app: FastifyInstance) {
     const plannedItemId = parsePositiveIntParam(
       reply,
       (request.params as { plannedItemId?: string }).plannedItemId,
-      "Invalid planned item id",
+      "invalid_planned_item_id",
+      "計画項目IDを確認してください。",
     );
     if (plannedItemId === undefined) {
       return;
@@ -90,7 +92,8 @@ export function registerPlannedItemRoutes(app: FastifyInstance) {
     const plannedItemId = parsePositiveIntParam(
       reply,
       (request.params as { plannedItemId?: string }).plannedItemId,
-      "Invalid planned item id",
+      "invalid_planned_item_id",
+      "計画項目IDを確認してください。",
     );
     if (plannedItemId === undefined) {
       return;
@@ -112,7 +115,8 @@ export function registerPlannedItemRoutes(app: FastifyInstance) {
     const plannedItemId = parsePositiveIntParam(
       reply,
       (request.params as { plannedItemId?: string }).plannedItemId,
-      "Invalid planned item id",
+      "invalid_planned_item_id",
+      "計画項目IDを確認してください。",
     );
     if (plannedItemId === undefined) {
       return;
@@ -134,7 +138,8 @@ export function registerPlannedItemRoutes(app: FastifyInstance) {
     const plannedItemId = parsePositiveIntParam(
       reply,
       (request.params as { plannedItemId?: string }).plannedItemId,
-      "Invalid planned item id",
+      "invalid_planned_item_id",
+      "計画項目IDを確認してください。",
     );
     if (plannedItemId === undefined) {
       return;

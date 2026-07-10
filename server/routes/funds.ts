@@ -24,7 +24,8 @@ export function registerFundRoutes(app: FastifyInstance) {
     const fundId = parsePositiveIntParam(
       reply,
       (request.params as { fundId?: string }).fundId,
-      "Invalid fund id",
+      "invalid_fund_id",
+      "予算IDを確認してください。",
     );
     if (fundId === undefined) {
       return;
@@ -47,7 +48,8 @@ export function registerFundRoutes(app: FastifyInstance) {
     const fundId = parsePositiveIntParam(
       reply,
       (request.params as { fundId?: string }).fundId,
-      "Invalid fund id",
+      "invalid_fund_id",
+      "予算IDを確認してください。",
     );
     if (fundId === undefined) {
       return;
@@ -55,7 +57,7 @@ export function registerFundRoutes(app: FastifyInstance) {
 
     const snapshot = getFundSnapshot(app.db, fundId);
     if (snapshot.fund === undefined) {
-      sendNotFound(reply, "Fund not found");
+      sendNotFound(reply, "fund_not_found", "対象の予算が見つかりません。");
       return;
     }
 

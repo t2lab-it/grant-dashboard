@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { parsePositiveIntParam, sendApiError } from "./routeHelpers";
 import { buildJsonExportPayload } from "../exports/jsonSnapshot";
 import {
   buildLedgerWorkbookExport,
@@ -19,15 +20,6 @@ function parseFiscalYear(value: unknown) {
   return Number.isInteger(fiscalYear) && fiscalYear > 0 ? fiscalYear : undefined;
 }
 
-function parsePositiveIntQuery(value: unknown) {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
-}
-
 export function registerExportRoutes(app: FastifyInstance, { now }: { now: () => Date }) {
   app.get("/api/exports/json", () => {
     return buildJsonExportPayload(app.db);
@@ -35,10 +27,23 @@ export function registerExportRoutes(app: FastifyInstance, { now }: { now: () =>
 
   app.get("/api/exports/ledger.xlsx", (request, reply) => {
     const query = request.query as { year?: unknown; fundId?: unknown };
+    const fundId =
+      query.fundId === undefined
+        ? undefined
+        : parsePositiveIntParam(
+            reply,
+            query.fundId,
+            "invalid_fund_id",
+            "予算IDを確認してください。",
+          );
+    if (query.fundId !== undefined && fundId === undefined) {
+      return;
+    }
+
     try {
       const exportResult = buildLedgerWorkbookExport(app.db, {
         fiscalYear: parseFiscalYear(query.year),
-        fundId: parsePositiveIntQuery(query.fundId),
+        fundId,
         exportedAt: now(),
       });
       reply.header("Content-Disposition", `attachment; filename="${exportResult.filename}"`);
@@ -46,7 +51,15 @@ export function registerExportRoutes(app: FastifyInstance, { now }: { now: () =>
       return reply.send(exportResult.buffer);
     } catch (error) {
       if (error instanceof LedgerWorkbookError) {
-        return reply.code(error.statusCode).send({ error: error.message });
+        const payload =
+          error.statusCode === 404
+            ? { code: "fund_not_found", message: "対象の予算が見つかりません。" }
+            : {
+                code: "fund_fiscal_year_mismatch",
+                message: "予算が指定した年度に属していません。",
+              };
+        sendApiError(reply, error.statusCode, payload);
+        return;
       }
 
       throw error;
@@ -62,10 +75,11 @@ export function registerExportRoutes(app: FastifyInstance, { now }: { now: () =>
       return saveWorkbookExport(app.db);
     } catch (error) {
       if (error instanceof WorkbookExportError) {
-        return reply.code(error.statusCode).send({
-          message: error.message,
-          ...error.preview,
+        sendApiError(reply, error.statusCode, {
+          code: "workbook_export_unavailable",
+          message: "ワークブックを保存できませんでした。",
         });
+        return;
       }
 
       throw error;

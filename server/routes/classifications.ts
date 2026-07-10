@@ -8,12 +8,11 @@ import {
   updateClassification,
 } from "../services/classifications";
 import { classificationSchema, classificationUpdateSchema } from "../validation";
-import { parsePositiveIntParam, sendNotFound } from "./routeHelpers";
+import { parsePositiveIntParam, sendApiError, sendNotFound } from "./routeHelpers";
 
 function sendValidationError(reply: FastifyReply) {
-  reply.code(400).send({
+  sendApiError(reply, 400, {
     code: "invalid_payload",
-    error: "Invalid request payload",
     message: "入力内容を確認してください。",
   });
 }
@@ -39,7 +38,8 @@ export function registerClassificationRoutes(app: FastifyInstance) {
     const tagId = parsePositiveIntParam(
       reply,
       (request.params as { tagId?: string }).tagId,
-      "Invalid classification id",
+      "invalid_classification_id",
+      "分類IDを確認してください。",
     );
     if (tagId === undefined) {
       return;
@@ -55,7 +55,7 @@ export function registerClassificationRoutes(app: FastifyInstance) {
       }
 
       if (error instanceof Error && error.message === CLASSIFICATION_NOT_FOUND_ERROR) {
-        sendNotFound(reply, CLASSIFICATION_NOT_FOUND_ERROR);
+        sendNotFound(reply, "classification_not_found", "対象の分類が見つかりません。");
         return;
       }
 
@@ -67,7 +67,8 @@ export function registerClassificationRoutes(app: FastifyInstance) {
     const tagId = parsePositiveIntParam(
       reply,
       (request.params as { tagId?: string }).tagId,
-      "Invalid classification id",
+      "invalid_classification_id",
+      "分類IDを確認してください。",
     );
     if (tagId === undefined) {
       return;
@@ -77,7 +78,7 @@ export function registerClassificationRoutes(app: FastifyInstance) {
       return deleteClassification(app.db, tagId);
     } catch (error) {
       if (error instanceof Error && error.message === CLASSIFICATION_NOT_FOUND_ERROR) {
-        sendNotFound(reply, CLASSIFICATION_NOT_FOUND_ERROR);
+        sendNotFound(reply, "classification_not_found", "対象の分類が見つかりません。");
         return;
       }
 

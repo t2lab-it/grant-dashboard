@@ -1,24 +1,26 @@
 import type { FastifyReply } from "fastify";
 import { z } from "zod";
+import type { ApiErrorResponse } from "../../src/contracts/apiError";
 
 const positiveIntParamSchema = z.coerce.number().int().positive();
 
-function sendRouteError(
+export function sendApiError(
   reply: Pick<FastifyReply, "code" | "send">,
   statusCode: number,
-  error: string,
+  payload: ApiErrorResponse,
 ) {
-  reply.code(statusCode).send({ error });
+  reply.code(statusCode).send(payload);
 }
 
 export function parsePositiveIntParam(
   reply: Pick<FastifyReply, "code" | "send">,
   rawValue: unknown,
-  error: string,
+  code: string,
+  message: string,
 ) {
   const parsed = positiveIntParamSchema.safeParse(rawValue);
   if (!parsed.success) {
-    sendRouteError(reply, 400, error);
+    sendApiError(reply, 400, { code, message });
     return undefined;
   }
 
@@ -27,7 +29,8 @@ export function parsePositiveIntParam(
 
 export function sendNotFound(
   reply: Pick<FastifyReply, "code" | "send">,
-  error: string,
+  code: string,
+  message: string,
 ) {
-  sendRouteError(reply, 404, error);
+  sendApiError(reply, 404, { code, message });
 }

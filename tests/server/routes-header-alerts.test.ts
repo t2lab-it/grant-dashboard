@@ -172,12 +172,13 @@ describe("header alerts route", () => {
       supporting: [
         {
           key: "import_warning",
-          label: "import warning",
+          label: "インポート警告",
           severity: "supporting",
           count: 3,
           items: [
             {
               title: "budget2026.xlsx",
+              description: "最新インポートに警告があります。",
               href: "/imports/1",
             },
           ],

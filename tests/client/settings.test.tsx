@@ -368,7 +368,7 @@ describe("SettingsPage", () => {
     renderAppRoute("/settings");
 
     const overviewDisplayToggle = await screen.findByRole("group", {
-      name: "Overview の既定表示",
+      name: "概要画面の既定表示",
     });
     const rateMetricToggle = screen.getByRole("group", { name: "率表示の既定値" });
     const numericDisplayButton = within(overviewDisplayToggle).getByRole("button", {

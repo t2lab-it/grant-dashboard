@@ -25,7 +25,7 @@ describe("static demo mode UI", () => {
     renderWithAppRouter(routes, "/");
 
     expect(await screen.findByRole("button", { name: "デモを初期状態に戻す" })).toBeInTheDocument();
-    expect(screen.getByText("静的デモでは実ファイル import/export と SQLite は使えません。")).toBeInTheDocument();
+    expect(screen.getByText("静的デモでは実ファイルのインポート・エクスポートと SQLite は使えません。")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "ローカル利用の手順を読む" })).toHaveAttribute(
       "href",
       "https://github.com/t2lab-it/grant-dashboard#readme",

@@ -826,7 +826,7 @@ export function SettingsPage() {
         <h3>表示</h3>
         <div className="settings-option-grid">
           <fieldset className="settings-option-group">
-            <legend>Overview の既定表示</legend>
+            <legend>概要画面の既定表示</legend>
             <TwoChoiceToggleGroup
               currentValue={defaultOverviewDisplayMode}
               options={[

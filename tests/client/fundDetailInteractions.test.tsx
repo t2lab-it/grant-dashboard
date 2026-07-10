@@ -183,8 +183,8 @@ describe("Fund detail interactions", () => {
       expect(screen.queryByRole("dialog", { name: "予算を編集" })).not.toBeInTheDocument();
     });
     expect(await fundPage.findByRole("heading", { name: "基盤研究費 改" })).toBeInTheDocument();
-    expect(within(fundPage.getByRole("region", { name: "Fund summary" })).getAllByText("6,100,000円")).toHaveLength(2);
-    const categoryTable = fundPage.getByRole("table", { name: "Fund categories" });
+    expect(within(fundPage.getByRole("region", { name: "予算概要" })).getAllByText("6,100,000円")).toHaveLength(2);
+    const categoryTable = fundPage.getByRole("table", { name: "費目別の状況" });
     expect(within(categoryTable).getByText("設備費")).toBeInTheDocument();
     expect(within(categoryTable).getByText("外注費")).toBeInTheDocument();
   }, 10_000);
@@ -653,7 +653,7 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
 
     await user.click(within(plannedTable).getByRole("button", { name: "精算" }));
 
@@ -728,7 +728,7 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
 
     await user.click(within(plannedTable).getByRole("button", { name: "精算" }));
     const dialog = await screen.findByRole("dialog", { name: "計画項目を精算" });
@@ -816,7 +816,7 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
 
     await user.click(within(plannedTable).getByRole("button", { name: "複製" }));
 
@@ -924,7 +924,7 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const actualTable = await fundPage.findByRole("table", { name: "Fund actual entries" });
+    const actualTable = await fundPage.findByRole("table", { name: "精算項目一覧" });
 
     await user.click(within(actualTable).getByRole("button", { name: "複製" }));
 
@@ -1041,7 +1041,7 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const historyTable = await fundPage.findByRole("table", { name: "Fund actual entries" });
+    const historyTable = await fundPage.findByRole("table", { name: "精算項目一覧" });
 
     await user.click(within(historyTable).getByRole("button", { name: "編集" }));
 
@@ -1090,8 +1090,8 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const historyTable = await fundPage.findByRole("table", { name: "Fund actual entries" });
-    const plannedTable = fundPage.getByRole("table", { name: "Fund planned items" });
+    const historyTable = await fundPage.findByRole("table", { name: "精算項目一覧" });
+    const plannedTable = fundPage.getByRole("table", { name: "計画項目一覧" });
     const actualEntry = within(historyTable)
       .getByText("GPU サーバ保守")
       .closest(".detail-history-entry");
@@ -1242,7 +1242,7 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
 
     await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
 
@@ -1349,7 +1349,7 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
 
     await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
 
@@ -1426,7 +1426,7 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
 
     expect(within(plannedTable).queryByRole("button", { name: "削除" })).not.toBeInTheDocument();
     await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
@@ -1499,7 +1499,7 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
 
     await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
 
@@ -1594,7 +1594,7 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
 
     await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
 
@@ -1699,7 +1699,7 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const historyTable = await fundPage.findByRole("table", { name: "Fund planned item history" });
+    const historyTable = await fundPage.findByRole("table", { name: "完了・取消済項目一覧" });
     const cancelledRow = within(historyTable).getByText("取消済み研究会").closest(".detail-history-entry");
 
     expect(cancelledRow).not.toBeNull();
@@ -1710,7 +1710,7 @@ describe("Fund detail interactions", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/planned-items/10/restore", {
       method: "POST",
     });
-    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
     expect(within(plannedTable).getByText("取消済み研究会")).toBeInTheDocument();
   });
 
@@ -1749,7 +1749,7 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "Fund planned items" });
+    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
 
     await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
     expect(await screen.findByRole("dialog", { name: "計画項目を編集" })).toBeInTheDocument();

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { PageStatusMessage } from "../../app/PageStatusMessage";
 import type { ImportHistoryResponse } from "../../contracts/imports";
 import { apiGet } from "../../lib/api";
+import { formatLocalDateTime } from "../../lib/format";
 
 export function ImportHistoryPage() {
   const { data, isError } = useQuery({
@@ -19,15 +20,15 @@ export function ImportHistoryPage() {
   }
 
   if (data.length === 0) {
-    return <div>No import runs yet.</div>;
+    return <div>インポート履歴はまだありません。</div>;
   }
 
   return (
     <section className="detail-grid">
       <header className="detail-hero">
         <div>
-          <p className="eyebrow">Import Review</p>
-          <h2>Import History</h2>
+          <p className="eyebrow">インポート確認</p>
+          <h2>インポート履歴</h2>
         </div>
       </header>
       <div className="import-list">
@@ -38,13 +39,13 @@ export function ImportHistoryPage() {
                 <Link to={`/imports/${item.id}`}>{item.source_filename}</Link>
               </strong>
               <span className={item.reconciliation_ok ? "status-pill ok" : "status-pill warn"}>
-                {item.reconciliation_ok ? "Reconciliation OK" : "Reconciliation mismatch"}
+                {item.reconciliation_ok ? "照合OK" : "照合不一致"}
               </span>
             </div>
-            <p>{item.imported_at}</p>
-            <p>{`Warnings: ${item.warning_count}`}</p>
+            <p>{formatLocalDateTime(item.imported_at)}</p>
+            <p>{`警告: ${item.warning_count}件`}</p>
             <p>
-              {`Funds ${item.mapping_summary.counts.funds} / Planned ${item.mapping_summary.counts.planned_items} / Actual ${item.mapping_summary.counts.actual_entries}`}
+              {`予算 ${item.mapping_summary.counts.funds}件 / 予定 ${item.mapping_summary.counts.planned_items}件 / 実績 ${item.mapping_summary.counts.actual_entries}件`}
             </p>
           </div>
         ))}

@@ -856,7 +856,7 @@ export function OverviewSummaryPanel({
     <aside
       id={id}
       className="overview-context-panel"
-      aria-label="Overview summary context"
+      aria-label="予算概要の分析"
       data-testid="tour-target-overview-summary"
       data-tour-id="overview-summary"
     >

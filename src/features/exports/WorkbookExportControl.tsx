@@ -44,6 +44,36 @@ const SHEET_LABELS: Record<WorkbookSheetName, string> = {
   actual_entries: "実績項目",
 };
 
+const CHANGE_ACTION_LABELS: Record<WorkbookChangeRow["action"], string> = {
+  added: "追加",
+  updated: "更新",
+  removed: "削除",
+};
+
+const CHANGE_FIELD_LABELS: Record<string, string> = {
+  fund_code: "予算コード",
+  category_code: "費目コード",
+  name: "名称",
+  fiscal_year: "年度",
+  awarded_amount: "交付額",
+  amount: "金額",
+  planned_ref: "予定参照",
+  planned_date: "立案日",
+  scheduled_month: "執行予定月",
+  actual_date: "実績日",
+  description: "説明",
+  status: "状態",
+  notes: "メモ",
+  project_tags: "研究プロジェクトタグ",
+  auxiliary_labels: "補助ラベル",
+  display_order: "表示順",
+  cross_aggregate_category: "横断集計カテゴリ",
+};
+
+function formatChangedFields(fields: string[]) {
+  return fields.map((field) => CHANGE_FIELD_LABELS[field] ?? field).join(", ");
+}
+
 export function WorkbookExportControl() {
   const { setStatus } = useWorkbookExportStatus();
   const [isOpen, setIsOpen] = useState(false);
@@ -200,8 +230,8 @@ export function WorkbookExportControl() {
                         <ul className="workbook-export-change-list">
                           {change.rows.map((row) => (
                             <li key={`${sheetName}:${row.action}:${row.key}`}>
-                              {row.action} {row.label || row.key}
-                              {row.fields.length > 0 ? ` (${row.fields.join(", ")})` : ""}
+                              {CHANGE_ACTION_LABELS[row.action]} {row.label || row.key}
+                              {row.fields.length > 0 ? ` (${formatChangedFields(row.fields)})` : ""}
                             </li>
                           ))}
                         </ul>

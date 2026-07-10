@@ -142,9 +142,9 @@ describe("Fund detail display", () => {
     const fundPage = within(view.container);
 
     expect(await fundPage.findByRole("heading", { name: "基盤研究費" }, { timeout: 5_000 })).toBeInTheDocument();
-    const summary = await fundPage.findByRole("region", { name: "Fund summary" });
+    const summary = await fundPage.findByRole("region", { name: "予算概要" });
     const summaryScope = within(summary);
-    const categoryTable = fundPage.getByRole("table", { name: "Fund categories" });
+    const categoryTable = fundPage.getByRole("table", { name: "費目別の状況" });
     const categoryScope = within(categoryTable);
     const categoryPanel = fundPage.getByRole("heading", { name: "費目別の状況" }).closest(".detail-panel");
     const exportLink = fundPage.getByRole("link", { name: "収支簿出力" });
@@ -188,9 +188,9 @@ describe("Fund detail display", () => {
     const timelineSection = fundPage.getByRole("heading", { name: "月別の状況" }).closest(".detail-panel");
     expect(timelineSection).not.toBeNull();
     const timelineScope = within(timelineSection as HTMLElement);
-    expect(fundPage.queryByRole("table", { name: "Cross aggregate categories" })).not.toBeInTheDocument();
+    expect(fundPage.queryByRole("table", { name: "横断集計カテゴリ別の状況" })).not.toBeInTheDocument();
     await user.click(fundPage.getByRole("button", { name: "横断集計カテゴリ別の状況" }));
-    const crossAggregateTable = fundPage.getByRole("table", { name: "Cross aggregate categories" });
+    const crossAggregateTable = fundPage.getByRole("table", { name: "横断集計カテゴリ別の状況" });
     const crossAggregateScope = within(crossAggregateTable);
     expect(crossAggregateScope.getByText("横断集計カテゴリ")).toBeInTheDocument();
     expect(crossAggregateScope.getByText("物品系")).toBeInTheDocument();
@@ -205,7 +205,7 @@ describe("Fund detail display", () => {
     expect(timelineScope.getByText("執行予定額+執行済額")).toBeInTheDocument();
     expect(timelineScope.getByText("2026-04")).toBeInTheDocument();
     expect(fundPage.getByRole("heading", { name: "精算項目一覧" })).toBeInTheDocument();
-    const historyTable = fundPage.getByRole("table", { name: "Fund actual entries" });
+    const historyTable = fundPage.getByRole("table", { name: "精算項目一覧" });
     const historyScope = within(historyTable);
 
     expect(historyScope.getByText("GPU サーバ保守")).toBeInTheDocument();
@@ -216,7 +216,7 @@ describe("Fund detail display", () => {
     const actualHistorySection = fundPage.getByRole("heading", { name: "精算項目一覧" }).closest(".detail-panel");
     expect(actualHistorySection).not.toBeNull();
     expect(fundPage.getByRole("heading", { name: "計画項目一覧" })).toBeInTheDocument();
-    const plannedTable = fundPage.getByRole("table", { name: "Fund planned items" });
+    const plannedTable = fundPage.getByRole("table", { name: "計画項目一覧" });
     const plannedScope = within(plannedTable);
     const plannedSection = fundPage.getByRole("heading", { name: "計画項目一覧" }).closest(".detail-panel");
     expect(plannedSection).not.toBeNull();
@@ -231,7 +231,7 @@ describe("Fund detail display", () => {
     expect(plannedScope.getByText("出張")).toBeInTheDocument();
     expect(plannedScope.getByText("280,000円")).toBeInTheDocument();
     expect(fundPage.getByRole("heading", { name: "完了・取消済項目一覧" })).toBeInTheDocument();
-    const plannedHistoryTable = fundPage.getByRole("table", { name: "Fund planned item history" });
+    const plannedHistoryTable = fundPage.getByRole("table", { name: "完了・取消済項目一覧" });
     const plannedHistoryScope = within(plannedHistoryTable);
     expect(plannedHistoryScope.getByText("状態")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("2026-07")).toBeInTheDocument();
@@ -320,7 +320,7 @@ describe("Fund detail display", () => {
     const fundPage = within(view.container);
 
     expect(await fundPage.findByRole("heading", { name: "基盤研究費" })).toBeInTheDocument();
-    const summary = await fundPage.findByRole("region", { name: "Fund summary" });
+    const summary = await fundPage.findByRole("region", { name: "予算概要" });
     const summaryScope = within(summary);
     expect(summaryScope.getByText("2222千円")).toBeInTheDocument();
     expect(summaryScope.getByText("5080千円")).toBeInTheDocument();
@@ -368,7 +368,7 @@ describe("Fund detail display", () => {
   it("renders an explicit error when the fund id route param is invalid", async () => {
     renderAppRoute("/funds/not-a-number");
 
-    expect(screen.getByText("Fund id is invalid.")).toBeInTheDocument();
+    expect(screen.getByText("予算IDを確認してください。")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith("/api/overview", {});
   });
 });

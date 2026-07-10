@@ -106,7 +106,7 @@ export function WorkbookImportControl() {
             <div>
               <h3 id="workbook-import-dialog-title">workbook をインポート</h3>
               <p className="budget-modal-description">
-                `.xlsx` を選び、件数と warning を確認してから既存データを置き換えます。
+                `.xlsx` を選び、件数と警告を確認してから既存データを置き換えます。
               </p>
             </div>
           </div>
@@ -137,19 +137,19 @@ export function WorkbookImportControl() {
                   {preview.counts.budget_lines} / 予定 {preview.counts.planned_items} / 実績{" "}
                   {preview.counts.actual_entries}
                 </p>
-                <p className="budget-modal-copy">Warnings {preview.counts.warnings}</p>
+                <p className="budget-modal-copy">警告 {preview.counts.warnings}件</p>
               </div>
 
               {preview.warnings.length > 0 ? (
                 <ul className="workbook-export-change-list">
                   {preview.warnings.map((warning) => (
                     <li key={`${warning.sheet_name}:${warning.row_number}:${warning.code}`}>
-                      {warning.sheet_name} row {warning.row_number}: {warning.message}
+                      {warning.sheet_name} {warning.row_number}行目: {warning.message}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="workbook-export-empty">warning はありません</p>
+                <p className="workbook-export-empty">警告はありません</p>
               )}
             </>
           ) : null}

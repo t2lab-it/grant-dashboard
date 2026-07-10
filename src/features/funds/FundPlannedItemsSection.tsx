@@ -58,7 +58,7 @@ export function FundPlannedItemsSection({
         <div
           className="detail-table detail-history-table detail-history-table-planned"
           role="table"
-          aria-label="Fund planned items"
+          aria-label="計画項目一覧"
         >
           <div className="detail-table-head detail-history-head detail-planned-head detail-sort-head" role="row">
             {sortControls}

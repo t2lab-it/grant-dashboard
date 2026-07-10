@@ -52,7 +52,7 @@ export function FundPlannedItemHistorySection({
         <div
           className="detail-table detail-history-table detail-history-table-planned detail-history-table-planned-archive"
           role="table"
-          aria-label="Fund planned item history"
+          aria-label="完了・取消済項目一覧"
         >
           <div className="detail-table-head detail-history-head detail-planned-head" role="row">
             <span>予定月</span>

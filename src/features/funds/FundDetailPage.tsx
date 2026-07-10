@@ -165,7 +165,7 @@ export function FundDetailPage() {
   }, [data?.fund, focusedEntry.id, focusedEntry.type]);
 
   if (!hasValidFundId) {
-    return <div>Fund id is invalid.</div>;
+    return <div>予算IDを確認してください。</div>;
   }
 
   if (isError) {
@@ -239,7 +239,7 @@ export function FundDetailPage() {
         </div>
         <div className="detail-categories-layout">
           <div className="detail-category-tables">
-            <div className="detail-table" role="table" aria-label="Fund categories">
+            <div className="detail-table" role="table" aria-label="費目別の状況">
               <div className="detail-table-head" role="row">
                 <span>費目</span>
                 <span className="detail-table-money-heading">予算</span>
@@ -290,7 +290,7 @@ export function FundDetailPage() {
                   <div
                     className="detail-table detail-cross-aggregate-table"
                     role="table"
-                    aria-label="Cross aggregate categories"
+                    aria-label="横断集計カテゴリ別の状況"
                   >
                     <div className="detail-table-head" role="row">
                       <span>横断集計カテゴリ</span>
@@ -479,7 +479,7 @@ export function FundDetailPage() {
           <div className="detail-panel-title-actions">
             <h2>{data.fund.name}</h2>
           </div>
-          <section className="detail-summary" aria-label="Fund summary">
+          <section className="detail-summary" aria-label="予算概要">
             <p className="detail-balance">
               <span>残高</span>
               <strong>{formatAmount(freeBalance, amountDisplayMode)}</strong>

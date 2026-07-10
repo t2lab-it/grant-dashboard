@@ -325,11 +325,11 @@ function buildImportWarningCategory(latestImport: LatestImportRow | undefined) {
     return null;
   }
 
-  return createCategory("import_warning", "import warning", "supporting", latestImport.warning_count, [
+  return createCategory("import_warning", "インポート警告", "supporting", latestImport.warning_count, [
     {
       id: `import-${latestImport.id}`,
       title: latestImport.source_filename,
-      description: "最新インポートに warning があります。",
+      description: "最新インポートに警告があります。",
       href: `/imports/${latestImport.id}`,
     },
   ]);

@@ -158,9 +158,9 @@ describe("Overview import/export", () => {
 
     expect(await within(dialog).findByText("budget2026.xlsx")).toBeInTheDocument();
     expect(within(dialog).getByText("資金 1 / 費目 1 / 予算行 1 / 予定 1 / 実績 1")).toBeInTheDocument();
-    expect(within(dialog).getByText("Warnings 1")).toBeInTheDocument();
+    expect(within(dialog).getByText("警告 1件")).toBeInTheDocument();
     expect(
-      within(dialog).getByText("planned_items row 7: negative planned adjustment is treated as a warning"),
+      within(dialog).getByText("planned_items 7行目: negative planned adjustment is treated as a warning"),
     ).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "取り込む" }));
@@ -272,7 +272,7 @@ describe("Overview import/export", () => {
     expect(within(dialog).getByText("/tmp/budget2026.xlsx")).toBeInTheDocument();
     expect(within(dialog).getByText("計画項目")).toBeInTheDocument();
     expect(within(dialog).getByText("追加 1 / 更新 1 / 削除 0")).toBeInTheDocument();
-    expect(within(dialog).getByText("updated 計算サーバ購入 (amount, notes)")).toBeInTheDocument();
+    expect(within(dialog).getByText("更新 計算サーバ購入 (金額, メモ)")).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "上書き保存" }));
 

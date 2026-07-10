@@ -371,7 +371,7 @@ function AppShellInner() {
                 </select>
               ) : null}
             </div>
-            <nav aria-label="Primary">
+            <nav aria-label="メインナビゲーション">
               <NavLink to={pathWithCurrentFiscalYear("/search")}>検索</NavLink>
               <NavLink to={pathWithCurrentFiscalYear("/planned-items/new")} state={{ backgroundLocation: baseLocation }}>
                 予定作成
@@ -398,13 +398,13 @@ function AppShellInner() {
           </div>
           {staticDemoMode ? (
             <div className="static-demo-notice" role="note">
-              <span>静的デモでは実ファイル import/export と SQLite は使えません。</span>
+              <span>静的デモでは実ファイルのインポート・エクスポートと SQLite は使えません。</span>
               <a href="https://github.com/t2lab-it/grant-dashboard#readme">ローカル利用の手順を読む</a>
             </div>
           ) : null}
           <HeaderAlerts selectedFiscalYear={selectedFiscalYear} />
         </header>
-        <main className="app-main">{needsFiscalYearSync ? <div>Loading…</div> : pageContent}</main>
+        <main className="app-main">{needsFiscalYearSync ? <div>読み込み中...</div> : pageContent}</main>
         <DemoTutorial
           eligible={isDemoTutorialEligible}
           firstFundId={firstDemoFundId}

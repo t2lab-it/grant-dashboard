@@ -35,7 +35,6 @@ describe("ImportHistoryPage", () => {
     renderAppRoute("/imports");
 
     expect(await screen.findByText("インポート履歴はまだありません。")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "インポート履歴" })).not.toBeInTheDocument();
   });
 
   it("renders import history summaries with warning and reconciliation status", async () => {

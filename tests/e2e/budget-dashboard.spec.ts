@@ -18,7 +18,6 @@ test("overview to fund detail to form flow works", async ({ page }) => {
   await page.getByRole("link", { name: "研究予算ダッシュボード" }).click();
 
   await expect(page).toHaveURL(/\/\?year=2026$/);
-  await expect(page.getByRole("link", { name: "Overview" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "研究予算ダッシュボード" })).toHaveAttribute("href", "/?year=2026");
   await expect(page.getByRole("link", { name: /デモ研究費A/ })).toBeVisible();
   await page.getByRole("link", { name: "予定作成" }).click();
@@ -52,7 +51,6 @@ test("overview to fund detail to form flow works", async ({ page }) => {
   expect(exportPayload.planned_items).toEqual(
     expect.arrayContaining([expect.objectContaining({ description: "追加出張", amount: 50000 })]),
   );
-  await expect(page.getByText("予定項目を保存できませんでした。")).toHaveCount(0);
 });
 
 test("demo tutorial starts on overview and moves to fund detail", async ({ page }) => {

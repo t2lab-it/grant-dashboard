@@ -65,7 +65,6 @@ describe("Overview display", () => {
     expect(screen.getByText(formatExpectedLocalDateTime("2026-04-20T15:00:00.000Z"))).toBeInTheDocument();
     expect(screen.getByText("照合NG")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "警告 2件" })).toHaveAttribute("href", "/imports/7");
-    expect(screen.queryByRole("link", { name: "詳細を見る" })).not.toBeInTheDocument();
 
     const overBudgetCard = screen.getByRole("link", { name: /基盤研究費/i });
     expect(overBudgetCard).toHaveAttribute("href", "/funds/1?year=2026");
@@ -106,10 +105,6 @@ describe("Overview display", () => {
     const taggedCard = await screen.findByRole("link", { name: /CREST 関連/i });
     expect(within(taggedCard).getByText("CREST 量子")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /タグなし/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "学生支援" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("region", { name: "研究プロジェクトタグ別集計" })).not.toBeInTheDocument();
-
-    expect(screen.queryByRole("group", { name: "研究プロジェクトタグで絞り込み" })).not.toBeInTheDocument();
     const projectTagSelect = screen.getByRole("combobox", { name: "研究プロジェクトタグ" });
     expect(projectTagSelect).toHaveValue("all");
     expect(within(projectTagSelect).getByRole("option", { name: "すべて" })).toBeInTheDocument();

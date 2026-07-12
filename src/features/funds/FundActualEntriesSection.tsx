@@ -55,7 +55,7 @@ export function FundActualEntriesSection({
         <div
           className="detail-table detail-history-table detail-history-table-actual"
           role="table"
-          aria-label="Fund actual entries"
+          aria-label="精算項目一覧"
         >
           <div className="detail-table-head detail-history-head detail-actual-head detail-sort-head" role="row">
             {sortControls}

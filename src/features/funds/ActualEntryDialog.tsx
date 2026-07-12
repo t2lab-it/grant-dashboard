@@ -1,7 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
-import { apiFetch, apiGet } from "../../lib/api";
+import { apiGet, apiMutateJson } from "../../lib/api";
+import { queryKeys } from "../../lib/queryKeys";
+import { formatTokyoDateKey } from "../../lib/calendar";
 import { ClassificationCheckboxGroup } from "../classifications/ClassificationCheckboxGroup";
 import type { ClassificationResponse } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
@@ -9,8 +11,7 @@ import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { FormFeedback } from "../forms/FormFeedback";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
-import { readApiErrorMessage } from "../forms/useEntryForm";
-import { useBudgetTargetOptions, useCloseOnEscape } from "./fundDetailDialogSupport";
+import { useBudgetTargetOptions } from "./fundDetailDialogSupport";
 import type { ActualEntry, PlannedItem } from "./fundDetailTypes";
 
 export type ActualEntryDialogProps =
@@ -25,6 +26,7 @@ export type ActualEntryDialogProps =
       mode: "edit";
       currentCategoryId: number | null;
       currentFundId: number;
+      fiscalYear: number;
       entry: ActualEntry;
       onClose: () => void;
       onSaved: () => Promise<void>;
@@ -32,6 +34,7 @@ export type ActualEntryDialogProps =
   | {
       mode: "duplicate";
       currentFundId: number;
+      fiscalYear: number;
       entry: ActualEntry;
       onClose: () => void;
       onSaved: () => Promise<void>;
@@ -40,9 +43,10 @@ export type ActualEntryDialogProps =
 export function ActualEntryDialog(props: ActualEntryDialogProps) {
   const isEditMode = props.mode === "edit";
   const isDuplicateMode = props.mode === "duplicate";
+  const canChooseDestination = isEditMode || isDuplicateMode;
   const actualDateInitialValue = isEditMode
     ? props.entry.actualDate
-    : new Date().toISOString().slice(0, 10);
+    : formatTokyoDateKey(new Date());
   const descriptionInitialValue =
     isEditMode || isDuplicateMode ? props.entry.description : props.item.description;
   const amountInitialValue =
@@ -74,25 +78,28 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
     isEditMode || isDuplicateMode ? String(props.currentFundId) : String(props.fundId),
   );
   const [selectedCategoryId, setSelectedCategoryId] = useState(
-    isEditMode && props.currentCategoryId !== null ? String(props.currentCategoryId) : "",
+    isEditMode && props.currentCategoryId !== null
+      ? String(props.currentCategoryId)
+      : isDuplicateMode
+        ? String(props.entry.categoryId)
+        : "",
   );
-  const currentCategoryName = isEditMode ? props.entry.categoryName : "";
+  const currentCategoryName = canChooseDestination ? props.entry.categoryName : "";
   const [blockingMessage, setBlockingMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { funds, categories, areCategoriesLoaded, hasSelectedFund } = useBudgetTargetOptions(
     selectedFundId,
-    isEditMode,
+    isEditMode || isDuplicateMode ? props.fiscalYear : 0,
+    canChooseDestination,
   );
   const { data: rawClassificationData } = useQuery({
-    queryKey: ["classifications"],
+    queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
 
-  useCloseOnEscape(props.onClose, !isSubmitting);
-
   useEffect(() => {
-    if (!isEditMode) {
+    if (!canChooseDestination) {
       return;
     }
 
@@ -111,7 +118,7 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
     if (!categories.some((category) => String(category.id) === selectedCategoryId)) {
       setSelectedCategoryId("");
     }
-  }, [areCategoriesLoaded, categories, currentCategoryName, isEditMode, selectedCategoryId]);
+  }, [areCategoriesLoaded, canChooseDestination, categories, currentCategoryName, selectedCategoryId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -128,11 +135,10 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
     }
 
     try {
-      const response = await apiFetch(isEditMode ? `/api/actual-entries/${props.entry.id}` : "/api/actual-entries", {
-        method: isEditMode ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          isEditMode
+      const result = await apiMutateJson(
+        isEditMode ? `/api/actual-entries/${props.entry.id}` : "/api/actual-entries",
+        isEditMode ? "PUT" : "POST",
+          canChooseDestination
             ? {
                 fundId: Number(selectedFundId),
                 categoryId: Number(selectedCategoryId),
@@ -142,16 +148,6 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
                 notes,
                 auxiliaryLabelIds: selectedAuxiliaryLabelIds,
               }
-            : isDuplicateMode
-              ? {
-                  fundId: props.currentFundId,
-                  categoryId: props.entry.categoryId,
-                  actualDate: normalizeDateForApi(actualDate),
-                  description,
-                  amount: parsedAmount,
-                  notes,
-                  auxiliaryLabelIds: selectedAuxiliaryLabelIds,
-                }
             : {
                 fundId: props.fundId,
                 categoryId: props.item.categoryId,
@@ -163,12 +159,10 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
                 auxiliaryLabelIds: selectedAuxiliaryLabelIds,
                 keepRemainingPlanned,
               },
-        ),
-      });
-      const payload = await response.json();
+      );
 
-      if (!response.ok) {
-        setBlockingMessage(readApiErrorMessage(payload, submitErrorMessage));
+      if (!result.ok) {
+        setBlockingMessage(result.error.message);
         return;
       }
 
@@ -190,13 +184,10 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
     setBlockingMessage("");
 
     try {
-      const response = await apiFetch(`/api/actual-entries/${props.entry.id}/cancel`, {
-        method: "POST",
-      });
-      const payload = await response.json();
+      const result = await apiMutateJson(`/api/actual-entries/${props.entry.id}/cancel`, "POST");
 
-      if (!response.ok) {
-        setBlockingMessage(readApiErrorMessage(payload, "精算項目を取り消せませんでした。"));
+      if (!result.ok) {
+        setBlockingMessage(result.error.message);
         return;
       }
 
@@ -212,7 +203,7 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
   return (
     <ModalShell
       ariaLabelledBy="settle-planned-item-dialog-title"
-      canCloseOnBackdrop={!isSubmitting}
+      canClose={!isSubmitting}
       onRequestClose={props.onClose}
     >
       <>
@@ -224,7 +215,7 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
         </div>
 
         <form className="budget-entry-form" onSubmit={handleSubmit}>
-          {isEditMode ? (
+          {canChooseDestination ? (
             <FundCategorySelectFields
               categories={categories}
               categoryId={selectedCategoryId}

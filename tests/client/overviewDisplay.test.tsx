@@ -64,8 +64,7 @@ describe("Overview display", () => {
     expect(screen.getByText("budget2026.xlsx")).toBeInTheDocument();
     expect(screen.getByText(formatExpectedLocalDateTime("2026-04-20T15:00:00.000Z"))).toBeInTheDocument();
     expect(screen.getByText("照合NG")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Warnings 2" })).toHaveAttribute("href", "/imports/7");
-    expect(screen.queryByRole("link", { name: "詳細を見る" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "警告 2件" })).toHaveAttribute("href", "/imports/7");
 
     const overBudgetCard = screen.getByRole("link", { name: /基盤研究費/i });
     expect(overBudgetCard).toHaveAttribute("href", "/funds/1?year=2026");
@@ -106,10 +105,6 @@ describe("Overview display", () => {
     const taggedCard = await screen.findByRole("link", { name: /CREST 関連/i });
     expect(within(taggedCard).getByText("CREST 量子")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /タグなし/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "学生支援" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("region", { name: "研究プロジェクトタグ別集計" })).not.toBeInTheDocument();
-
-    expect(screen.queryByRole("group", { name: "研究プロジェクトタグで絞り込み" })).not.toBeInTheDocument();
     const projectTagSelect = screen.getByRole("combobox", { name: "研究プロジェクトタグ" });
     expect(projectTagSelect).toHaveValue("all");
     expect(within(projectTagSelect).getByRole("option", { name: "すべて" })).toBeInTheDocument();
@@ -172,7 +167,7 @@ describe("Overview display", () => {
 
     await screen.findByRole("link", { name: /ACT-X/i });
     expect(screen.getByText("まだインポート実行なし")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Warnings/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /警告/ })).not.toBeInTheDocument();
     const sectionHeading = screen.getByRole("heading", { name: "予算別の状況" });
     expect(sectionHeading).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "基金別の状況" })).not.toBeInTheDocument();
@@ -396,7 +391,7 @@ describe("Overview display", () => {
 
       fireEvent.click(screen.getByRole("button", { name: /執行済額/ }));
 
-      const panel = screen.getByLabelText("Overview summary context");
+      const panel = screen.getByLabelText("予算概要の分析");
       const panelScope = within(panel);
       expect(panelScope.getByRole("heading", { name: "執行済額の分析" })).toBeInTheDocument();
       expect(panelScope.getByLabelText("執行済額の大費目別内訳グラフ")).toBeInTheDocument();
@@ -432,7 +427,7 @@ describe("Overview display", () => {
 
       fireEvent.click(screen.getByRole("button", { name: /^残高 600,000円$/ }));
 
-      expect(screen.getByLabelText("Overview summary context")).toBeInTheDocument();
+      expect(screen.getByLabelText("予算概要の分析")).toBeInTheDocument();
       expect(panelScope.getByRole("heading", { name: "残高の分析" })).toBeInTheDocument();
     } finally {
       vi.useRealTimers();

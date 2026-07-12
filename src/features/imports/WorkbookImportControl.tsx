@@ -1,18 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
 import type { WorkbookImportPreview, WorkbookImportResult } from "../../contracts/imports";
 import { apiPostFile } from "../../lib/api";
-
-function readApiMessage(payload: unknown, fallback: string) {
-  if (typeof payload === "object" && payload !== null) {
-    if (typeof (payload as { message?: unknown }).message === "string") {
-      return (payload as { message: string }).message;
-    }
-  }
-
-  return fallback;
-}
+import { queryKeys } from "../../lib/queryKeys";
 
 export function WorkbookImportControl() {
   const queryClient = useQueryClient();
@@ -24,21 +15,6 @@ export function WorkbookImportControl() {
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPreviewLoading && !isImporting) {
-        setIsOpen(false);
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isImporting, isOpen, isPreviewLoading]);
-
   async function uploadWorkbook(endpoint: string) {
     if (!selectedFile) {
       throw new Error("`.xlsx` ファイルを選択してください。");
@@ -47,7 +23,7 @@ export function WorkbookImportControl() {
     const result = await apiPostFile<WorkbookImportPreview | WorkbookImportResult>(endpoint, selectedFile);
 
     if (!result.ok) {
-      throw new Error(readApiMessage(result.data, "workbook を処理できませんでした。"));
+      throw result.error;
     }
 
     return result.data;
@@ -76,7 +52,7 @@ export function WorkbookImportControl() {
       const payload = (await uploadWorkbook("/api/imports/workbook")) as WorkbookImportResult;
       setStatusMessage(`workbook を取り込みました: ${payload.source_filename}`);
       setIsOpen(false);
-      await queryClient.invalidateQueries({ queryKey: ["overview"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
       await queryClient.invalidateQueries({ queryKey: ["imports"] });
     } catch (error) {
       setDialogError(error instanceof Error ? error.message : "workbook を取り込めませんでした。");
@@ -108,7 +84,7 @@ export function WorkbookImportControl() {
       {isOpen ? (
         <ModalShell
           ariaLabelledBy="workbook-import-dialog-title"
-          canCloseOnBackdrop={!isPreviewLoading && !isImporting}
+          canClose={!isPreviewLoading && !isImporting}
           onRequestClose={() => setIsOpen(false)}
           usePortal
         >
@@ -116,7 +92,7 @@ export function WorkbookImportControl() {
             <div>
               <h3 id="workbook-import-dialog-title">workbook をインポート</h3>
               <p className="budget-modal-description">
-                `.xlsx` を選び、件数と warning を確認してから既存データを置き換えます。
+                `.xlsx` を選び、件数と警告を確認してから既存データを置き換えます。
               </p>
             </div>
           </div>
@@ -147,19 +123,19 @@ export function WorkbookImportControl() {
                   {preview.counts.budget_lines} / 予定 {preview.counts.planned_items} / 実績{" "}
                   {preview.counts.actual_entries}
                 </p>
-                <p className="budget-modal-copy">Warnings {preview.counts.warnings}</p>
+                <p className="budget-modal-copy">警告 {preview.counts.warnings}件</p>
               </div>
 
               {preview.warnings.length > 0 ? (
                 <ul className="workbook-export-change-list">
                   {preview.warnings.map((warning) => (
                     <li key={`${warning.sheet_name}:${warning.row_number}:${warning.code}`}>
-                      {warning.sheet_name} row {warning.row_number}: {warning.message}
+                      {warning.sheet_name} {warning.row_number}行目: {warning.message}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="workbook-export-empty">warning はありません</p>
+                <p className="workbook-export-empty">警告はありません</p>
               )}
             </>
           ) : null}

@@ -42,7 +42,7 @@ function parseMonth(value: unknown) {
   return typeof value === "string" && MONTH_PATTERN.test(value) ? value : undefined;
 }
 
-export function registerSearchRoutes(app: FastifyInstance) {
+export function registerSearchRoutes(app: FastifyInstance, { now }: { now: () => Date }) {
   app.get("/api/search", (request) => {
     const query = request.query as {
       year?: unknown;
@@ -66,6 +66,7 @@ export function registerSearchRoutes(app: FastifyInstance) {
       entryType: parseEntryType(query.entryType),
       monthFrom: parseMonth(query.monthFrom),
       monthTo: parseMonth(query.monthTo),
+      today: now(),
     });
   });
 }

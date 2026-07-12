@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import * as XLSX from "xlsx";
@@ -113,17 +113,58 @@ describe("API overview and export routes", () => {
     const mismatchResponse = await app.inject({ method: "GET", url: "/api/exports/ledger.xlsx?year=2027&fundId=1" });
 
     expect(mismatchResponse.statusCode).toBe(400);
-    expect(mismatchResponse.json()).toEqual({ error: "Fund does not belong to the requested fiscal year" });
+    expect(mismatchResponse.json()).toEqual({
+      code: "fund_fiscal_year_mismatch",
+      message: "予算が指定した年度に属していません。",
+    });
+  });
+
+  it("returns the shared error contract for an invalid export fund query id", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/exports/ledger.xlsx?fundId=not-an-id",
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      code: "invalid_fund_id",
+      message: "予算IDを確認してください。",
+    });
   });
 
   it("maps workbook export errors to HTTP responses on the save route", async () => {
     const response = await app.inject({ method: "POST", url: "/api/exports/workbook" });
 
     expect(response.statusCode).toBe(400);
-    expect(response.json()).toMatchObject({
-      available: false,
-      message: "最新のインポート履歴がありません。",
-      reason: "最新のインポート履歴がありません。",
+    expect(response.json()).toEqual({
+      code: "workbook_export_unavailable",
+      message: "ワークブックを保存できませんでした。",
     });
+  });
+
+  it("does not expose workbook parsing details from export errors", async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "budget-export-error-route-"));
+    const workbookPath = join(tempDir, "broken.xlsx");
+    writeFileSync(workbookPath, "not an xlsx workbook");
+    cleanups.push(() => rmSync(tempDir, { recursive: true, force: true }));
+    app.db
+      .prepare(
+        "INSERT INTO imports (source_filename, imported_at, workbook_path, warning_count) VALUES (@sourceFilename, @importedAt, @workbookPath, @warningCount)",
+      )
+      .run({
+        sourceFilename: "broken.xlsx",
+        importedAt: "2026-07-10T00:00:00.000Z",
+        workbookPath,
+        warningCount: 0,
+      });
+
+    const response = await app.inject({ method: "POST", url: "/api/exports/workbook" });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      code: "workbook_export_unavailable",
+      message: "ワークブックを保存できませんでした。",
+    });
+    expect(response.body).not.toContain("Unsupported ZIP");
   });
 });

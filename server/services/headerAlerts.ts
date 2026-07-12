@@ -1,4 +1,5 @@
 import type Database from "better-sqlite3";
+import { formatTokyoMonthKey, inferJapaneseFiscalYear } from "../../src/lib/calendar";
 import type {
   HeaderAlertCategory,
   HeaderAlertDetail,
@@ -62,11 +63,6 @@ function listAvailableFiscalYears(db: Database.Database) {
   ).map((row) => row.fiscalYear);
 }
 
-function inferJapaneseFiscalYear(today: Date) {
-  const month = today.getMonth() + 1;
-  return month >= 4 ? today.getFullYear() : today.getFullYear() - 1;
-}
-
 function resolveFiscalYear(availableFiscalYears: number[], options: HeaderAlertsOptions) {
   if (availableFiscalYears.length === 0) {
     return null;
@@ -91,10 +87,6 @@ function resolveFiscalYear(availableFiscalYears: number[], options: HeaderAlerts
 
     return nearest;
   });
-}
-
-function formatMonthKey(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function buildFundHref(fundId: number, fiscalYear: number) {
@@ -307,7 +299,7 @@ function buildYearEndRiskCategory(db: Database.Database, fiscalYear: number, tod
     freeBalance: toFreeBalance(row.awarded_amount, row.committed_amount, row.actual_amount),
   }));
   const overduePlannedAmountByFundId = new Map(
-    listFundOverduePlannedAmountRows(db, fiscalYear, formatMonthKey(today)).map((row) => [
+    listFundOverduePlannedAmountRows(db, fiscalYear, formatTokyoMonthKey(today)).map((row) => [
       row.fundId,
       row.overduePlannedAmount,
     ]),
@@ -333,11 +325,11 @@ function buildImportWarningCategory(latestImport: LatestImportRow | undefined) {
     return null;
   }
 
-  return createCategory("import_warning", "import warning", "supporting", latestImport.warning_count, [
+  return createCategory("import_warning", "インポート警告", "supporting", latestImport.warning_count, [
     {
       id: `import-${latestImport.id}`,
       title: latestImport.source_filename,
-      description: "最新インポートに warning があります。",
+      description: "最新インポートに警告があります。",
       href: `/imports/${latestImport.id}`,
     },
   ]);
@@ -370,7 +362,7 @@ export function getHeaderAlertsSnapshot(
     compactCategories([
       buildBudgetOverrunCategory(db, selectedFiscalYear),
       buildReconciliationCategory(latestImport),
-      buildOverdueCategory(plannedRows, selectedFiscalYear, formatMonthKey(today)),
+      buildOverdueCategory(plannedRows, selectedFiscalYear, formatTokyoMonthKey(today)),
       buildYearEndRiskCategory(db, selectedFiscalYear, today),
     ]).map((category) => [category.key, category]),
   );

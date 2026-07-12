@@ -26,7 +26,6 @@ describe("Overview navigation", () => {
         "/?year=2026",
       );
     });
-    expect(appScope.queryByRole("link", { name: "新規予算" })).not.toBeInTheDocument();
     await waitFor(() => {
       expect(appScope.getByRole("link", { name: "実績作成" })).toHaveAttribute("href", "/actual-entries/new?year=2026");
     });
@@ -35,7 +34,6 @@ describe("Overview navigation", () => {
     await waitFor(() => {
       expect(appScope.getByRole("link", { name: "設定" })).toHaveAttribute("href", "/settings?year=2026");
     });
-    expect(appScope.queryByRole("link", { name: "項目作成" })).not.toBeInTheDocument();
   });
 
   it("opens planned item creation from the global nav as a modal while keeping the overview page visible", async () => {

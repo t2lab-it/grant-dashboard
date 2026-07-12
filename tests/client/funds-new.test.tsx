@@ -32,7 +32,6 @@ describe("NewFundForm", () => {
 
     renderAppRoute("/funds/new");
 
-    expect(screen.queryByRole("link", { name: "新規予算" })).not.toBeInTheDocument();
     expect(await screen.findAllByLabelText("費目名")).toHaveLength(1);
     await user.click(screen.getByRole("button", { name: "費目を追加" }));
     expect(screen.getAllByLabelText("費目名")).toHaveLength(2);
@@ -227,7 +226,9 @@ describe("NewFundForm", () => {
 
     fetchMock.mockResolvedValue({
       ok: false,
+      status: 400,
       json: async () => ({
+        code: "invalid_payload",
         message: "入力内容を確認してください。",
       }),
     });

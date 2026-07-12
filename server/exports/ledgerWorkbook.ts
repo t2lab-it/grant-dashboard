@@ -4,11 +4,12 @@ import {
   CROSS_AGGREGATE_CATEGORY_LABELS,
   type CrossAggregateCategory,
 } from "../../src/contracts/crossAggregateCategory";
+import { inferJapaneseFiscalYear, listFiscalYearMonths } from "../../src/lib/calendar";
 
 const require = createRequire(import.meta.url);
 const XLSX = require("xlsx") as typeof import("xlsx");
 
-const SHEET_NAMES = ["概要", "予算別サマリ", "費目別サマリ", "月別推移", "計画明細", "実績明細"] as const;
+type SheetName = "概要" | "予算別サマリ" | "費目別サマリ" | "月別推移" | "計画明細" | "実績明細";
 const AMOUNT_FORMAT = "#,##0";
 const RATE_FORMAT = "0.0%";
 
@@ -91,21 +92,6 @@ export type LedgerWorkbookOptions = {
   fundId?: number;
   exportedAt?: Date;
 };
-
-function inferJapaneseFiscalYear(today: Date) {
-  const month = today.getMonth() + 1;
-  return month >= 4 ? today.getFullYear() : today.getFullYear() - 1;
-}
-
-function listFiscalYearMonths(fiscalYear: number) {
-  return Array.from({ length: 12 }, (_, index) => {
-    const fiscalMonth = index + 4;
-    const year = fiscalMonth <= 12 ? fiscalYear : fiscalYear + 1;
-    const month = fiscalMonth <= 12 ? fiscalMonth : fiscalMonth - 12;
-
-    return `${year}-${String(month).padStart(2, "0")}`;
-  });
-}
 
 function resolveFiscalYear(db: Database.Database, options: LedgerWorkbookOptions) {
   if (options.fiscalYear !== undefined) {
@@ -476,7 +462,7 @@ function createSheet(rows: CellValue[][], amountColumns: number[] = [], rateColu
 
 function appendSheet(
   workbook: import("xlsx").WorkBook,
-  sheetName: (typeof SHEET_NAMES)[number],
+  sheetName: SheetName,
   rows: CellValue[][],
   amountColumns: number[] = [],
   rateColumns: number[] = [],

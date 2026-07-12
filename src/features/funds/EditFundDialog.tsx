@@ -1,12 +1,12 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
-import { apiFetch, apiGet } from "../../lib/api";
+import { apiGet, apiMutateJson } from "../../lib/api";
+import { queryKeys } from "../../lib/queryKeys";
 import type { ClassificationResponse, ClassificationTag } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import { FormFeedback } from "../forms/FormFeedback";
 import { parseNonnegativeAmountExpression, parsePositiveAmountExpression } from "../forms/amountExpression";
-import { readApiErrorMessage } from "../forms/useEntryForm";
 import { buildFundBudgetSummary } from "./FundBudgetSummary";
 import {
   FundFormFields,
@@ -14,7 +14,7 @@ import {
   nextFundCategoryDraftId,
   type FundCategoryDraft,
 } from "./FundFormFields";
-import { useCloseOnEscape } from "./fundDetailDialogSupport";
+import type { UpdateFundRequest } from "../../contracts/requestSchemas";
 
 type EditFundDialogProps = {
   fundId: number;
@@ -71,12 +71,10 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
       ? "費目予算の合計が交付額を超えています。"
       : "";
   const { data: rawClassificationData } = useQuery({
-    queryKey: ["classifications"],
+    queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
-
-  useCloseOnEscape(onClose, !isSubmitting);
 
   function setValue<K extends keyof typeof values>(field: K, value: (typeof values)[K]) {
     setValues((currentValues) => ({ ...currentValues, [field]: value }));
@@ -119,7 +117,7 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
     }
 
     let awardedAmount: number;
-    let parsedCategories: Array<{ id?: number; name: string; amount: number; crossAggregateCategory: string }>;
+    let parsedCategories: UpdateFundRequest["categories"];
     try {
       awardedAmount = parsePositiveAmountExpression(values.awardedAmount, "交付額");
       parsedCategories = categories.map((category) => ({
@@ -137,10 +135,7 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
     setBlockingMessage("");
 
     try {
-      const response = await apiFetch(`/api/funds/${fundId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const result = await apiMutateJson<unknown, UpdateFundRequest>(`/api/funds/${fundId}`, "PUT", {
           name: values.name,
           fiscalYear: Number(values.fiscalYear),
           awardedAmount,
@@ -148,12 +143,10 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
           projectTagIds: selectedProjectTagIds,
           auxiliaryLabelIds: selectedAuxiliaryLabelIds,
           categories: parsedCategories,
-        }),
       });
-      const payload = await response.json();
 
-      if (!response.ok) {
-        setBlockingMessage(readApiErrorMessage(payload, "予算を保存できませんでした。"));
+      if (!result.ok) {
+        setBlockingMessage(result.error.message);
         return;
       }
 
@@ -169,7 +162,7 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
   return (
     <ModalShell
       ariaLabelledBy="edit-fund-dialog-title"
-      canCloseOnBackdrop={!isSubmitting}
+      canClose={!isSubmitting}
       onRequestClose={onClose}
     >
       <>

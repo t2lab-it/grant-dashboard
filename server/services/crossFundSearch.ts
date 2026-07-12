@@ -1,4 +1,5 @@
 import type Database from "better-sqlite3";
+import { formatTokyoMonthKey, inferJapaneseFiscalYear } from "../../src/lib/calendar";
 
 export type CrossFundSearchTab = "all" | "overdue" | "unsettled" | "unlinked";
 export type CrossFundEntryType = "planned" | "actual";
@@ -116,11 +117,6 @@ function listAvailableFiscalYears(db: Database.Database) {
   ).map((row) => row.fiscalYear);
 }
 
-function inferJapaneseFiscalYear(today: Date) {
-  const month = today.getMonth() + 1;
-  return month >= 4 ? today.getFullYear() : today.getFullYear() - 1;
-}
-
 function resolveFiscalYear(availableFiscalYears: number[], options: CrossFundSearchOptions) {
   if (availableFiscalYears.length === 0) {
     return null;
@@ -153,12 +149,6 @@ function formatYen(amount: number) {
 
 function toMonth(date: string) {
   return date.slice(0, 7);
-}
-
-function toCurrentMonth(today: Date) {
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  return `${year}-${month}`;
 }
 
 function normalizeText(value: string) {
@@ -491,7 +481,7 @@ export function getCrossFundSearchSnapshot(
     };
   }
 
-  const currentMonth = toCurrentMonth(options.today ?? new Date());
+  const currentMonth = formatTokyoMonthKey(options.today ?? new Date());
   const tab = options.tab ?? "all";
   const funds = listScopedFunds(db, selectedFiscalYear).map(({ id, name }) => ({ id, name }));
   const categories = listScopedCategories(db, selectedFiscalYear);

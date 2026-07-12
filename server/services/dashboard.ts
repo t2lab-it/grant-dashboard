@@ -20,19 +20,12 @@ import {
 import { isDemoTutorialEligible } from "./demoMetadata";
 import { listAssignedClassifications } from "./classifications";
 import { buildYearEndRiskSummary, defaultYearEndRiskThresholds } from "../../src/contracts/yearEndRisk";
+import { formatTokyoMonthKey, inferJapaneseFiscalYear, listFiscalYearMonths } from "../../src/lib/calendar";
 
 type OverviewTotalsRow = {
   assets: number;
   committed: number;
   actual: number;
-};
-
-type OverviewFundRow = {
-  id: number;
-  name: string;
-  awarded_amount: number;
-  committed_amount: number;
-  actual_amount: number;
 };
 
 type LatestImportRow = {
@@ -98,11 +91,6 @@ function listAvailableFiscalYears(db: Database.Database) {
   ).map((row) => row.fiscalYear);
 }
 
-function inferJapaneseFiscalYear(today: Date) {
-  const month = today.getMonth() + 1;
-  return month >= 4 ? today.getFullYear() : today.getFullYear() - 1;
-}
-
 function resolveFiscalYear(availableFiscalYears: number[], options: OverviewSnapshotOptions) {
   if (availableFiscalYears.length === 0) {
     return null;
@@ -129,16 +117,6 @@ function resolveFiscalYear(availableFiscalYears: number[], options: OverviewSnap
   });
 }
 
-function listFiscalYearMonths(fiscalYear: number) {
-  return Array.from({ length: 12 }, (_, index) => {
-    const fiscalMonth = index + 4;
-    const year = fiscalMonth <= 12 ? fiscalYear : fiscalYear + 1;
-    const month = fiscalMonth <= 12 ? fiscalMonth : fiscalMonth - 12;
-
-    return `${year}-${String(month).padStart(2, "0")}`;
-  });
-}
-
 function listOverviewMonthlyStatus(db: Database.Database, totalAssets: number, fiscalYear: number) {
   const rows = listOverviewMonthlyAggregateRows(db, fiscalYear) as OverviewMonthlyAggregateRow[];
   const rowsByMonth = new Map(rows.map((row) => [row.month, row]));
@@ -156,13 +134,9 @@ function listOverviewMonthlyStatus(db: Database.Database, totalAssets: number, f
   });
 }
 
-function formatMonthKey(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
 function getFundOverduePlannedAmountMap(db: Database.Database, fiscalYear: number, today: Date) {
   return new Map(
-    listFundOverduePlannedAmountRows(db, fiscalYear, formatMonthKey(today)).map((row) => [
+    listFundOverduePlannedAmountRows(db, fiscalYear, formatTokyoMonthKey(today)).map((row) => [
       row.fundId,
       row.overduePlannedAmount,
     ]),

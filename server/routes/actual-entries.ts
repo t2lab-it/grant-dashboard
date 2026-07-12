@@ -23,7 +23,8 @@ export function registerActualEntryRoutes(app: FastifyInstance) {
     const actualEntryId = parsePositiveIntParam(
       reply,
       (request.params as { actualEntryId?: string }).actualEntryId,
-      "Invalid actual entry id",
+      "invalid_actual_entry_id",
+      "精算項目IDを確認してください。",
     );
     if (actualEntryId === undefined) {
       return;
@@ -46,7 +47,8 @@ export function registerActualEntryRoutes(app: FastifyInstance) {
     const actualEntryId = parsePositiveIntParam(
       reply,
       (request.params as { actualEntryId?: string }).actualEntryId,
-      "Invalid actual entry id",
+      "invalid_actual_entry_id",
+      "精算項目IDを確認してください。",
     );
     if (actualEntryId === undefined) {
       return;

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ModalShell } from "../../app/ModalShell";
+import { apiGet, apiMutateJson } from "../../lib/api";
 import { useWorkbookExportStatus } from "./WorkbookExportStatus";
 
 type WorkbookChangeRow = {
@@ -43,18 +44,34 @@ const SHEET_LABELS: Record<WorkbookSheetName, string> = {
   actual_entries: "実績項目",
 };
 
-function readApiMessage(payload: unknown, fallback: string) {
-  if (typeof payload === "object" && payload !== null) {
-    if (typeof (payload as { message?: unknown }).message === "string") {
-      return (payload as { message: string }).message;
-    }
+const CHANGE_ACTION_LABELS: Record<WorkbookChangeRow["action"], string> = {
+  added: "追加",
+  updated: "更新",
+  removed: "削除",
+};
 
-    if (typeof (payload as { reason?: unknown }).reason === "string") {
-      return (payload as { reason: string }).reason;
-    }
-  }
+const CHANGE_FIELD_LABELS: Record<string, string> = {
+  fund_code: "予算コード",
+  category_code: "費目コード",
+  name: "名称",
+  fiscal_year: "年度",
+  awarded_amount: "交付額",
+  amount: "金額",
+  planned_ref: "予定参照",
+  planned_date: "立案日",
+  scheduled_month: "執行予定月",
+  actual_date: "実績日",
+  description: "説明",
+  status: "状態",
+  notes: "メモ",
+  project_tags: "研究プロジェクトタグ",
+  auxiliary_labels: "補助ラベル",
+  display_order: "表示順",
+  cross_aggregate_category: "横断集計カテゴリ",
+};
 
-  return fallback;
+function formatChangedFields(fields: string[]) {
+  return fields.map((field) => CHANGE_FIELD_LABELS[field] ?? field).join(", ");
 }
 
 export function WorkbookExportControl() {
@@ -95,20 +112,14 @@ export function WorkbookExportControl() {
 
     void (async () => {
       try {
-        const response = await fetch("/api/exports/workbook/preview");
-        const payload = (await response.json()) as WorkbookExportPreview;
+        const payload = await apiGet<WorkbookExportPreview>("/api/exports/workbook/preview");
 
         if (!cancelled) {
-          if (!response.ok) {
-            setDialogError(readApiMessage(payload, "workbook プレビューを取得できませんでした。"));
-            return;
-          }
-
           setPreview(payload);
         }
-      } catch {
+      } catch (error) {
         if (!cancelled) {
-          setDialogError("workbook プレビューを取得できませんでした。");
+          setDialogError(error instanceof Error ? error.message : "workbook プレビューを取得できませんでした。");
         }
       } finally {
         if (!cancelled) {
@@ -122,43 +133,24 @@ export function WorkbookExportControl() {
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isSaving) {
-        setIsOpen(false);
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, isSaving]);
-
   async function handleSave() {
     setDialogError("");
     setIsSaving(true);
 
     try {
-      const response = await fetch("/api/exports/workbook", {
-        method: "POST",
-      });
-      const payload = (await response.json()) as WorkbookExportPreview;
+      const result = await apiMutateJson<WorkbookExportPreview>("/api/exports/workbook", "POST");
 
-      if (!response.ok) {
-        setDialogError(readApiMessage(payload, "workbook を保存できませんでした。"));
-        setPreview(payload);
+      if (!result.ok) {
+        setDialogError(result.error.message);
         return;
       }
 
       setStatus({
-        workbookPath: payload.workbook_path,
-        exportedAt: payload.exported_at ?? "",
+        workbookPath: result.data.workbook_path,
+        exportedAt: result.data.exported_at ?? "",
       });
       setIsOpen(false);
-      setPreview(payload);
+      setPreview(result.data);
     } catch {
       setDialogError("workbook を保存できませんでした。");
     } finally {
@@ -182,7 +174,7 @@ export function WorkbookExportControl() {
       {isOpen ? (
         <ModalShell
           ariaLabelledBy="workbook-export-dialog-title"
-          canCloseOnBackdrop={!isSaving}
+          canClose={!isSaving}
           onRequestClose={() => setIsOpen(false)}
           usePortal
         >
@@ -223,8 +215,8 @@ export function WorkbookExportControl() {
                         <ul className="workbook-export-change-list">
                           {change.rows.map((row) => (
                             <li key={`${sheetName}:${row.action}:${row.key}`}>
-                              {row.action} {row.label || row.key}
-                              {row.fields.length > 0 ? ` (${row.fields.join(", ")})` : ""}
+                              {CHANGE_ACTION_LABELS[row.action]} {row.label || row.key}
+                              {row.fields.length > 0 ? ` (${formatChangedFields(row.fields)})` : ""}
                             </li>
                           ))}
                         </ul>

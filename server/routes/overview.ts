@@ -10,9 +10,9 @@ function parseFiscalYear(value: unknown) {
   return Number.isInteger(fiscalYear) && fiscalYear > 0 ? fiscalYear : undefined;
 }
 
-export function registerOverviewRoutes(app: FastifyInstance) {
+export function registerOverviewRoutes(app: FastifyInstance, { now }: { now: () => Date }) {
   app.get("/api/overview", (request) => {
     const query = request.query as { year?: unknown };
-    return getOverviewSnapshot(app.db, { fiscalYear: parseFiscalYear(query.year) });
+    return getOverviewSnapshot(app.db, { fiscalYear: parseFiscalYear(query.year), today: now() });
   });
 }

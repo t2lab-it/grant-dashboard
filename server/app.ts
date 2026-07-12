@@ -11,11 +11,18 @@ import { registerOverviewRoutes } from "./routes/overview";
 import { registerPlannedItemRoutes } from "./routes/planned-items";
 import { registerSearchRoutes } from "./routes/search";
 import { ensureDefaultAuxiliaryLabels } from "./services/classifications";
+import { sendApiError } from "./routes/routeHelpers";
+
+function isApiRequestUrl(rawUrl: string) {
+  const pathname = new URL(rawUrl, "http://localhost").pathname;
+  return pathname === "/api" || pathname.startsWith("/api/");
+}
 
 export async function buildServer({
   dbPath = "app.db",
   seedDefaultClassifications = true,
-}: { dbPath?: string; seedDefaultClassifications?: boolean } = {}) {
+  now = () => new Date(),
+}: { dbPath?: string; seedDefaultClassifications?: boolean; now?: () => Date } = {}) {
   const db = createDb(dbPath);
   runMigrations(db);
   if (seedDefaultClassifications) {
@@ -28,14 +35,57 @@ export async function buildServer({
     db.close();
   });
 
-  registerOverviewRoutes(app);
-  registerHeaderAlertRoutes(app);
-  registerSearchRoutes(app);
+  app.setNotFoundHandler((request, reply) => {
+    if (isApiRequestUrl(request.url)) {
+      sendApiError(reply, 404, {
+        code: "api_not_found",
+        message: "APIが見つかりません。",
+      });
+      return;
+    }
+
+    reply.code(404).send({
+      message: "Route " + request.method + ":" + request.url + " not found",
+      error: "Not Found",
+      statusCode: 404,
+    });
+  });
+
+  app.setErrorHandler((error, request, reply) => {
+    if (!isApiRequestUrl(request.url)) {
+      throw error;
+    }
+
+    const statusCode =
+      typeof error === "object" &&
+      error !== null &&
+      "statusCode" in error &&
+      typeof error.statusCode === "number"
+        ? error.statusCode
+        : undefined;
+
+    if (statusCode !== undefined && statusCode < 500) {
+      sendApiError(reply, statusCode, {
+        code: "invalid_request",
+        message: "リクエスト内容を確認してください。",
+      });
+      return;
+    }
+
+    sendApiError(reply, statusCode ?? 500, {
+      code: "internal_error",
+      message: "サーバーでエラーが発生しました。",
+    });
+  });
+
+  registerOverviewRoutes(app, { now });
+  registerHeaderAlertRoutes(app, { now });
+  registerSearchRoutes(app, { now });
   registerClassificationRoutes(app);
   registerFundRoutes(app);
   registerPlannedItemRoutes(app);
   registerActualEntryRoutes(app);
-  registerExportRoutes(app);
+  registerExportRoutes(app, { now });
   registerImportRoutes(app, { dbPath });
 
   return app;

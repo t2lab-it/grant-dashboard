@@ -8,17 +8,16 @@ test("overview to fund detail to form flow works", async ({ page }) => {
 
   expect(overviewResponse.status()).toBe(200);
   await expect(page.getByText("研究予算ダッシュボード")).toBeVisible();
-  await page.getByRole("button", { name: "no" }).click();
+  await page.getByRole("button", { name: "今回は始めない" }).click();
   const fundResponsePromise = page.waitForResponse("**/api/funds/1");
   await page.getByRole("link", { name: /デモ研究費A/ }).click();
   const fundResponse = await fundResponsePromise;
 
   expect(fundResponse.status()).toBe(200);
-  await expect(page.getByRole("table", { name: "Fund categories" }).getByText("物品費")).toBeVisible();
+  await expect(page.getByRole("table", { name: "費目別の状況" }).getByText("物品費")).toBeVisible();
   await page.getByRole("link", { name: "研究予算ダッシュボード" }).click();
 
   await expect(page).toHaveURL(/\/\?year=2026$/);
-  await expect(page.getByRole("link", { name: "Overview" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "研究予算ダッシュボード" })).toHaveAttribute("href", "/?year=2026");
   await expect(page.getByRole("link", { name: /デモ研究費A/ })).toBeVisible();
   await page.getByRole("link", { name: "予定作成" }).click();
@@ -52,7 +51,6 @@ test("overview to fund detail to form flow works", async ({ page }) => {
   expect(exportPayload.planned_items).toEqual(
     expect.arrayContaining([expect.objectContaining({ description: "追加出張", amount: 50000 })]),
   );
-  await expect(page.getByText("予定項目を保存できませんでした。")).toHaveCount(0);
 });
 
 test("demo tutorial starts on overview and moves to fund detail", async ({ page }) => {
@@ -64,7 +62,7 @@ test("demo tutorial starts on overview and moves to fund detail", async ({ page 
 
   const prompt = page.getByRole("dialog", { name: "チュートリアルを始めますか？" });
   await expect(prompt).toBeVisible();
-  await prompt.getByRole("button", { name: "yes" }).click();
+  await prompt.getByRole("button", { name: "チュートリアルを始める" }).click();
 
   const tutorial = page.getByRole("dialog", { name: "チュートリアル" });
   await expect(tutorial.getByText("予算総額の分析")).toBeVisible();

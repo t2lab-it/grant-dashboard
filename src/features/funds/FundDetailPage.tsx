@@ -3,11 +3,9 @@ import { useLocation, useNavigate, useParams, useSearchParams } from "react-rout
 import { getFiscalYearFromSearch, setFiscalYearInSearch } from "../../app/fiscalYear";
 import { PageStatusMessage } from "../../app/PageStatusMessage";
 import { isStaticDemoMode } from "../../demo/staticDemoMode";
-import { apiFetch } from "../../lib/api";
-import { getRateMetric, getRateMetricKey, getRateMetricLabel } from "../../lib/executionRate";
+import { apiMutateJson } from "../../lib/api";
+import { getRateMetricKey } from "../../lib/executionRate";
 import { formatAmount } from "../../lib/format";
-import { CROSS_AGGREGATE_CATEGORY_LABELS } from "../../contracts/crossAggregateCategory";
-import { readApiErrorMessage } from "../forms/useEntryForm";
 import { ActualEntryDialog } from "./ActualEntryDialog";
 import { useAppSettings } from "../settings/AppSettings";
 import { type FundDetailSectionKey } from "../settings/fundDetailSectionOrder";
@@ -15,15 +13,14 @@ import { DuplicatePlannedItemDialog } from "./DuplicatePlannedItemDialog";
 import { EditFundDialog } from "./EditFundDialog";
 import { EditPlannedItemDialog } from "./EditPlannedItemDialog";
 import { FundActualEntriesSection } from "./FundActualEntriesSection";
-import { FundDetailChart } from "./FundDetailChart";
+import { FundCategoriesSection } from "./FundCategoriesSection";
 import { FundListFilters } from "./FundListFilters";
 import { FundPlannedItemHistorySection } from "./FundPlannedItemHistorySection";
 import { FundPlannedItemsSection } from "./FundPlannedItemsSection";
+import { FundMonthlyStatusSection } from "./FundMonthlyStatusSection";
 import { FundSortButtons } from "./FundSortButtons";
-import { RateMetricToggle } from "./RateMetricToggle";
 import {
   ACTUAL_ENTRY_SORT_FIELDS,
-  MONTHLY_STATUS_SORT_FIELDS,
   PLANNED_ITEM_SORT_FIELDS,
   sortActualEntries,
   sortMonthlyStatus,
@@ -44,10 +41,6 @@ function isListDetailSectionKey(sectionKey: FundDetailSectionKey) {
 import { useFundDetailData } from "./useFundDetailData";
 import { useFundDetailNotes } from "./useFundDetailNotes";
 import type { RateMetricKey } from "../../lib/executionRate";
-
-function formatBudgetAmount(amount: number | null, amountDisplayMode: "grouped-yen" | "plain-yen" | "thousand-yen") {
-  return amount === null ? "未設定" : formatAmount(amount, amountDisplayMode);
-}
 
 function parseFocusedEntry(value: string | null) {
   const match = value?.match(/^(planned|actual)-(\d+)$/);
@@ -87,7 +80,6 @@ export function FundDetailPage() {
   const [editingActualEntry, setEditingActualEntry] = useState<ActualEntry | null>(null);
   const [editingItem, setEditingItem] = useState<PlannedItem | null>(null);
   const [isEditingFund, setIsEditingFund] = useState(false);
-  const [isCrossAggregateExpanded, setIsCrossAggregateExpanded] = useState(false);
   const [deletingPlannedHistoryItemId, setDeletingPlannedHistoryItemId] = useState<number | null>(null);
   const [restoringPlannedHistoryItemId, setRestoringPlannedHistoryItemId] = useState<number | null>(null);
   const [plannedHistoryDeleteError, setPlannedHistoryDeleteError] = useState("");
@@ -166,7 +158,7 @@ export function FundDetailPage() {
   }, [data?.fund, focusedEntry.id, focusedEntry.type]);
 
   if (!hasValidFundId) {
-    return <div>Fund id is invalid.</div>;
+    return <div>予算IDを確認してください。</div>;
   }
 
   if (isError) {
@@ -214,149 +206,32 @@ export function FundDetailPage() {
     : `/api/exports/ledger.xlsx?year=${fundFiscalYear}&fundId=${parsedFundId}`;
   const fundDetailSections: Record<FundDetailSectionKey, ReactNode> = {
     categories: (
-      <section className="detail-panel" aria-labelledby="fund-categories-heading">
-        <div className="detail-panel-header">
-          <div className="detail-panel-title-actions">
-            <h3 id="fund-categories-heading">費目別の状況</h3>
-            <button
-              type="button"
-              className="detail-action-button detail-action-button-edit"
-              onClick={() => setIsEditingFund(true)}
-            >
-              予算を編集
-            </button>
-          </div>
-          <div className="detail-panel-actions">
-            <RateMetricToggle rateMetric={rateMetric} onRateMetricChange={updateDetailRateMetric} />
-            {staticDemoMode ? null : (
-              <a
-                className="detail-action-button"
-                href={ledgerExportHref}
-              >
-                収支簿出力
-              </a>
-            )}
-          </div>
-        </div>
-        <div className="detail-categories-layout">
-          <div className="detail-category-tables">
-            <div className="detail-table" role="table" aria-label="Fund categories">
-              <div className="detail-table-head" role="row">
-                <span>費目</span>
-                <span className="detail-table-money-heading">予算</span>
-                <span className="detail-table-money-heading">執行予定額</span>
-                <span className="detail-table-money-heading">執行済額</span>
-                <span className="detail-table-rate-heading">{getRateMetricLabel(rateMetric).replace(" [%]", "")}</span>
-              </div>
-              {data.categories.map((row) => {
-                const rate = getRateMetric(
-                  rateMetric,
-                  row.budgetAmount,
-                  row.plannedAmount,
-                  row.actualAmount,
-                  (row.budgetAmount ?? 0) - row.plannedAmount - row.actualAmount,
-                  executionRateThresholds,
-                  balanceRateThresholds,
-                );
-
-                return (
-                  <div key={row.id} className="detail-table-row" role="row">
-                    <strong>{row.categoryName}</strong>
-                    <span className="detail-table-money-cell">{formatBudgetAmount(row.budgetAmount, amountDisplayMode)}</span>
-                    <span className="detail-table-money-cell">{formatAmount(row.plannedAmount, amountDisplayMode)}</span>
-                    <span className="detail-table-money-cell">{formatAmount(row.actualAmount, amountDisplayMode)}</span>
-                    <span className={`detail-table-rate-cell ${rate.className}`}>{rate.label}</span>
-                  </div>
-                );
-              })}
-              <div className="detail-table-row detail-table-total-row" role="row">
-                <strong>合計</strong>
-                <span className="detail-table-money-cell" />
-                <span className="detail-table-money-cell">{formatAmount(plannedAmount, amountDisplayMode)}</span>
-                <span className="detail-table-money-cell">{formatAmount(actualAmount, amountDisplayMode)}</span>
-                <span className="detail-table-rate-cell" />
-              </div>
-            </div>
-            {crossAggregateCategories.length > 0 ? (
-              <div className="detail-cross-aggregate-disclosure">
-                <button
-                  className="detail-cross-aggregate-toggle"
-                  type="button"
-                  aria-expanded={isCrossAggregateExpanded}
-                  onClick={() => setIsCrossAggregateExpanded((current) => !current)}
-                >
-                  横断集計カテゴリ別の状況
-                </button>
-                {isCrossAggregateExpanded ? (
-                  <div
-                    className="detail-table detail-cross-aggregate-table"
-                    role="table"
-                    aria-label="Cross aggregate categories"
-                  >
-                    <div className="detail-table-head" role="row">
-                      <span>横断集計カテゴリ</span>
-                      <span className="detail-table-money-heading">予算</span>
-                      <span className="detail-table-money-heading">執行予定額</span>
-                      <span className="detail-table-money-heading">執行済額</span>
-                      <span className="detail-table-money-heading">残高</span>
-                    </div>
-                    {crossAggregateCategories.map((row) => {
-                      const balance = (row.budgetAmount ?? 0) - row.plannedAmount - row.actualAmount;
-
-                      return (
-                        <div key={row.crossAggregateCategory} className="detail-table-row" role="row">
-                          <strong>{CROSS_AGGREGATE_CATEGORY_LABELS[row.crossAggregateCategory]}</strong>
-                          <span className="detail-table-money-cell">{formatBudgetAmount(row.budgetAmount, amountDisplayMode)}</span>
-                          <span className="detail-table-money-cell">{formatAmount(row.plannedAmount, amountDisplayMode)}</span>
-                          <span className="detail-table-money-cell">{formatAmount(row.actualAmount, amountDisplayMode)}</span>
-                          <span className="detail-table-money-cell">{formatAmount(balance, amountDisplayMode)}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-          <FundDetailChart
-            fundName={data.fund.name}
-            awardedAmount={data.fund.awarded_amount}
-            categories={data.categories}
-            preset={themePreset}
-            customChartPresets={customChartPresets}
-            rateMetric={rateMetric}
-            amountDisplayMode={amountDisplayMode}
-            executionRateThresholds={executionRateThresholds}
-            balanceRateThresholds={balanceRateThresholds}
-          />
-        </div>
-      </section>
+      <FundCategoriesSection
+        actualAmount={actualAmount}
+        amountDisplayMode={amountDisplayMode}
+        awardedAmount={data.fund.awarded_amount}
+        balanceRateThresholds={balanceRateThresholds}
+        categories={data.categories}
+        crossAggregateCategories={crossAggregateCategories}
+        customChartPresets={customChartPresets}
+        executionRateThresholds={executionRateThresholds}
+        fundName={data.fund.name}
+        ledgerExportHref={ledgerExportHref}
+        onEditFund={() => setIsEditingFund(true)}
+        onRateMetricChange={updateDetailRateMetric}
+        plannedAmount={plannedAmount}
+        rateMetric={rateMetric}
+        staticDemoMode={staticDemoMode}
+        themePreset={themePreset}
+      />
     ),
     timeline: (
-      <section className="detail-panel" aria-labelledby="fund-timeline-heading">
-        <div className="detail-panel-header">
-          <div>
-            <h3 id="fund-timeline-heading">月別の状況</h3>
-          </div>
-        </div>
-        <div className="timeline-list">
-          <div className="timeline-head timeline-sort-head" role="row">
-            <FundSortButtons
-              fields={MONTHLY_STATUS_SORT_FIELDS}
-              sortState={monthlySort}
-              onSortChange={setMonthlySort}
-            />
-          </div>
-          {sortedMonthlyStatus.map((item) => (
-            <div key={item.month} className="timeline-row">
-              <strong>{item.month}</strong>
-              <span className="detail-table-money-cell">{formatAmount(item.plannedAmount, amountDisplayMode)}</span>
-              <span className="detail-table-money-cell">{formatAmount(item.actualAmount, amountDisplayMode)}</span>
-              <span className="detail-table-money-cell">{formatAmount(item.totalAmount, amountDisplayMode)}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <FundMonthlyStatusSection
+        amountDisplayMode={amountDisplayMode}
+        items={sortedMonthlyStatus}
+        onSortChange={setMonthlySort}
+        sortState={monthlySort}
+      />
     ),
     actualEntries: (
       <FundActualEntriesSection
@@ -437,13 +312,10 @@ export function FundDetailPage() {
     setPlannedHistoryRestoreError("");
 
     try {
-      const response = await apiFetch(`/api/planned-items/${item.id}`, {
-        method: "DELETE",
-      });
-      const payload = await response.json();
+      const result = await apiMutateJson(`/api/planned-items/${item.id}`, "DELETE");
 
-      if (!response.ok) {
-        setPlannedHistoryDeleteError(readApiErrorMessage(payload, "計画項目を削除できませんでした。"));
+      if (!result.ok) {
+        setPlannedHistoryDeleteError(result.error.message);
         return;
       }
 
@@ -461,13 +333,10 @@ export function FundDetailPage() {
     setPlannedHistoryRestoreError("");
 
     try {
-      const response = await apiFetch(`/api/planned-items/${item.id}/restore`, {
-        method: "POST",
-      });
-      const payload = await response.json();
+      const result = await apiMutateJson(`/api/planned-items/${item.id}/restore`, "POST");
 
-      if (!response.ok) {
-        setPlannedHistoryRestoreError(readApiErrorMessage(payload, "計画項目を計画に戻せませんでした。"));
+      if (!result.ok) {
+        setPlannedHistoryRestoreError(result.error.message);
         return;
       }
 
@@ -486,7 +355,7 @@ export function FundDetailPage() {
           <div className="detail-panel-title-actions">
             <h2>{data.fund.name}</h2>
           </div>
-          <section className="detail-summary" aria-label="Fund summary">
+          <section className="detail-summary" aria-label="予算概要">
             <p className="detail-balance">
               <span>残高</span>
               <strong>{formatAmount(freeBalance, amountDisplayMode)}</strong>
@@ -552,6 +421,7 @@ export function FundDetailPage() {
           key={`duplicate-${duplicatingActualEntry.id}`}
           mode="duplicate"
           currentFundId={parsedFundId}
+          fiscalYear={data.fund.fiscalYear}
           entry={duplicatingActualEntry}
           onClose={() => setDuplicatingActualEntry(null)}
           onSaved={refreshFundDetail}
@@ -566,6 +436,7 @@ export function FundDetailPage() {
             null
           }
           currentFundId={parsedFundId}
+          fiscalYear={data.fund.fiscalYear}
           entry={editingActualEntry}
           onClose={() => setEditingActualEntry(null)}
           onSaved={refreshFundDetail}
@@ -584,6 +455,7 @@ export function FundDetailPage() {
         <EditPlannedItemDialog
           key={editingItem.id}
           fundId={parsedFundId}
+          fiscalYear={data.fund.fiscalYear}
           item={editingItem}
           onClose={() => setEditingItem(null)}
           onSaved={refreshFundDetail}

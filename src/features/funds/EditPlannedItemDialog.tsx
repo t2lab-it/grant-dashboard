@@ -1,19 +1,20 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
-import { apiFetch, apiGet } from "../../lib/api";
+import { apiGet, apiMutateJson } from "../../lib/api";
+import { queryKeys } from "../../lib/queryKeys";
 import { ClassificationCheckboxGroup } from "../classifications/ClassificationCheckboxGroup";
 import type { ClassificationResponse } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { FormFeedback } from "../forms/FormFeedback";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
-import { readApiErrorMessage } from "../forms/useEntryForm";
-import { useBudgetTargetOptions, useCloseOnEscape } from "./fundDetailDialogSupport";
+import { useBudgetTargetOptions } from "./fundDetailDialogSupport";
 import type { PlannedItem } from "./fundDetailTypes";
 
 export type EditPlannedItemDialogProps = {
   fundId: number;
+  fiscalYear: number;
   item: PlannedItem;
   onClose: () => void;
   onSaved: () => Promise<void>;
@@ -21,6 +22,7 @@ export type EditPlannedItemDialogProps = {
 
 export function EditPlannedItemDialog({
   fundId,
+  fiscalYear,
   item,
   onClose,
   onSaved,
@@ -40,15 +42,14 @@ export function EditPlannedItemDialog({
   const [warnings, setWarnings] = useState<string[]>([]);
   const { funds, categories, areCategoriesLoaded, hasSelectedFund } = useBudgetTargetOptions(
     selectedFundId,
+    fiscalYear,
     true,
   );
   const { data: rawClassificationData } = useQuery({
-    queryKey: ["classifications"],
+    queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
-
-  useCloseOnEscape(onClose, !isSubmitting);
 
   useEffect(() => {
     if (selectedCategoryId.length === 0 || !areCategoriesLoaded) {
@@ -77,10 +78,7 @@ export function EditPlannedItemDialog({
     }
 
     try {
-      const response = await apiFetch(`/api/planned-items/${item.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const result = await apiMutateJson<{ warnings?: unknown }>(`/api/planned-items/${item.id}`, "PUT", {
           fundId: Number(selectedFundId),
           categoryId: Number(selectedCategoryId),
           scheduledMonth,
@@ -88,18 +86,16 @@ export function EditPlannedItemDialog({
           amount: parsedAmount,
           notes,
           auxiliaryLabelIds: selectedAuxiliaryLabelIds,
-        }),
       });
-      const payload = await response.json();
 
-      if (!response.ok) {
-        setBlockingMessage(readApiErrorMessage(payload, "計画項目を更新できませんでした。"));
+      if (!result.ok) {
+        setBlockingMessage(result.error.message);
         return;
       }
 
       await onSaved();
-      const nextWarnings = Array.isArray(payload.warnings)
-        ? payload.warnings.filter((warning: unknown): warning is string => typeof warning === "string")
+      const nextWarnings = Array.isArray(result.data.warnings)
+        ? result.data.warnings.filter((warning: unknown): warning is string => typeof warning === "string")
         : [];
 
       if (nextWarnings.length > 0) {
@@ -123,13 +119,10 @@ export function EditPlannedItemDialog({
     setWarnings([]);
 
     try {
-      const response = await apiFetch(`/api/planned-items/${item.id}/cancel`, {
-        method: "POST",
-      });
-      const payload = await response.json();
+      const result = await apiMutateJson(`/api/planned-items/${item.id}/cancel`, "POST");
 
-      if (!response.ok) {
-        setBlockingMessage(readApiErrorMessage(payload, "計画項目を取り消せませんでした。"));
+      if (!result.ok) {
+        setBlockingMessage(result.error.message);
         return;
       }
 
@@ -149,13 +142,10 @@ export function EditPlannedItemDialog({
     setWarnings([]);
 
     try {
-      const response = await apiFetch(`/api/planned-items/${item.id}`, {
-        method: "DELETE",
-      });
-      const payload = await response.json();
+      const result = await apiMutateJson(`/api/planned-items/${item.id}`, "DELETE");
 
-      if (!response.ok) {
-        setBlockingMessage(readApiErrorMessage(payload, "計画項目を削除できませんでした。"));
+      if (!result.ok) {
+        setBlockingMessage(result.error.message);
         return;
       }
 
@@ -171,7 +161,7 @@ export function EditPlannedItemDialog({
   return (
     <ModalShell
       ariaLabelledBy="edit-planned-item-dialog-title"
-      canCloseOnBackdrop={!isSubmitting}
+      canClose={!isSubmitting}
       onRequestClose={onClose}
     >
       <>

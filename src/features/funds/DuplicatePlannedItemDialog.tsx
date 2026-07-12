@@ -1,15 +1,15 @@
 import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
-import { apiFetch, apiGet } from "../../lib/api";
+import { apiGet, apiMutateJson } from "../../lib/api";
+import { queryKeys } from "../../lib/queryKeys";
+import { formatTokyoDateKey } from "../../lib/calendar";
 import { ClassificationCheckboxGroup } from "../classifications/ClassificationCheckboxGroup";
 import type { ClassificationResponse } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { FormFeedback } from "../forms/FormFeedback";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
-import { readApiErrorMessage } from "../forms/useEntryForm";
-import { useCloseOnEscape } from "./fundDetailDialogSupport";
 import type { PlannedItem } from "./fundDetailTypes";
 
 type DuplicatePlannedItemDialogProps = {
@@ -25,7 +25,7 @@ export function DuplicatePlannedItemDialog({
   onClose,
   onSaved,
 }: DuplicatePlannedItemDialogProps) {
-  const [plannedDate, setPlannedDate] = useState(formatDateForDisplay(new Date().toISOString().slice(0, 10)));
+  const [plannedDate, setPlannedDate] = useState(formatDateForDisplay(formatTokyoDateKey(new Date())));
   const [scheduledMonth, setScheduledMonth] = useState(item.scheduledMonth);
   const [description, setDescription] = useState(item.description);
   const [amount, setAmount] = useState(String(item.amount));
@@ -38,12 +38,10 @@ export function DuplicatePlannedItemDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
   const { data: rawClassificationData } = useQuery({
-    queryKey: ["classifications"],
+    queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
-
-  useCloseOnEscape(onClose, !isSubmitting);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -62,10 +60,7 @@ export function DuplicatePlannedItemDialog({
     }
 
     try {
-      const response = await apiFetch("/api/planned-items", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const result = await apiMutateJson<{ warnings?: unknown }>("/api/planned-items", "POST", {
           fundId,
           categoryId: item.categoryId,
           plannedDate: normalizeDateForApi(plannedDate),
@@ -74,18 +69,16 @@ export function DuplicatePlannedItemDialog({
           amount: parsedAmount,
           notes,
           auxiliaryLabelIds: selectedAuxiliaryLabelIds,
-        }),
       });
-      const payload = await response.json();
 
-      if (!response.ok) {
-        setBlockingMessage(readApiErrorMessage(payload, "計画項目を複製できませんでした。"));
+      if (!result.ok) {
+        setBlockingMessage(result.error.message);
         return;
       }
 
       await onSaved();
-      const nextWarnings = Array.isArray(payload.warnings)
-        ? payload.warnings.filter((warning: unknown): warning is string => typeof warning === "string")
+      const nextWarnings = Array.isArray(result.data.warnings)
+        ? result.data.warnings.filter((warning: unknown): warning is string => typeof warning === "string")
         : [];
 
       if (nextWarnings.length > 0) {
@@ -105,7 +98,7 @@ export function DuplicatePlannedItemDialog({
   return (
     <ModalShell
       ariaLabelledBy="duplicate-planned-item-dialog-title"
-      canCloseOnBackdrop={!isSubmitting}
+      canClose={!isSubmitting}
       onRequestClose={onClose}
     >
       <>

@@ -10,6 +10,7 @@ import {
 } from "../../app/fiscalYear";
 import { isStaticDemoMode } from "../../demo/staticDemoMode";
 import { apiGet } from "../../lib/api";
+import { queryKeys } from "../../lib/queryKeys";
 import { getRateMetric, getRateMetricKey, getRateMetricLabel } from "../../lib/executionRate";
 import { formatAmount, formatLocalDateTime } from "../../lib/format";
 import { useAppSettings } from "../settings/AppSettings";
@@ -163,7 +164,7 @@ export function OverviewPage() {
   } = useAppSettings();
   const [displayMode, setDisplayMode] = useState<"chart" | "numeric">(defaultOverviewDisplayMode);
   const { data, isError } = useQuery({
-    queryKey: ["overview", requestedFiscalYear ?? "auto"],
+    queryKey: queryKeys.overview.detail(requestedFiscalYear),
     queryFn: () => apiGet<OverviewResponse>(buildOverviewApiPath(requestedFiscalYear)),
   });
 
@@ -254,10 +255,10 @@ export function OverviewPage() {
       {shouldShowFirstRunGuide ? (
         <section className="first-run-card" aria-labelledby="first-run-card-title">
           <div className="first-run-card-intro">
-            <p className="eyebrow">Local Setup</p>
+            <p className="eyebrow">ローカル設定</p>
             <h2 id="first-run-card-title">初回ローカル利用の準備</h2>
             <p>
-              demo seed で画面を試すか、template から自分の workbook を作って preview/import します。
+              デモ用 seed で画面を試すか、テンプレートから自分の workbook を作って内容確認・インポートします。
             </p>
           </div>
           <div className="first-run-actions">
@@ -265,7 +266,7 @@ export function OverviewPage() {
               <span className="first-run-step-number">1</span>
               <div>
                 <h3>架空データで試す</h3>
-                <p>ターミナルで実行すると、公開用 demo seed をローカル DB に投入できます。</p>
+                <p>ターミナルで実行すると、公開用のデモデータをローカル DB に投入できます。</p>
                 <code>npm run seed:demo</code>
               </div>
             </div>
@@ -273,7 +274,7 @@ export function OverviewPage() {
               <span className="first-run-step-number">2</span>
               <div>
                 <h3>自分の workbook を作る</h3>
-                <p>blank template をダウンロードして、funds / categories / planned / actual を入力します。</p>
+                <p>空のテンプレートをダウンロードして、funds / categories / planned / actual シートを入力します。</p>
                 <a className="detail-action-button" href="/api/imports/workbook/template.xlsx">
                   template.xlsx をダウンロード
                 </a>
@@ -282,15 +283,15 @@ export function OverviewPage() {
             <div className="first-run-step">
               <span className="first-run-step-number">3</span>
               <div>
-                <h3>preview してから import</h3>
-                <p>ヘッダーの <strong>インポート</strong> で `.xlsx` を選び、件数と warning を確認して取り込みます。</p>
+                <h3>内容を確認してからインポート</h3>
+                <p>ヘッダーの <strong>インポート</strong> で `.xlsx` を選び、件数と警告を確認して取り込みます。</p>
               </div>
             </div>
             <div className="first-run-step">
               <span className="first-run-step-number">4</span>
               <div>
                 <h3>手順を確認する</h3>
-                <p>CLI の dry-run / import / backup の詳しい流れを確認できます。</p>
+                <p>CLI の dry-run / import / backup コマンドを使う詳しい流れを確認できます。</p>
                 <div className="first-run-doc-links">
                   <a href="https://github.com/t2lab-it/grant-dashboard#readme">README を読む</a>
                   <a href="https://github.com/t2lab-it/grant-dashboard/blob/main/docs/workbook.md">Workbook 運用を読む</a>
@@ -500,7 +501,7 @@ export function OverviewPage() {
                 to={`/imports/${data.latestImport.id}`}
                 className="overview-latest-import-link"
               >
-                {`Warnings ${data.latestImport.warning_count}`}
+                {`警告 ${data.latestImport.warning_count}件`}
               </Link>
               <span
                 className={

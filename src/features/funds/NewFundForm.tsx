@@ -3,15 +3,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getFiscalYearFromSearch, setFiscalYearInSearch } from "../../app/fiscalYear";
 import { FormFeedback } from "../forms/FormFeedback";
-import { apiFetch } from "../../lib/api";
-import { apiGet } from "../../lib/api";
+import { apiGet, apiMutateJson } from "../../lib/api";
+import { queryKeys } from "../../lib/queryKeys";
 import type { ClassificationResponse } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import { parseNonnegativeAmountExpression, parsePositiveAmountExpression } from "../forms/amountExpression";
-import { readApiErrorMessage, useEntryForm } from "../forms/useEntryForm";
+import { useEntryForm } from "../forms/useEntryForm";
 import { buildFundBudgetSummary } from "./FundBudgetSummary";
 import { createFundCategoryDraft, nextFundCategoryDraftId, type FundCategoryDraft } from "./FundFormFields";
 import { FundFormFields } from "./FundFormFields";
+import type { CreateFundRequest } from "../../contracts/requestSchemas";
 
 export function NewFundForm() {
   const queryClient = useQueryClient();
@@ -29,7 +30,7 @@ export function NewFundForm() {
   const [selectedProjectTagIds, setSelectedProjectTagIds] = useState<number[]>([]);
   const [selectedAuxiliaryLabelIds, setSelectedAuxiliaryLabelIds] = useState<number[]>([]);
   const { data: rawClassificationData } = useQuery({
-    queryKey: ["classifications"],
+    queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
@@ -87,7 +88,7 @@ export function NewFundForm() {
       }
 
       let awardedAmount: number;
-      let parsedCategories: Array<{ name: string; amount: number; crossAggregateCategory: string }>;
+      let parsedCategories: CreateFundRequest["categories"];
       try {
         awardedAmount = parsePositiveAmountExpression(values.awardedAmount, "交付額");
         parsedCategories = categories.map((category) => ({
@@ -101,10 +102,7 @@ export function NewFundForm() {
         };
       }
 
-      const response = await apiFetch("/api/funds", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const result = await apiMutateJson<{ fundId: number }, CreateFundRequest>("/api/funds", "POST", {
           name: values.name,
           fiscalYear: Number(values.fiscalYear),
           awardedAmount,
@@ -112,19 +110,17 @@ export function NewFundForm() {
           projectTagIds: selectedProjectTagIds,
           auxiliaryLabelIds: selectedAuxiliaryLabelIds,
           categories: parsedCategories,
-        }),
       });
 
-      const payload = await response.json();
-      if (!response.ok) {
+      if (!result.ok) {
         return {
-          blockingMessage: readApiErrorMessage(payload, "予算を保存できませんでした。"),
+          blockingMessage: result.error.message,
         };
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["overview"] });
-      await queryClient.invalidateQueries({ queryKey: ["overview", Number(values.fiscalYear)] });
-      await navigate(`/funds/${payload.fundId}${setFiscalYearInSearch("", Number(values.fiscalYear))}`);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.detail(Number(values.fiscalYear)) });
+      await navigate(`/funds/${result.data.fundId}${setFiscalYearInSearch("", Number(values.fiscalYear))}`);
 
       return {
         infoMessage: "予算を保存しました。",

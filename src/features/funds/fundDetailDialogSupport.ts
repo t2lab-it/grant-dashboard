@@ -1,6 +1,7 @@
-import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "../../lib/api";
+import { queryKeys } from "../../lib/queryKeys";
+import { buildOverviewApiPath } from "../../app/fiscalYear";
 
 type OverviewResponse = {
   funds: Array<{
@@ -16,36 +17,16 @@ type FundCategoryOptionsResponse = {
   }>;
 };
 
-export function useCloseOnEscape(onClose: () => void, enabled: boolean) {
-  useEffect(() => {
-    if (!enabled) {
-      return;
-    }
-
-    function handleKeyDown(event: globalThis.KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [enabled, onClose]);
-}
-
-export function useBudgetTargetOptions(selectedFundId: string, enabled: boolean) {
+export function useBudgetTargetOptions(selectedFundId: string, fiscalYear: number, enabled: boolean) {
   const parsedFundId = selectedFundId.trim().length > 0 ? Number(selectedFundId) : Number.NaN;
   const hasSelectedFund = Number.isInteger(parsedFundId) && parsedFundId > 0;
   const { data: overviewData } = useQuery({
-    queryKey: ["overview"],
-    queryFn: () => apiGet<OverviewResponse>("/api/overview"),
+    queryKey: queryKeys.overview.detail(fiscalYear),
+    queryFn: () => apiGet<OverviewResponse>(buildOverviewApiPath(fiscalYear)),
     enabled,
   });
   const categoryOptionsQuery = useQuery({
-    queryKey: ["fund-category-options", parsedFundId],
+    queryKey: queryKeys.fund.categoryOptions(parsedFundId),
     queryFn: () => apiGet<FundCategoryOptionsResponse>(`/api/funds/${parsedFundId}`),
     enabled: enabled && hasSelectedFund,
   });

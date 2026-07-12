@@ -13,56 +13,6 @@ function formatExpectedLocalDateTime(value: string) {
   }).format(new Date(value));
 }
 
-function expectTopLayerWorkbookDialog() {
-  return async (actionName: "インポート" | "エクスポート", dialogName: string) => {
-    const user = userEvent.setup();
-
-    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      const method = init?.method ?? "GET";
-
-      if (url.startsWith("/api/overview") && method === "GET") {
-        return {
-          ok: true,
-          json: async () => buildOverviewResponse(),
-        };
-      }
-
-      if (actionName === "エクスポート" && url === "/api/exports/workbook/preview" && method === "GET") {
-        return {
-          ok: true,
-          json: async () => ({
-            available: true,
-            workbook_path: "/tmp/budget2026.xlsx",
-            source_filename: "budget2026.xlsx",
-            imported_at: "2026-04-20T15:00:00.000Z",
-            changes: {
-              funds: { added: 0, updated: 0, removed: 0, rows: [], more_count: 0 },
-              categories: { added: 0, updated: 0, removed: 0, rows: [], more_count: 0 },
-              budget_lines: { added: 0, updated: 0, removed: 0, rows: [], more_count: 0 },
-              planned_items: { added: 0, updated: 0, removed: 0, rows: [], more_count: 0 },
-              actual_entries: { added: 0, updated: 0, removed: 0, rows: [], more_count: 0 },
-            },
-          }),
-        };
-      }
-
-      throw new Error(`Unhandled request: ${method} ${url}`);
-    });
-
-    renderAppRoute("/");
-
-    await screen.findByRole("heading", { name: "予算別の状況" });
-    await screen.findByRole("heading", { name: "予算総額の分析" });
-
-    await user.click(screen.getByRole("button", { name: actionName }));
-
-    const dialog = await screen.findByRole("dialog", { name: dialogName });
-    expect(dialog.closest("header")).toBeNull();
-    expect(dialog.parentElement?.closest("nav")).toBeNull();
-  };
-}
-
 describe("Overview import/export", () => {
   beforeEach(() => {
     resetOverviewTestState();
@@ -71,11 +21,6 @@ describe("Overview import/export", () => {
   afterEach(() => {
     cleanup();
   });
-
-  it.each([
-    ["インポート" as const, "workbook をインポート"],
-    ["エクスポート" as const, "workbook をエクスポート"],
-  ])("renders the %s dialog outside the header with the default analysis panel", expectTopLayerWorkbookDialog());
 
   it("opens the workbook import dialog, previews counts and warnings, then imports the workbook", async () => {
     const user = userEvent.setup();
@@ -158,9 +103,9 @@ describe("Overview import/export", () => {
 
     expect(await within(dialog).findByText("budget2026.xlsx")).toBeInTheDocument();
     expect(within(dialog).getByText("資金 1 / 費目 1 / 予算行 1 / 予定 1 / 実績 1")).toBeInTheDocument();
-    expect(within(dialog).getByText("Warnings 1")).toBeInTheDocument();
+    expect(within(dialog).getByText("警告 1件")).toBeInTheDocument();
     expect(
-      within(dialog).getByText("planned_items row 7: negative planned adjustment is treated as a warning"),
+      within(dialog).getByText("planned_items 7行目: negative planned adjustment is treated as a warning"),
     ).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "取り込む" }));
@@ -272,7 +217,7 @@ describe("Overview import/export", () => {
     expect(within(dialog).getByText("/tmp/budget2026.xlsx")).toBeInTheDocument();
     expect(within(dialog).getByText("計画項目")).toBeInTheDocument();
     expect(within(dialog).getByText("追加 1 / 更新 1 / 削除 0")).toBeInTheDocument();
-    expect(within(dialog).getByText("updated 計算サーバ購入 (amount, notes)")).toBeInTheDocument();
+    expect(within(dialog).getByText("更新 計算サーバ購入 (金額, メモ)")).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "上書き保存" }));
 

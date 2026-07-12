@@ -15,11 +15,13 @@ import type {
   OverviewFundOptionsResponse,
 } from "../../contracts/entries";
 import { apiGet, apiPostJson } from "../../lib/api";
+import { formatTokyoDateKey } from "../../lib/calendar";
 import { FormFeedback } from "../forms/FormFeedback";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
-import { readApiErrorMessage, useEntryForm } from "../forms/useEntryForm";
+import { useEntryForm } from "../forms/useEntryForm";
+import { queryKeys } from "../../lib/queryKeys";
 import { useAppSettings } from "../settings/AppSettings";
 
 function getScheduledMonthFromDisplayDate(value: string) {
@@ -66,7 +68,7 @@ function formatYearMonth(monthIndex: number) {
 }
 
 export function PlannedItemForm() {
-  const today = formatDateForDisplay(new Date().toISOString().slice(0, 10));
+  const today = formatDateForDisplay(formatTokyoDateKey(new Date()));
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -106,17 +108,17 @@ export function PlannedItemForm() {
   const parsedFundId = selectedFundId.length > 0 ? Number(selectedFundId) : Number.NaN;
   const hasSelectedFund = Number.isInteger(parsedFundId) && parsedFundId > 0;
   const { data: overviewData } = useQuery({
-    queryKey: ["overview", requestedFiscalYear ?? "auto"],
+    queryKey: queryKeys.overview.detail(requestedFiscalYear),
     queryFn: () => apiGet<OverviewFundOptionsResponse>(buildOverviewApiPath(requestedFiscalYear)),
     enabled: lockedFundId === null,
   });
   const { data: fundDetailData } = useQuery({
-    queryKey: ["fund-category-options", parsedFundId],
+    queryKey: queryKeys.fund.categoryOptions(parsedFundId),
     queryFn: () => apiGet<FundEntryOptionsResponse>(`/api/funds/${parsedFundId}`),
     enabled: hasSelectedFund,
   });
   const { data: rawClassificationData } = useQuery({
-    queryKey: ["classifications"],
+    queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
@@ -142,7 +144,7 @@ export function PlannedItemForm() {
     ) {
       setValue("fundId", String(defaultFundId));
     }
-  }, [defaultFundId, overviewData, setValue, values.fundId]);
+  }, [defaultFundId, lockedFundId, overviewData, setValue, values.fundId]);
 
   useEffect(() => {
     if (hasAppliedDefaultCategory.current || !fundDetailData || parsedFundId !== defaultFundId) {
@@ -169,9 +171,8 @@ export function PlannedItemForm() {
     const startIndex = parseYearMonth(bulkStartMonth);
     const endIndex = parseYearMonth(bulkEndMonth);
     const baseDescription = bulkBaseDescription.trim();
-    let amount = 0;
     try {
-      amount = parsePositiveAmountExpression(bulkBaseAmount, "基準金額");
+      parsePositiveAmountExpression(bulkBaseAmount, "基準金額");
     } catch (error) {
       setBulkPreviewError(error instanceof Error ? error.message : "基準金額は有効な数式で入力してください。");
       setBulkPreviewRows([]);
@@ -247,13 +248,13 @@ export function PlannedItemForm() {
 
       if (!result.ok) {
         return {
-          blockingMessage: readApiErrorMessage(result.data, "予定項目を保存できませんでした。"),
+          blockingMessage: result.error.message,
         };
       }
 
       const warnings = result.data.warnings ?? [];
-      await queryClient.invalidateQueries({ queryKey: ["overview"] });
-      await queryClient.invalidateQueries({ queryKey: ["fund", Number(values.fundId)] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.fund.detail(Number(values.fundId)) });
 
       return {
         infoMessage: warnings.length > 0 ? "予定項目を保存しました。警告を確認してください。" : "予定項目を保存しました。",
@@ -298,13 +299,13 @@ export function PlannedItemForm() {
 
       if (!result.ok) {
         return {
-          blockingMessage: readApiErrorMessage(result.data, "予定項目を保存できませんでした。"),
+          blockingMessage: result.error.message,
         };
       }
 
       const warnings = result.data.warnings ?? [];
-      await queryClient.invalidateQueries({ queryKey: ["overview"] });
-      await queryClient.invalidateQueries({ queryKey: ["fund", Number(values.fundId)] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.fund.detail(Number(values.fundId)) });
 
       return {
         infoMessage:

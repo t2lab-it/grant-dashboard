@@ -3,7 +3,7 @@ import {
   handleStaticDemoRequest,
   resetStaticDemoStore,
 } from "../../src/demo/staticDemoApi";
-import { readClonedStaticDemoState } from "../../src/demo/staticDemoStore";
+import { readClonedStaticDemoState } from "../../src/demo/staticDemoState";
 
 async function readJson(response: Response) {
   return (await response.json()) as Record<string, unknown>;
@@ -13,6 +13,28 @@ describe("static demo API", () => {
   beforeEach(() => {
     window.localStorage.clear();
     resetStaticDemoStore();
+  });
+
+  test("rejects malformed request bodies with the shared API error contract", async () => {
+    const response = await handleStaticDemoRequest("/api/planned-items", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fundId: 1,
+        categoryId: 1,
+        plannedDate: "2026-02-30",
+        scheduledMonth: "2026-13",
+        description: "",
+        amount: 0,
+        notes: "",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await readJson(response)).toEqual({
+      code: "invalid_payload",
+      message: "入力内容を確認してください。",
+    });
   });
 
   test("builds overview from demo seed data", async () => {
@@ -124,6 +146,47 @@ describe("static demo API", () => {
         }),
       ]),
     );
+  });
+
+  test.each([
+    ["/api/funds/not-an-id", 400, "invalid_fund_id", "予算IDを確認してください。"],
+    ["/api/funds/999", 404, "fund_not_found", "対象の予算が見つかりません。"],
+    ["/api/does-not-exist", 404, "api_not_found", "APIが見つかりません。"],
+  ])("matches the server error contract for GET %s", async (path, status, code, message) => {
+    const response = await handleStaticDemoRequest(path, { method: "GET" });
+
+    expect(response.status).toBe(status);
+    expect(await response.json()).toEqual({ code, message });
+  });
+
+  test.each([
+    ["PUT", "/api/funds/not-an-id", "invalid_fund_id", "予算IDを確認してください。"],
+    ["DELETE", "/api/planned-items/not-an-id", "invalid_planned_item_id", "計画項目IDを確認してください。"],
+    ["POST", "/api/planned-items/not-an-id/cancel", "invalid_planned_item_id", "計画項目IDを確認してください。"],
+    ["POST", "/api/actual-entries/not-an-id/cancel", "invalid_actual_entry_id", "精算項目IDを確認してください。"],
+    ["PUT", "/api/classifications/not-an-id", "invalid_classification_id", "分類IDを確認してください。"],
+  ])("matches the server invalid-ID contract for %s %s", async (method, path, code, message) => {
+    const response = await handleStaticDemoRequest(path, { method });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ code, message });
+  });
+
+  test("keeps an unknown nested GET route as API not found", async () => {
+    const response = await handleStaticDemoRequest("/api/funds/1/extra", { method: "GET" });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ code: "api_not_found", message: "APIが見つかりません。" });
+  });
+
+  test("matches the server domain error contract for a missing planned item", async () => {
+    const response = await handleStaticDemoRequest("/api/planned-items/999/cancel", { method: "POST" });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({
+      code: "planned_item_not_found",
+      message: "対象の計画項目が見つかりません。",
+    });
   });
 
   test("persists planned item changes and reflects them in overview", async () => {

@@ -210,10 +210,10 @@ export function DemoTutorial({ eligible, firstFundId, selectedFiscalYear }: Demo
           <p>デモデータを使って、予算の確認から精算、workbook 差分確認まで案内します。</p>
           <div className="demo-tutorial-actions">
             <button type="button" className="detail-action-button" onClick={startTutorial}>
-              yes
+              チュートリアルを始める
             </button>
             <button type="button" className="detail-action-button detail-action-button-edit" onClick={dismissPrompt}>
-              no
+              今回は始めない
             </button>
           </div>
         </ModalShell>

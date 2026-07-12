@@ -102,7 +102,7 @@ describe("Demo tutorial", () => {
     const view = renderAppRoute("/");
 
     const prompt = await screen.findByRole("dialog", { name: "チュートリアルを始めますか？" });
-    await user.click(within(prompt).getByRole("button", { name: "no" }));
+    await user.click(within(prompt).getByRole("button", { name: "今回は始めない" }));
 
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "チュートリアルを始めますか？" })).not.toBeInTheDocument();
@@ -133,7 +133,7 @@ describe("Demo tutorial", () => {
     renderAppRoute("/");
 
     const prompt = await screen.findByRole("dialog", { name: "チュートリアルを始めますか？" });
-    await user.click(within(prompt).getByRole("button", { name: "yes" }));
+    await user.click(within(prompt).getByRole("button", { name: "チュートリアルを始める" }));
 
     for (let index = 0; index < 4; index += 1) {
       await user.click(screen.getByRole("button", { name: "次へ" }));
@@ -154,7 +154,7 @@ describe("Demo tutorial", () => {
     const view = renderAppRoute("/");
 
     const prompt = await screen.findByRole("dialog", { name: "チュートリアルを始めますか？" });
-    await user.click(within(prompt).getByRole("button", { name: "yes" }));
+    await user.click(within(prompt).getByRole("button", { name: "チュートリアルを始める" }));
 
     for (let index = 0; index < 4; index += 1) {
       await user.click(screen.getByRole("button", { name: "次へ" }));

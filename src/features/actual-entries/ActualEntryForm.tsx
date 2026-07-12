@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { buildOverviewApiPath, getFiscalYearFromSearch } from "../../app/fiscalYear";
@@ -13,11 +13,13 @@ import type {
   OverviewFundOptionsResponse,
 } from "../../contracts/entries";
 import { apiGet, apiPostJson } from "../../lib/api";
+import { formatTokyoDateKey } from "../../lib/calendar";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { FormFeedback } from "../forms/FormFeedback";
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
-import { readApiErrorMessage, useEntryForm } from "../forms/useEntryForm";
+import { useEntryForm } from "../forms/useEntryForm";
+import { queryKeys } from "../../lib/queryKeys";
 import { useAppSettings } from "../settings/AppSettings";
 
 function parsePositiveFundId(value: string | null) {
@@ -30,7 +32,7 @@ function parsePositiveFundId(value: string | null) {
 }
 
 export function ActualEntryForm() {
-  const today = formatDateForDisplay(new Date().toISOString().slice(0, 10));
+  const today = formatDateForDisplay(formatTokyoDateKey(new Date()));
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -65,23 +67,25 @@ export function ActualEntryForm() {
   const hasSelectedFund = Number.isInteger(parsedFundId) && parsedFundId > 0;
   const hasSelectedCategory = selectedCategoryId.length > 0;
   const { data: overviewData } = useQuery({
-    queryKey: ["overview", requestedFiscalYear ?? "auto"],
+    queryKey: queryKeys.overview.detail(requestedFiscalYear),
     queryFn: () => apiGet<OverviewFundOptionsResponse>(buildOverviewApiPath(requestedFiscalYear)),
     enabled: lockedFundId === null,
   });
   const { data: fundDetailData } = useQuery({
-    queryKey: ["fund-category-options", parsedFundId],
+    queryKey: queryKeys.fund.categoryOptions(parsedFundId),
     queryFn: () => apiGet<FundEntryOptionsResponse>(`/api/funds/${parsedFundId}`),
     enabled: hasSelectedFund,
   });
   const { data: rawClassificationData } = useQuery({
-    queryKey: ["classifications"],
+    queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
   const lockedFundName = fundDetailData?.fund?.name ?? "読み込み中...";
-  const plannedItemOptions =
-    fundDetailData?.plannedItems.filter((item) => String(item.categoryId) === selectedCategoryId) ?? [];
+  const plannedItemOptions = useMemo(
+    () => fundDetailData?.plannedItems.filter((item) => String(item.categoryId) === selectedCategoryId) ?? [],
+    [fundDetailData?.plannedItems, selectedCategoryId],
+  );
 
   useEffect(() => {
     if (lockedFundId !== null && values.fundId !== String(lockedFundId)) {
@@ -103,7 +107,7 @@ export function ActualEntryForm() {
     ) {
       setValue("fundId", String(defaultFundId));
     }
-  }, [defaultFundId, overviewData, setValue, values.fundId]);
+  }, [defaultFundId, lockedFundId, overviewData, setValue, values.fundId]);
 
   useEffect(() => {
     if (hasAppliedDefaultCategory.current || !fundDetailData || parsedFundId !== defaultFundId) {
@@ -166,13 +170,13 @@ export function ActualEntryForm() {
 
       if (!result.ok) {
         return {
-          blockingMessage: readApiErrorMessage(result.data, "実績を保存できませんでした。"),
+          blockingMessage: result.error.message,
         };
       }
 
       const { remainingPlannedAmount } = result.data;
-      await queryClient.invalidateQueries({ queryKey: ["overview"] });
-      await queryClient.invalidateQueries({ queryKey: ["fund", Number(values.fundId)] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.fund.detail(Number(values.fundId)) });
 
       if (
         typeof remainingPlannedAmount === "number" &&

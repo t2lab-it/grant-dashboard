@@ -1,0 +1,337 @@
+
+.app-shell {
+  width: 100%;
+  max-width: 1280px;
+  min-height: 100vh;
+  margin-inline: auto;
+  padding: 32px;
+}
+.app-header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.app-header-primary-row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 1;
+}
+
+.app-header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.app-fiscal-year-select {
+  min-width: 112px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 8px 34px 8px 12px;
+  background: var(--surface-muted);
+  color: inherit;
+  font: inherit;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+}
+
+.app-header nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.static-demo-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--accent-text);
+  background: var(--accent-surface);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.static-demo-notice span {
+  min-width: 0;
+}
+
+.static-demo-notice a {
+  flex: 0 0 auto;
+  color: var(--interactive-strong);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  white-space: nowrap;
+}
+
+.app-alert-strip {
+  position: relative;
+  display: grid;
+  justify-self: end;
+  width: min(560px, 100%);
+}
+
+.app-alert-bar {
+  width: 100%;
+  border: 1px solid var(--surface-border-strong);
+  border-radius: 8px;
+  padding: 9px 12px;
+  text-align: left;
+  font: inherit;
+  font-weight: 700;
+  color: var(--app-text);
+  background: var(--surface-soft);
+  cursor: pointer;
+}
+
+.app-alert-bar:disabled {
+  cursor: default;
+  opacity: 0.76;
+}
+
+.app-alert-bar-danger {
+  border-color: #fca5a5;
+  color: #991b1b;
+  background: #fff1f2;
+}
+
+.app-page-status {
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 16px;
+  color: var(--app-text-muted);
+  background: var(--surface-soft);
+  font-weight: 600;
+}
+
+.app-route-error {
+  border-color: #fecdd3;
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+:root[data-theme="dark"] .app-route-error {
+  border-color: rgba(251, 113, 133, 0.44);
+  background: rgba(91, 33, 45, 0.94);
+  color: #fecdd3;
+}
+
+.app-alert-bar-warning {
+  border-color: #facc15;
+  color: #713f12;
+  background: #fefce8;
+}
+
+.app-alert-bar-clear {
+  border-color: #86efac;
+  color: #166534;
+  background: #f0fdf4;
+}
+
+.app-alert-panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  width: auto;
+  display: grid;
+  gap: 14px;
+  max-height: min(70vh, 560px);
+  overflow: auto;
+  border: 1px solid var(--surface-border-strong);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--surface-bg);
+  box-shadow: var(--shadow-elevated);
+}
+
+.app-alert-panel-section,
+.app-alert-panel-supporting {
+  display: grid;
+  gap: 8px;
+}
+
+.app-alert-panel-section h3,
+.app-alert-panel-supporting h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.app-alert-category-description {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 0.85rem;
+}
+
+.app-alert-detail-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-alert-detail-list a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--surface-soft);
+}
+
+.app-alert-detail-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.app-alert-detail-main span,
+.app-alert-empty {
+  color: var(--app-text-muted);
+  font-size: 0.85rem;
+}
+
+.app-alert-detail-amount {
+  flex: 0 0 auto;
+  font-weight: 700;
+  color: var(--app-text-subtle);
+}
+
+.app-alert-grouped-details {
+  display: grid;
+  grid-template-columns: max-content max-content auto;
+  align-items: center;
+  column-gap: 7px;
+  row-gap: 5px;
+}
+
+.app-alert-grouped-details-with-title {
+  grid-template-columns: max-content minmax(7rem, 1fr) max-content auto;
+}
+
+.app-alert-grouped-detail {
+  display: contents;
+}
+
+.app-alert-grouped-badge {
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.13);
+  color: var(--app-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.app-alert-grouped-badge.overdue_planned,
+.app-alert-grouped-badge.excess_balance,
+.app-alert-grouped-badge.overdue {
+  background: rgba(245, 158, 11, 0.14);
+  color: #92400e;
+}
+
+.app-alert-grouped-badge.low_balance,
+.app-alert-grouped-badge.negative_balance,
+.app-alert-grouped-badge.budget_overrun {
+  background: rgba(239, 68, 68, 0.13);
+  color: #991b1b;
+}
+
+.app-alert-grouped-title {
+  min-width: 0;
+  color: var(--app-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.app-alert-grouped-value {
+  color: var(--app-text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.app-alert-grouped-rate {
+  color: var(--app-text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+:root[data-theme="dark"] .app-alert-grouped-badge.overdue_planned,
+:root[data-theme="dark"] .app-alert-grouped-badge.excess_balance,
+:root[data-theme="dark"] .app-alert-grouped-badge.overdue {
+  background: rgba(251, 146, 60, 0.18);
+  color: #fdba74;
+}
+
+:root[data-theme="dark"] .app-alert-grouped-badge.low_balance,
+:root[data-theme="dark"] .app-alert-grouped-badge.negative_balance,
+:root[data-theme="dark"] .app-alert-grouped-badge.budget_overrun {
+  background: rgba(248, 113, 113, 0.18);
+  color: #fca5a5;
+}
+
+.app-header nav a,
+.app-header-action-button {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  white-space: nowrap;
+}
+
+.app-header-action-button {
+  border: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.app-header-status {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--app-text-subtle);
+}
+
+.app-main {
+  background: var(--surface-bg);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: var(--shadow-elevated);
+}
+
+.detail-fiscal-year-notice {
+  margin: 12px 0 0;
+  color: var(--app-text-muted);
+  font-size: 0.9rem;
+}

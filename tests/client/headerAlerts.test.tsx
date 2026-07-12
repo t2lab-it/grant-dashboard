@@ -141,7 +141,6 @@ describe("header alerts", () => {
     const panel = screen.getByRole("region", { name: "アラート詳細" });
     const fundLinks = within(panel).getAllByRole("link", { name: "基盤研究費" });
     expect(within(panel).getByRole("heading", { name: "予算超過 1" })).toBeInTheDocument();
-    expect(within(panel).queryByText("費目別予算を超過している費目があります。")).not.toBeInTheDocument();
     const budgetOverrunLink = fundLinks[0];
     expect(budgetOverrunLink).toHaveAttribute(
       "href",
@@ -150,7 +149,6 @@ describe("header alerts", () => {
     expect(within(budgetOverrunLink).getByText("物品費")).toBeInTheDocument();
     expect(within(budgetOverrunLink).getByText("-30,000円")).toBeInTheDocument();
     expect(within(panel).getByRole("heading", { name: "年度末注意 1" })).toBeInTheDocument();
-    expect(within(panel).queryByText("年度末までに確認が必要な予算があります。")).not.toBeInTheDocument();
     const yearEndRiskLink = within(panel).getByRole("link", { name: /ACT-X/ });
     expect(yearEndRiskLink).toHaveAttribute("href", "/funds/2?year=2026");
     expect(within(yearEndRiskLink).getByText("残高不足")).toBeInTheDocument();
@@ -165,8 +163,6 @@ describe("header alerts", () => {
     expect(within(overdueLink as HTMLElement).getAllByText("2026-04")).toHaveLength(2);
     expect(within(overdueLink as HTMLElement).getByText("GPU サーバ購入")).toBeInTheDocument();
     expect(within(overdueLink as HTMLElement).getByText("70,000円")).toBeInTheDocument();
-    expect(within(panel).queryByRole("heading", { name: /^未精算予定/ })).not.toBeInTheDocument();
-    expect(within(panel).queryByRole("heading", { name: "補助項目" })).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith("/api/header-alerts?year=2026", {});

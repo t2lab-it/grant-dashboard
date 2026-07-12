@@ -24,7 +24,10 @@ describe("API fund routes", () => {
     const response = await app.inject({ method: "GET", url: "/api/funds/999" });
 
     expect(response.statusCode).toBe(404);
-    expect(response.json()).toEqual({ error: "Fund not found" });
+    expect(response.json()).toEqual({
+      code: "fund_not_found",
+      message: "対象の予算が見つかりません。",
+    });
   });
 
   it("creates a fund with categories and budget lines in one request", async () => {
@@ -92,7 +95,7 @@ describe("API fund routes", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
-      error: "Invalid request payload",
+      code: "invalid_payload",
       message: "入力内容を確認してください。",
     });
   });
@@ -112,7 +115,7 @@ describe("API fund routes", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
-      error: "Invalid request payload",
+      code: "invalid_payload",
       message: "入力内容を確認してください。",
     });
   });
@@ -197,7 +200,6 @@ describe("API fund routes", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "category_has_entries",
-      error: "Category has linked planned or actual entries",
       message: "計画項目または精算項目がある費目は削除できません。",
     });
   });

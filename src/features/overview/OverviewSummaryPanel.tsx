@@ -315,7 +315,6 @@ function getTodayAnnotationLines(todayProgressLabel: string | null, todayIdealDe
 
 function getTodayProgressLabelPlacement({
   chartPoints,
-  chartWidth,
   height,
   idealY,
   labelLines,
@@ -325,7 +324,6 @@ function getTodayProgressLabelPlacement({
   width,
 }: {
   chartPoints: Array<OverviewTrendPoint & { x: number; y: number }>;
-  chartWidth: number;
   height: number;
   idealY: number | null;
   labelLines: string[];
@@ -464,8 +462,6 @@ function OverviewHelp({
 
 function createInsightCards({
   amountDisplayMode,
-  balanceRateThresholds,
-  breakdown,
   funds,
   linkedActualAmount,
   metric,
@@ -474,8 +470,6 @@ function createInsightCards({
   totals,
 }: {
   amountDisplayMode: AmountDisplayMode;
-  balanceRateThresholds: BalanceRateThresholds;
-  breakdown: Array<{ id: number; name: string; value: number }>;
   funds: OverviewSummaryFund[];
   linkedActualAmount: number;
   metric: OverviewSummaryMetricKey;
@@ -594,7 +588,6 @@ function OverviewTrendChart({
     todayMarker && todayLabels.length > 0
       ? getTodayProgressLabelPlacement({
           chartPoints,
-          chartWidth,
           height,
           idealY: todayIdealY,
           labelLines: todayLabels,
@@ -818,7 +811,6 @@ function OverviewCrossAggregateDonut({
 export function OverviewSummaryPanel({
   id,
   amountDisplayMode,
-  balanceRateThresholds,
   crossAggregateCategories,
   funds,
   linkedActualAmount,
@@ -839,8 +831,6 @@ export function OverviewSummaryPanel({
     .sort((left, right) => right.value - left.value);
   const insights = createInsightCards({
     amountDisplayMode,
-    balanceRateThresholds,
-    breakdown,
     funds,
     linkedActualAmount,
     metric,

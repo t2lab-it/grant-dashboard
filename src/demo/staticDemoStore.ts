@@ -3,7 +3,6 @@ import {
   type StaticDemoActualEntry,
   type StaticDemoBudgetLine,
   type StaticDemoCategory,
-  type StaticDemoClassificationTag,
   type StaticDemoFund,
   type StaticDemoPlannedItem,
   type StaticDemoState,
@@ -120,17 +119,6 @@ type StaticSearchResult = {
   statusLabel: string;
   detailHref: string;
   auxiliaryLabels: Array<{ id: number; kind: "auxiliary"; name: string; color: string; inherited: boolean }>;
-};
-
-type StaticOverviewFund = {
-  id: number;
-  fund_code: string | null;
-  name: string;
-  awarded_amount: number;
-  committed_amount: number;
-  actual_amount: number;
-  freeBalance: number;
-  projectTags: StaticDemoClassificationTag[];
 };
 
 function cloneState(state: StaticDemoState): StaticDemoState {

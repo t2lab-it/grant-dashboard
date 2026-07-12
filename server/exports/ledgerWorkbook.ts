@@ -9,7 +9,7 @@ import { inferJapaneseFiscalYear, listFiscalYearMonths } from "../../src/lib/cal
 const require = createRequire(import.meta.url);
 const XLSX = require("xlsx") as typeof import("xlsx");
 
-const SHEET_NAMES = ["概要", "予算別サマリ", "費目別サマリ", "月別推移", "計画明細", "実績明細"] as const;
+type SheetName = "概要" | "予算別サマリ" | "費目別サマリ" | "月別推移" | "計画明細" | "実績明細";
 const AMOUNT_FORMAT = "#,##0";
 const RATE_FORMAT = "0.0%";
 
@@ -462,7 +462,7 @@ function createSheet(rows: CellValue[][], amountColumns: number[] = [], rateColu
 
 function appendSheet(
   workbook: import("xlsx").WorkBook,
-  sheetName: (typeof SHEET_NAMES)[number],
+  sheetName: SheetName,
   rows: CellValue[][],
   amountColumns: number[] = [],
   rateColumns: number[] = [],

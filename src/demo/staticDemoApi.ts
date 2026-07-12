@@ -16,7 +16,6 @@ import {
   getStaticImportHistory,
   getStaticOverviewSnapshot,
   getStaticSearchSnapshot,
-  resetStaticDemoStore,
   restoreStaticCancelledPlannedItem,
   updateStaticClassification,
   updateStaticActualEntry,

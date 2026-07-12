@@ -192,7 +192,6 @@ describe("SettingsPage", () => {
     renderSettingsRoute();
 
     expect(await screen.findByRole("radiogroup", { name: "カラーテーマ" })).toBeInTheDocument();
-    const lightButton = screen.getByRole("button", { name: "ライト" });
     const darkButton = screen.getByRole("button", { name: "ダーク" });
     const systemButton = screen.getByRole("button", { name: "システムのデフォルト" });
     const tealYellowRadio = screen.getByRole("radio", { name: /青緑＋黄色系/ });

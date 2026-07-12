@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { buildOverviewApiPath, getFiscalYearFromSearch } from "../../app/fiscalYear";
@@ -81,8 +81,10 @@ export function ActualEntryForm() {
   });
   const classificationData = normalizeClassifications(rawClassificationData);
   const lockedFundName = fundDetailData?.fund?.name ?? "読み込み中...";
-  const plannedItemOptions =
-    fundDetailData?.plannedItems.filter((item) => String(item.categoryId) === selectedCategoryId) ?? [];
+  const plannedItemOptions = useMemo(
+    () => fundDetailData?.plannedItems.filter((item) => String(item.categoryId) === selectedCategoryId) ?? [],
+    [fundDetailData?.plannedItems, selectedCategoryId],
+  );
 
   useEffect(() => {
     if (lockedFundId !== null && values.fundId !== String(lockedFundId)) {
@@ -104,7 +106,7 @@ export function ActualEntryForm() {
     ) {
       setValue("fundId", String(defaultFundId));
     }
-  }, [defaultFundId, overviewData, setValue, values.fundId]);
+  }, [defaultFundId, lockedFundId, overviewData, setValue, values.fundId]);
 
   useEffect(() => {
     if (hasAppliedDefaultCategory.current || !fundDetailData || parsedFundId !== defaultFundId) {

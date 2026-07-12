@@ -210,7 +210,7 @@ describe("Fund detail interactions", () => {
   it("duplicates planned items from the planned list with today as the planned date", async () => {
     const user = userEvent.setup();
     const today = new Date().toISOString().slice(0, 10);
-    let currentFundDetail = {
+    const currentFundDetail = {
       fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
       categories: [
         {
@@ -300,7 +300,7 @@ describe("Fund detail interactions", () => {
   it("scopes actual-entry duplicate destinations to the displayed historical fiscal year", async () => {
     const user = userEvent.setup();
     const today = formatTokyoDateKey(new Date());
-    let currentFundDetail = {
+    const currentFundDetail = {
       fund: { id: 1, name: "基盤研究費", fiscalYear: 2024, awarded_amount: 5080000 },
       categories: [
         {

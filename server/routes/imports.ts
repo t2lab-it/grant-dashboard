@@ -51,7 +51,7 @@ export function registerImportRoutes(app: FastifyInstance, { dbPath }: { dbPath:
         buffer: request.body,
         sourceFilename: filename.data,
       });
-    } catch (error) {
+    } catch {
       sendApiError(reply, 400, {
         code: "workbook_preview_failed",
         message: "workbookをプレビューできませんでした。",
@@ -78,7 +78,7 @@ export function registerImportRoutes(app: FastifyInstance, { dbPath }: { dbPath:
         importedAt: new Date().toISOString(),
       });
       reply.code(201).send(payload);
-    } catch (error) {
+    } catch {
       sendApiError(reply, 400, {
         code: "workbook_import_failed",
         message: "workbookを取り込めませんでした。",

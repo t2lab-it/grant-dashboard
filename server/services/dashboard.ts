@@ -28,14 +28,6 @@ type OverviewTotalsRow = {
   actual: number;
 };
 
-type OverviewFundRow = {
-  id: number;
-  name: string;
-  awarded_amount: number;
-  committed_amount: number;
-  actual_amount: number;
-};
-
 type LatestImportRow = {
   id: number;
   source_filename: string;

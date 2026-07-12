@@ -5,7 +5,6 @@ import {
   fetchMock,
   renderSettingsRoute,
   setupSettingsTests,
-  storedAppSettings,
 } from "./settingsTestUtils";
 
 describe("SettingsPage", () => {

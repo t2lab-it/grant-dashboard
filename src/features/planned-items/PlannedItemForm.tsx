@@ -143,7 +143,7 @@ export function PlannedItemForm() {
     ) {
       setValue("fundId", String(defaultFundId));
     }
-  }, [defaultFundId, overviewData, setValue, values.fundId]);
+  }, [defaultFundId, lockedFundId, overviewData, setValue, values.fundId]);
 
   useEffect(() => {
     if (hasAppliedDefaultCategory.current || !fundDetailData || parsedFundId !== defaultFundId) {
@@ -170,9 +170,8 @@ export function PlannedItemForm() {
     const startIndex = parseYearMonth(bulkStartMonth);
     const endIndex = parseYearMonth(bulkEndMonth);
     const baseDescription = bulkBaseDescription.trim();
-    let amount = 0;
     try {
-      amount = parsePositiveAmountExpression(bulkBaseAmount, "基準金額");
+      parsePositiveAmountExpression(bulkBaseAmount, "基準金額");
     } catch (error) {
       setBulkPreviewError(error instanceof Error ? error.message : "基準金額は有効な数式で入力してください。");
       setBulkPreviewRows([]);

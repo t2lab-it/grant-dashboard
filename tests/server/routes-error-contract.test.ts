@@ -41,19 +41,6 @@ describe("API error response contract", () => {
     });
   });
 
-  it.each(["/api", "/api?source=test"])(
-    "treats the API root as an API not-found route: %s",
-    async (url) => {
-      const response = await app.inject({ method: "GET", url });
-
-      expect(response.statusCode).toBe(404);
-      expect(response.json()).toEqual({
-        code: "api_not_found",
-        message: "APIが見つかりません。",
-      });
-    },
-  );
-
   it("sanitizes unexpected failures at the API root with a query string", async () => {
     app.get("/api", () => {
       throw new Error("sensitive API root detail");

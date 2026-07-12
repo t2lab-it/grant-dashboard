@@ -4,9 +4,8 @@ import { getFiscalYearFromSearch, setFiscalYearInSearch } from "../../app/fiscal
 import { PageStatusMessage } from "../../app/PageStatusMessage";
 import { isStaticDemoMode } from "../../demo/staticDemoMode";
 import { apiMutateJson } from "../../lib/api";
-import { getRateMetric, getRateMetricKey, getRateMetricLabel } from "../../lib/executionRate";
+import { getRateMetricKey } from "../../lib/executionRate";
 import { formatAmount } from "../../lib/format";
-import { CROSS_AGGREGATE_CATEGORY_LABELS } from "../../contracts/crossAggregateCategory";
 import { ActualEntryDialog } from "./ActualEntryDialog";
 import { useAppSettings } from "../settings/AppSettings";
 import { type FundDetailSectionKey } from "../settings/fundDetailSectionOrder";
@@ -14,15 +13,14 @@ import { DuplicatePlannedItemDialog } from "./DuplicatePlannedItemDialog";
 import { EditFundDialog } from "./EditFundDialog";
 import { EditPlannedItemDialog } from "./EditPlannedItemDialog";
 import { FundActualEntriesSection } from "./FundActualEntriesSection";
-import { FundDetailChart } from "./FundDetailChart";
+import { FundCategoriesSection } from "./FundCategoriesSection";
 import { FundListFilters } from "./FundListFilters";
 import { FundPlannedItemHistorySection } from "./FundPlannedItemHistorySection";
 import { FundPlannedItemsSection } from "./FundPlannedItemsSection";
+import { FundMonthlyStatusSection } from "./FundMonthlyStatusSection";
 import { FundSortButtons } from "./FundSortButtons";
-import { RateMetricToggle } from "./RateMetricToggle";
 import {
   ACTUAL_ENTRY_SORT_FIELDS,
-  MONTHLY_STATUS_SORT_FIELDS,
   PLANNED_ITEM_SORT_FIELDS,
   sortActualEntries,
   sortMonthlyStatus,
@@ -43,10 +41,6 @@ function isListDetailSectionKey(sectionKey: FundDetailSectionKey) {
 import { useFundDetailData } from "./useFundDetailData";
 import { useFundDetailNotes } from "./useFundDetailNotes";
 import type { RateMetricKey } from "../../lib/executionRate";
-
-function formatBudgetAmount(amount: number | null, amountDisplayMode: "grouped-yen" | "plain-yen" | "thousand-yen") {
-  return amount === null ? "未設定" : formatAmount(amount, amountDisplayMode);
-}
 
 function parseFocusedEntry(value: string | null) {
   const match = value?.match(/^(planned|actual)-(\d+)$/);
@@ -86,7 +80,6 @@ export function FundDetailPage() {
   const [editingActualEntry, setEditingActualEntry] = useState<ActualEntry | null>(null);
   const [editingItem, setEditingItem] = useState<PlannedItem | null>(null);
   const [isEditingFund, setIsEditingFund] = useState(false);
-  const [isCrossAggregateExpanded, setIsCrossAggregateExpanded] = useState(false);
   const [deletingPlannedHistoryItemId, setDeletingPlannedHistoryItemId] = useState<number | null>(null);
   const [restoringPlannedHistoryItemId, setRestoringPlannedHistoryItemId] = useState<number | null>(null);
   const [plannedHistoryDeleteError, setPlannedHistoryDeleteError] = useState("");
@@ -213,149 +206,32 @@ export function FundDetailPage() {
     : `/api/exports/ledger.xlsx?year=${fundFiscalYear}&fundId=${parsedFundId}`;
   const fundDetailSections: Record<FundDetailSectionKey, ReactNode> = {
     categories: (
-      <section className="detail-panel" aria-labelledby="fund-categories-heading">
-        <div className="detail-panel-header">
-          <div className="detail-panel-title-actions">
-            <h3 id="fund-categories-heading">費目別の状況</h3>
-            <button
-              type="button"
-              className="detail-action-button detail-action-button-edit"
-              onClick={() => setIsEditingFund(true)}
-            >
-              予算を編集
-            </button>
-          </div>
-          <div className="detail-panel-actions">
-            <RateMetricToggle rateMetric={rateMetric} onRateMetricChange={updateDetailRateMetric} />
-            {staticDemoMode ? null : (
-              <a
-                className="detail-action-button"
-                href={ledgerExportHref}
-              >
-                収支簿出力
-              </a>
-            )}
-          </div>
-        </div>
-        <div className="detail-categories-layout">
-          <div className="detail-category-tables">
-            <div className="detail-table" role="table" aria-label="費目別の状況">
-              <div className="detail-table-head" role="row">
-                <span>費目</span>
-                <span className="detail-table-money-heading">予算</span>
-                <span className="detail-table-money-heading">執行予定額</span>
-                <span className="detail-table-money-heading">執行済額</span>
-                <span className="detail-table-rate-heading">{getRateMetricLabel(rateMetric).replace(" [%]", "")}</span>
-              </div>
-              {data.categories.map((row) => {
-                const rate = getRateMetric(
-                  rateMetric,
-                  row.budgetAmount,
-                  row.plannedAmount,
-                  row.actualAmount,
-                  (row.budgetAmount ?? 0) - row.plannedAmount - row.actualAmount,
-                  executionRateThresholds,
-                  balanceRateThresholds,
-                );
-
-                return (
-                  <div key={row.id} className="detail-table-row" role="row">
-                    <strong>{row.categoryName}</strong>
-                    <span className="detail-table-money-cell">{formatBudgetAmount(row.budgetAmount, amountDisplayMode)}</span>
-                    <span className="detail-table-money-cell">{formatAmount(row.plannedAmount, amountDisplayMode)}</span>
-                    <span className="detail-table-money-cell">{formatAmount(row.actualAmount, amountDisplayMode)}</span>
-                    <span className={`detail-table-rate-cell ${rate.className}`}>{rate.label}</span>
-                  </div>
-                );
-              })}
-              <div className="detail-table-row detail-table-total-row" role="row">
-                <strong>合計</strong>
-                <span className="detail-table-money-cell" />
-                <span className="detail-table-money-cell">{formatAmount(plannedAmount, amountDisplayMode)}</span>
-                <span className="detail-table-money-cell">{formatAmount(actualAmount, amountDisplayMode)}</span>
-                <span className="detail-table-rate-cell" />
-              </div>
-            </div>
-            {crossAggregateCategories.length > 0 ? (
-              <div className="detail-cross-aggregate-disclosure">
-                <button
-                  className="detail-cross-aggregate-toggle"
-                  type="button"
-                  aria-expanded={isCrossAggregateExpanded}
-                  onClick={() => setIsCrossAggregateExpanded((current) => !current)}
-                >
-                  横断集計カテゴリ別の状況
-                </button>
-                {isCrossAggregateExpanded ? (
-                  <div
-                    className="detail-table detail-cross-aggregate-table"
-                    role="table"
-                    aria-label="横断集計カテゴリ別の状況"
-                  >
-                    <div className="detail-table-head" role="row">
-                      <span>横断集計カテゴリ</span>
-                      <span className="detail-table-money-heading">予算</span>
-                      <span className="detail-table-money-heading">執行予定額</span>
-                      <span className="detail-table-money-heading">執行済額</span>
-                      <span className="detail-table-money-heading">残高</span>
-                    </div>
-                    {crossAggregateCategories.map((row) => {
-                      const balance = (row.budgetAmount ?? 0) - row.plannedAmount - row.actualAmount;
-
-                      return (
-                        <div key={row.crossAggregateCategory} className="detail-table-row" role="row">
-                          <strong>{CROSS_AGGREGATE_CATEGORY_LABELS[row.crossAggregateCategory]}</strong>
-                          <span className="detail-table-money-cell">{formatBudgetAmount(row.budgetAmount, amountDisplayMode)}</span>
-                          <span className="detail-table-money-cell">{formatAmount(row.plannedAmount, amountDisplayMode)}</span>
-                          <span className="detail-table-money-cell">{formatAmount(row.actualAmount, amountDisplayMode)}</span>
-                          <span className="detail-table-money-cell">{formatAmount(balance, amountDisplayMode)}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-          <FundDetailChart
-            fundName={data.fund.name}
-            awardedAmount={data.fund.awarded_amount}
-            categories={data.categories}
-            preset={themePreset}
-            customChartPresets={customChartPresets}
-            rateMetric={rateMetric}
-            amountDisplayMode={amountDisplayMode}
-            executionRateThresholds={executionRateThresholds}
-            balanceRateThresholds={balanceRateThresholds}
-          />
-        </div>
-      </section>
+      <FundCategoriesSection
+        actualAmount={actualAmount}
+        amountDisplayMode={amountDisplayMode}
+        awardedAmount={data.fund.awarded_amount}
+        balanceRateThresholds={balanceRateThresholds}
+        categories={data.categories}
+        crossAggregateCategories={crossAggregateCategories}
+        customChartPresets={customChartPresets}
+        executionRateThresholds={executionRateThresholds}
+        fundName={data.fund.name}
+        ledgerExportHref={ledgerExportHref}
+        onEditFund={() => setIsEditingFund(true)}
+        onRateMetricChange={updateDetailRateMetric}
+        plannedAmount={plannedAmount}
+        rateMetric={rateMetric}
+        staticDemoMode={staticDemoMode}
+        themePreset={themePreset}
+      />
     ),
     timeline: (
-      <section className="detail-panel" aria-labelledby="fund-timeline-heading">
-        <div className="detail-panel-header">
-          <div>
-            <h3 id="fund-timeline-heading">月別の状況</h3>
-          </div>
-        </div>
-        <div className="timeline-list">
-          <div className="timeline-head timeline-sort-head" role="row">
-            <FundSortButtons
-              fields={MONTHLY_STATUS_SORT_FIELDS}
-              sortState={monthlySort}
-              onSortChange={setMonthlySort}
-            />
-          </div>
-          {sortedMonthlyStatus.map((item) => (
-            <div key={item.month} className="timeline-row">
-              <strong>{item.month}</strong>
-              <span className="detail-table-money-cell">{formatAmount(item.plannedAmount, amountDisplayMode)}</span>
-              <span className="detail-table-money-cell">{formatAmount(item.actualAmount, amountDisplayMode)}</span>
-              <span className="detail-table-money-cell">{formatAmount(item.totalAmount, amountDisplayMode)}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <FundMonthlyStatusSection
+        amountDisplayMode={amountDisplayMode}
+        items={sortedMonthlyStatus}
+        onSortChange={setMonthlySort}
+        sortState={monthlySort}
+      />
     ),
     actualEntries: (
       <FundActualEntriesSection

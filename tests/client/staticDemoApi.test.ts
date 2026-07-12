@@ -3,7 +3,7 @@ import {
   handleStaticDemoRequest,
   resetStaticDemoStore,
 } from "../../src/demo/staticDemoApi";
-import { readClonedStaticDemoState } from "../../src/demo/staticDemoStore";
+import { readClonedStaticDemoState } from "../../src/demo/staticDemoState";
 
 async function readJson(response: Response) {
   return (await response.json()) as Record<string, unknown>;
@@ -13,6 +13,28 @@ describe("static demo API", () => {
   beforeEach(() => {
     window.localStorage.clear();
     resetStaticDemoStore();
+  });
+
+  test("rejects malformed request bodies with the shared API error contract", async () => {
+    const response = await handleStaticDemoRequest("/api/planned-items", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fundId: 1,
+        categoryId: 1,
+        plannedDate: "2026-02-30",
+        scheduledMonth: "2026-13",
+        description: "",
+        amount: 0,
+        notes: "",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await readJson(response)).toEqual({
+      code: "invalid_payload",
+      message: "入力内容を確認してください。",
+    });
   });
 
   test("builds overview from demo seed data", async () => {

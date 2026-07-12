@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, NavLink, useLocation, useNavigate, useRoutes } from "react-router-dom";
 import type { HeaderAlertCategory, HeaderAlertDetail, HeaderAlertsResponse } from "../contracts/headerAlerts";
-import { resetStaticDemoStore } from "../demo/staticDemoApi";
 import { isStaticDemoMode } from "../demo/staticDemoMode";
 import { WorkbookExportControl } from "../features/exports/WorkbookExportControl";
 import { WorkbookExportStatusProvider } from "../features/exports/WorkbookExportStatus";
@@ -311,6 +310,7 @@ function AppShellInner() {
   }
 
   async function resetStaticDemo() {
+    const { resetStaticDemoStore } = await import("../demo/staticDemoState");
     resetStaticDemoStore();
     await queryClient.invalidateQueries();
   }

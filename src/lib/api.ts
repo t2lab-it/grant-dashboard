@@ -1,4 +1,3 @@
-import { handleStaticDemoRequest } from "../demo/staticDemoApi";
 import { isStaticDemoMode } from "../demo/staticDemoMode";
 import type { ApiErrorResponse } from "../contracts/apiError";
 
@@ -39,6 +38,7 @@ export async function parseApiError(response: Pick<Response, "json" | "status">)
 
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   if (isStaticDemoMode()) {
+    const { handleStaticDemoRequest } = await import("../demo/staticDemoApi");
     return handleStaticDemoRequest(path, init);
   }
 

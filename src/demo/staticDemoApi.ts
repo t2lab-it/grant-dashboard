@@ -9,6 +9,13 @@ import {
   createStaticPlannedItem,
   deleteStaticPlannedItem,
   deleteStaticClassification,
+  restoreStaticCancelledPlannedItem,
+  updateStaticClassification,
+  updateStaticActualEntry,
+  updateStaticFund,
+  updateStaticPlannedItem,
+} from "./staticDemoMutations";
+import {
   getStaticClassifications,
   getStaticFundSnapshot,
   getStaticHeaderAlertsSnapshot,
@@ -16,21 +23,22 @@ import {
   getStaticImportHistory,
   getStaticOverviewSnapshot,
   getStaticSearchSnapshot,
-  restoreStaticCancelledPlannedItem,
-  updateStaticClassification,
-  updateStaticActualEntry,
-  updateStaticFund,
-  updateStaticPlannedItem,
-  type ActualEntryEditInput,
-  type ActualEntryInput,
-  type BulkPlannedItemsInput,
-  type FundInput,
-  type PlannedItemEditInput,
-  type PlannedItemInput,
-} from "./staticDemoStore";
+} from "./staticDemoReadModels";
 import type { ApiErrorResponse } from "../contracts/apiError";
+import {
+  actualEntryEditSchema,
+  actualEntrySchema,
+  classificationSchema,
+  classificationUpdateSchema,
+  fundCreationSchema,
+  fundUpdateSchema,
+  plannedItemEditSchema,
+  plannedItemSchema,
+  plannedItemsBulkSchema,
+} from "../contracts/requestSchemas";
+import type { z, ZodTypeAny } from "zod";
 
-export { resetStaticDemoStore } from "./staticDemoStore";
+export { resetStaticDemoStore } from "./staticDemoState";
 
 type StaticDemoRequestInit = Pick<RequestInit, "body" | "headers" | "method">;
 
@@ -44,12 +52,11 @@ function jsonResponse(data: unknown, init?: ResponseInit) {
   });
 }
 
-async function readJsonBody<T>(init: StaticDemoRequestInit) {
-  if (typeof init.body !== "string") {
-    return {} as T;
-  }
-
-  return JSON.parse(init.body) as T;
+async function readJsonBody<TSchema extends ZodTypeAny>(
+  init: StaticDemoRequestInit,
+  schema: TSchema,
+): Promise<z.output<TSchema>> {
+  return schema.parse(typeof init.body === "string" ? JSON.parse(init.body) : {});
 }
 
 function parseId(path: string, pattern: RegExp) {
@@ -264,7 +271,7 @@ export async function handleStaticDemoRequest(path: string, init: StaticDemoRequ
 
     if (method === "POST" && pathname === "/api/classifications") {
       return jsonResponse(
-        createStaticClassification(await readJsonBody<{ kind: "project" | "auxiliary"; name: string; color: string }>(init)),
+        createStaticClassification(await readJsonBody(init, classificationSchema)),
         { status: 201 },
       );
     }
@@ -275,7 +282,7 @@ export async function handleStaticDemoRequest(path: string, init: StaticDemoRequ
         return jsonResponse(
           updateStaticClassification(
             classificationId,
-            await readJsonBody<{ name: string; color: string }>(init),
+            await readJsonBody(init, classificationUpdateSchema),
           ),
         );
       }
@@ -316,28 +323,28 @@ export async function handleStaticDemoRequest(path: string, init: StaticDemoRequ
     }
 
     if (method === "POST" && pathname === "/api/funds") {
-      return jsonResponse(createStaticFund(await readJsonBody<FundInput>(init)), { status: 201 });
+      return jsonResponse(createStaticFund(await readJsonBody(init, fundCreationSchema)), { status: 201 });
     }
 
     if (method === "PUT") {
       const fundId = parseId(pathname, /^\/api\/funds\/(\d+)$/);
       if (fundId !== null) {
-        return jsonResponse(updateStaticFund(fundId, await readJsonBody<FundInput>(init)));
+        return jsonResponse(updateStaticFund(fundId, await readJsonBody(init, fundUpdateSchema)));
       }
     }
 
     if (method === "POST" && pathname === "/api/planned-items") {
-      return jsonResponse(createStaticPlannedItem(await readJsonBody<PlannedItemInput>(init)), { status: 201 });
+      return jsonResponse(createStaticPlannedItem(await readJsonBody(init, plannedItemSchema)), { status: 201 });
     }
 
     if (method === "POST" && pathname === "/api/planned-items/bulk") {
-      return jsonResponse(createStaticPlannedItemsBulk(await readJsonBody<BulkPlannedItemsInput>(init)), { status: 201 });
+      return jsonResponse(createStaticPlannedItemsBulk(await readJsonBody(init, plannedItemsBulkSchema)), { status: 201 });
     }
 
     if (method === "PUT") {
       const plannedItemId = parseId(pathname, /^\/api\/planned-items\/(\d+)$/);
       if (plannedItemId !== null) {
-        return jsonResponse(updateStaticPlannedItem(plannedItemId, await readJsonBody<PlannedItemEditInput>(init)));
+        return jsonResponse(updateStaticPlannedItem(plannedItemId, await readJsonBody(init, plannedItemEditSchema)));
       }
     }
 
@@ -370,13 +377,13 @@ export async function handleStaticDemoRequest(path: string, init: StaticDemoRequ
     }
 
     if (method === "POST" && pathname === "/api/actual-entries") {
-      return jsonResponse(createStaticActualEntry(await readJsonBody<ActualEntryInput>(init)), { status: 201 });
+      return jsonResponse(createStaticActualEntry(await readJsonBody(init, actualEntrySchema)), { status: 201 });
     }
 
     if (method === "PUT") {
       const actualEntryId = parseId(pathname, /^\/api\/actual-entries\/(\d+)$/);
       if (actualEntryId !== null) {
-        return jsonResponse(updateStaticActualEntry(actualEntryId, await readJsonBody<ActualEntryEditInput>(init)));
+        return jsonResponse(updateStaticActualEntry(actualEntryId, await readJsonBody(init, actualEntryEditSchema)));
       }
     }
 

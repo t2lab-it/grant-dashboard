@@ -9,7 +9,6 @@ import { normalizeClassifications } from "../classifications/classificationTypes
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { FormFeedback } from "../forms/FormFeedback";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
-import { useCloseOnEscape } from "./fundDetailDialogSupport";
 import type { PlannedItem } from "./fundDetailTypes";
 
 type DuplicatePlannedItemDialogProps = {
@@ -42,8 +41,6 @@ export function DuplicatePlannedItemDialog({
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
-
-  useCloseOnEscape(onClose, !isSubmitting);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -100,7 +97,7 @@ export function DuplicatePlannedItemDialog({
   return (
     <ModalShell
       ariaLabelledBy="duplicate-planned-item-dialog-title"
-      canCloseOnBackdrop={!isSubmitting}
+      canClose={!isSubmitting}
       onRequestClose={onClose}
     >
       <>

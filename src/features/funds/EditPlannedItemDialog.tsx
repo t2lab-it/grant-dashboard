@@ -8,7 +8,7 @@ import { normalizeClassifications } from "../classifications/classificationTypes
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { FormFeedback } from "../forms/FormFeedback";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
-import { useBudgetTargetOptions, useCloseOnEscape } from "./fundDetailDialogSupport";
+import { useBudgetTargetOptions } from "./fundDetailDialogSupport";
 import type { PlannedItem } from "./fundDetailTypes";
 
 export type EditPlannedItemDialogProps = {
@@ -49,8 +49,6 @@ export function EditPlannedItemDialog({
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
-
-  useCloseOnEscape(onClose, !isSubmitting);
 
   useEffect(() => {
     if (selectedCategoryId.length === 0 || !areCategoriesLoaded) {
@@ -162,7 +160,7 @@ export function EditPlannedItemDialog({
   return (
     <ModalShell
       ariaLabelledBy="edit-planned-item-dialog-title"
-      canCloseOnBackdrop={!isSubmitting}
+      canClose={!isSubmitting}
       onRequestClose={onClose}
     >
       <>

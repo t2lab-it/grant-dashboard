@@ -133,21 +133,6 @@ export function WorkbookExportControl() {
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isSaving) {
-        setIsOpen(false);
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, isSaving]);
-
   async function handleSave() {
     setDialogError("");
     setIsSaving(true);
@@ -189,7 +174,7 @@ export function WorkbookExportControl() {
       {isOpen ? (
         <ModalShell
           ariaLabelledBy="workbook-export-dialog-title"
-          canCloseOnBackdrop={!isSaving}
+          canClose={!isSaving}
           onRequestClose={() => setIsOpen(false)}
           usePortal
         >

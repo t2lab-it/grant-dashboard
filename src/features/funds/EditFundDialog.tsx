@@ -13,7 +13,6 @@ import {
   nextFundCategoryDraftId,
   type FundCategoryDraft,
 } from "./FundFormFields";
-import { useCloseOnEscape } from "./fundDetailDialogSupport";
 
 type EditFundDialogProps = {
   fundId: number;
@@ -74,8 +73,6 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
-
-  useCloseOnEscape(onClose, !isSubmitting);
 
   function setValue<K extends keyof typeof values>(field: K, value: (typeof values)[K]) {
     setValues((currentValues) => ({ ...currentValues, [field]: value }));
@@ -163,7 +160,7 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
   return (
     <ModalShell
       ariaLabelledBy="edit-fund-dialog-title"
-      canCloseOnBackdrop={!isSubmitting}
+      canClose={!isSubmitting}
       onRequestClose={onClose}
     >
       <>

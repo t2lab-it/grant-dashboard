@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "../../lib/api";
 import { buildOverviewApiPath } from "../../app/fiscalYear";
@@ -16,26 +15,6 @@ type FundCategoryOptionsResponse = {
     categoryName: string;
   }>;
 };
-
-export function useCloseOnEscape(onClose: () => void, enabled: boolean) {
-  useEffect(() => {
-    if (!enabled) {
-      return;
-    }
-
-    function handleKeyDown(event: globalThis.KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [enabled, onClose]);
-}
 
 export function useBudgetTargetOptions(selectedFundId: string, fiscalYear: number, enabled: boolean) {
   const parsedFundId = selectedFundId.trim().length > 0 ? Number(selectedFundId) : Number.NaN;

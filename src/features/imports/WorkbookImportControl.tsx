@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
 import type { WorkbookImportPreview, WorkbookImportResult } from "../../contracts/imports";
@@ -13,21 +13,6 @@ export function WorkbookImportControl() {
   const [statusMessage, setStatusMessage] = useState("");
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPreviewLoading && !isImporting) {
-        setIsOpen(false);
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isImporting, isOpen, isPreviewLoading]);
 
   async function uploadWorkbook(endpoint: string) {
     if (!selectedFile) {
@@ -98,7 +83,7 @@ export function WorkbookImportControl() {
       {isOpen ? (
         <ModalShell
           ariaLabelledBy="workbook-import-dialog-title"
-          canCloseOnBackdrop={!isPreviewLoading && !isImporting}
+          canClose={!isPreviewLoading && !isImporting}
           onRequestClose={() => setIsOpen(false)}
           usePortal
         >

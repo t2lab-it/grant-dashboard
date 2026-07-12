@@ -10,7 +10,7 @@ import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { FormFeedback } from "../forms/FormFeedback";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
-import { useBudgetTargetOptions, useCloseOnEscape } from "./fundDetailDialogSupport";
+import { useBudgetTargetOptions } from "./fundDetailDialogSupport";
 import type { ActualEntry, PlannedItem } from "./fundDetailTypes";
 
 export type ActualEntryDialogProps =
@@ -96,8 +96,6 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
-
-  useCloseOnEscape(props.onClose, !isSubmitting);
 
   useEffect(() => {
     if (!canChooseDestination) {
@@ -204,7 +202,7 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
   return (
     <ModalShell
       ariaLabelledBy="settle-planned-item-dialog-title"
-      canCloseOnBackdrop={!isSubmitting}
+      canClose={!isSubmitting}
       onRequestClose={props.onClose}
     >
       <>

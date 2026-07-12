@@ -299,28 +299,6 @@ function AppShellInner() {
     );
   }, [currentFiscalYear, location.hash, location.pathname, location.search, navigate, selectedFiscalYear]);
 
-  useEffect(() => {
-    if (!isCreateEntryModal || backgroundLocation === null) {
-      return;
-    }
-
-    const nextLocation = backgroundLocation;
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        navigate(`${nextLocation.pathname}${nextLocation.search}${nextLocation.hash}`, {
-          replace: true,
-        });
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [backgroundLocation, isCreateEntryModal, navigate]);
-
   function closeCreateEntryModal() {
     if (backgroundLocation === null) {
       return;

@@ -1,4 +1,8 @@
 import type Database from "better-sqlite3";
+import type {
+  ParsedCreateClassificationRequest,
+  ParsedUpdateClassificationRequest,
+} from "../../src/contracts/requestSchemas";
 
 export type ClassificationKind = "project" | "auxiliary";
 export type ClassificationTargetType = "fund" | "planned_item" | "actual_entry";
@@ -76,7 +80,7 @@ export function ensureDefaultAuxiliaryLabels(db: Database.Database) {
 
 export function createClassification(
   db: Database.Database,
-  input: { kind: ClassificationKind; name: string; color: string },
+  input: ParsedCreateClassificationRequest,
 ) {
   db.prepare(
     `
@@ -91,7 +95,7 @@ export function createClassification(
 export function updateClassification(
   db: Database.Database,
   tagId: number,
-  input: { name: string; color: string },
+  input: ParsedUpdateClassificationRequest,
 ) {
   const result = db
     .prepare(

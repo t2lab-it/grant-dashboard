@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "../../lib/api";
+import { queryKeys } from "../../lib/queryKeys";
 import { buildOverviewApiPath } from "../../app/fiscalYear";
 
 type OverviewResponse = {
@@ -20,12 +21,12 @@ export function useBudgetTargetOptions(selectedFundId: string, fiscalYear: numbe
   const parsedFundId = selectedFundId.trim().length > 0 ? Number(selectedFundId) : Number.NaN;
   const hasSelectedFund = Number.isInteger(parsedFundId) && parsedFundId > 0;
   const { data: overviewData } = useQuery({
-    queryKey: ["overview", fiscalYear],
+    queryKey: queryKeys.overview.detail(fiscalYear),
     queryFn: () => apiGet<OverviewResponse>(buildOverviewApiPath(fiscalYear)),
     enabled,
   });
   const categoryOptionsQuery = useQuery({
-    queryKey: ["fund-category-options", parsedFundId],
+    queryKey: queryKeys.fund.categoryOptions(parsedFundId),
     queryFn: () => apiGet<FundCategoryOptionsResponse>(`/api/funds/${parsedFundId}`),
     enabled: enabled && hasSelectedFund,
   });

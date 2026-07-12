@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { getFiscalYearFromSearch, setFiscalYearInSearch } from "../../app/fiscalYear";
 import { FormFeedback } from "../forms/FormFeedback";
 import { apiGet, apiMutateJson } from "../../lib/api";
+import { queryKeys } from "../../lib/queryKeys";
 import type { ClassificationResponse } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import { parseNonnegativeAmountExpression, parsePositiveAmountExpression } from "../forms/amountExpression";
@@ -11,6 +12,7 @@ import { useEntryForm } from "../forms/useEntryForm";
 import { buildFundBudgetSummary } from "./FundBudgetSummary";
 import { createFundCategoryDraft, nextFundCategoryDraftId, type FundCategoryDraft } from "./FundFormFields";
 import { FundFormFields } from "./FundFormFields";
+import type { CreateFundRequest } from "../../contracts/requestSchemas";
 
 export function NewFundForm() {
   const queryClient = useQueryClient();
@@ -28,7 +30,7 @@ export function NewFundForm() {
   const [selectedProjectTagIds, setSelectedProjectTagIds] = useState<number[]>([]);
   const [selectedAuxiliaryLabelIds, setSelectedAuxiliaryLabelIds] = useState<number[]>([]);
   const { data: rawClassificationData } = useQuery({
-    queryKey: ["classifications"],
+    queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
@@ -86,7 +88,7 @@ export function NewFundForm() {
       }
 
       let awardedAmount: number;
-      let parsedCategories: Array<{ name: string; amount: number; crossAggregateCategory: string }>;
+      let parsedCategories: CreateFundRequest["categories"];
       try {
         awardedAmount = parsePositiveAmountExpression(values.awardedAmount, "交付額");
         parsedCategories = categories.map((category) => ({
@@ -100,7 +102,7 @@ export function NewFundForm() {
         };
       }
 
-      const result = await apiMutateJson<{ fundId: number }>("/api/funds", "POST", {
+      const result = await apiMutateJson<{ fundId: number }, CreateFundRequest>("/api/funds", "POST", {
           name: values.name,
           fiscalYear: Number(values.fiscalYear),
           awardedAmount,
@@ -116,8 +118,8 @@ export function NewFundForm() {
         };
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["overview"] });
-      await queryClient.invalidateQueries({ queryKey: ["overview", Number(values.fiscalYear)] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.detail(Number(values.fiscalYear)) });
       await navigate(`/funds/${result.data.fundId}${setFiscalYearInSearch("", Number(values.fiscalYear))}`);
 
       return {

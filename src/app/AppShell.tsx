@@ -14,6 +14,7 @@ import {
 } from "../features/settings/AppSettings";
 import { DemoTutorial } from "../features/tutorial/DemoTutorial";
 import { apiGet } from "../lib/api";
+import { queryKeys } from "../lib/queryKeys";
 import { formatRatePercentage } from "../lib/executionRate";
 import { formatAmount } from "../lib/format";
 import { ModalShell } from "./ModalShell";
@@ -239,7 +240,7 @@ function AppShellInner() {
   const modalContent = useRoutes(shellRoutes, location);
   const requestedFiscalYear = getFiscalYearFromSearch(location.search);
   const { data: overviewData } = useQuery({
-    queryKey: ["overview", requestedFiscalYear ?? "auto"],
+    queryKey: queryKeys.overview.detail(requestedFiscalYear),
     queryFn: () =>
       apiGet<
         FiscalYearOverviewFields & {

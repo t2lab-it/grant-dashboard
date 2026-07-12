@@ -10,6 +10,7 @@ import {
 } from "../../app/fiscalYear";
 import { isStaticDemoMode } from "../../demo/staticDemoMode";
 import { apiGet } from "../../lib/api";
+import { queryKeys } from "../../lib/queryKeys";
 import { getRateMetric, getRateMetricKey, getRateMetricLabel } from "../../lib/executionRate";
 import { formatAmount, formatLocalDateTime } from "../../lib/format";
 import { useAppSettings } from "../settings/AppSettings";
@@ -163,7 +164,7 @@ export function OverviewPage() {
   } = useAppSettings();
   const [displayMode, setDisplayMode] = useState<"chart" | "numeric">(defaultOverviewDisplayMode);
   const { data, isError } = useQuery({
-    queryKey: ["overview", requestedFiscalYear ?? "auto"],
+    queryKey: queryKeys.overview.detail(requestedFiscalYear),
     queryFn: () => apiGet<OverviewResponse>(buildOverviewApiPath(requestedFiscalYear)),
   });
 

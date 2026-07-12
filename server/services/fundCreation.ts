@@ -1,23 +1,8 @@
 import type Database from "better-sqlite3";
 import { setFundClassifications } from "./classifications";
-import type { CrossAggregateCategory } from "../../src/contracts/crossAggregateCategory";
+import type { ParsedUpdateFundRequest } from "../../src/contracts/requestSchemas";
 
-type FundCategoryInput = {
-  id?: number;
-  name: string;
-  amount: number;
-  crossAggregateCategory: CrossAggregateCategory;
-};
-
-export type CreateFundInput = {
-  name: string;
-  fiscalYear: number;
-  awardedAmount: number;
-  notes: string;
-  projectTagIds?: number[];
-  auxiliaryLabelIds?: number[];
-  categories: FundCategoryInput[];
-};
+export type CreateFundInput = ParsedUpdateFundRequest;
 
 type ExistingCategoryRow = {
   id: number;

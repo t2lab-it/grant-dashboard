@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { buildOverviewApiPath, getFiscalYearFromSearch } from "../../app/fiscalYear";
 import { apiGet, apiMutateJson, apiPostJson } from "../../lib/api";
+import { queryKeys } from "../../lib/queryKeys";
 import type { ClassificationKind, ClassificationResponse, ClassificationTag } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import {
@@ -23,6 +24,10 @@ import {
 import { OverviewFundChart } from "../overview/OverviewFundChart";
 import { useDirectManipulationSortableList } from "../../lib/useDirectManipulationSortableList";
 import { useAppSettings } from "./AppSettings";
+import type {
+  CreateClassificationRequest,
+  UpdateClassificationRequest,
+} from "../../contracts/requestSchemas";
 import {
   defaultFundDetailSectionOrder,
   fundDetailSectionLabels,
@@ -309,7 +314,7 @@ function ClassificationCreateForm({
 
     setIsSubmitting(true);
     try {
-      const result = await apiPostJson<{ kind: ClassificationKind; name: string; color: string }, { id: number }>(
+      const result = await apiPostJson<CreateClassificationRequest, { id: number }>(
         "/api/classifications",
         { kind, name: trimmedName, color },
       );
@@ -379,7 +384,7 @@ function ClassificationEditRow({
 
     setIsSubmitting(true);
     try {
-      const result = await apiMutateJson(`/api/classifications/${tag.id}`, "PUT", {
+      const result = await apiMutateJson<unknown, UpdateClassificationRequest>(`/api/classifications/${tag.id}`, "PUT", {
         name: trimmedName,
         color,
       });
@@ -574,16 +579,16 @@ export function SettingsPage() {
       : defaultCustomChartPresetForm.balanceBorder,
   };
   const { data: overviewData } = useQuery({
-    queryKey: ["overview", requestedFiscalYear ?? "auto"],
+    queryKey: queryKeys.overview.detail(requestedFiscalYear),
     queryFn: () => apiGet<OverviewResponse>(buildOverviewApiPath(requestedFiscalYear)),
   });
   const { data: fundDetailData } = useQuery({
-    queryKey: ["fund-category-options", defaultFundId],
+    queryKey: queryKeys.fund.categoryOptions(defaultFundId),
     queryFn: () => apiGet<FundDetailResponse>(`/api/funds/${defaultFundId}`),
     enabled: hasDefaultFund,
   });
   const { data: rawClassificationData } = useQuery({
-    queryKey: ["classifications"],
+    queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
@@ -715,7 +720,7 @@ export function SettingsPage() {
     onReorder: setFundDetailSectionOrder,
   });
   const effectiveThemeMode = appThemeMode === "system" ? systemThemeMode : appThemeMode;
-  const refreshClassifications = () => queryClient.invalidateQueries({ queryKey: ["classifications"] });
+  const refreshClassifications = () => queryClient.invalidateQueries({ queryKey: queryKeys.classifications.all });
 
   return (
     <section className="settings-page">

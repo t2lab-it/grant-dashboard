@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
 import { apiGet, apiMutateJson } from "../../lib/api";
+import { queryKeys } from "../../lib/queryKeys";
 import type { ClassificationResponse, ClassificationTag } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import { FormFeedback } from "../forms/FormFeedback";
@@ -13,6 +14,7 @@ import {
   nextFundCategoryDraftId,
   type FundCategoryDraft,
 } from "./FundFormFields";
+import type { UpdateFundRequest } from "../../contracts/requestSchemas";
 
 type EditFundDialogProps = {
   fundId: number;
@@ -69,7 +71,7 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
       ? "費目予算の合計が交付額を超えています。"
       : "";
   const { data: rawClassificationData } = useQuery({
-    queryKey: ["classifications"],
+    queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
@@ -115,7 +117,7 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
     }
 
     let awardedAmount: number;
-    let parsedCategories: Array<{ id?: number; name: string; amount: number; crossAggregateCategory: string }>;
+    let parsedCategories: UpdateFundRequest["categories"];
     try {
       awardedAmount = parsePositiveAmountExpression(values.awardedAmount, "交付額");
       parsedCategories = categories.map((category) => ({
@@ -133,7 +135,7 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
     setBlockingMessage("");
 
     try {
-      const result = await apiMutateJson(`/api/funds/${fundId}`, "PUT", {
+      const result = await apiMutateJson<unknown, UpdateFundRequest>(`/api/funds/${fundId}`, "PUT", {
           name: values.name,
           fiscalYear: Number(values.fiscalYear),
           awardedAmount,

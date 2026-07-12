@@ -19,6 +19,7 @@ import { FormFeedback } from "../forms/FormFeedback";
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
 import { useEntryForm } from "../forms/useEntryForm";
+import { queryKeys } from "../../lib/queryKeys";
 import { useAppSettings } from "../settings/AppSettings";
 
 function parsePositiveFundId(value: string | null) {
@@ -66,17 +67,17 @@ export function ActualEntryForm() {
   const hasSelectedFund = Number.isInteger(parsedFundId) && parsedFundId > 0;
   const hasSelectedCategory = selectedCategoryId.length > 0;
   const { data: overviewData } = useQuery({
-    queryKey: ["overview", requestedFiscalYear ?? "auto"],
+    queryKey: queryKeys.overview.detail(requestedFiscalYear),
     queryFn: () => apiGet<OverviewFundOptionsResponse>(buildOverviewApiPath(requestedFiscalYear)),
     enabled: lockedFundId === null,
   });
   const { data: fundDetailData } = useQuery({
-    queryKey: ["fund-category-options", parsedFundId],
+    queryKey: queryKeys.fund.categoryOptions(parsedFundId),
     queryFn: () => apiGet<FundEntryOptionsResponse>(`/api/funds/${parsedFundId}`),
     enabled: hasSelectedFund,
   });
   const { data: rawClassificationData } = useQuery({
-    queryKey: ["classifications"],
+    queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
@@ -174,8 +175,8 @@ export function ActualEntryForm() {
       }
 
       const { remainingPlannedAmount } = result.data;
-      await queryClient.invalidateQueries({ queryKey: ["overview"] });
-      await queryClient.invalidateQueries({ queryKey: ["fund", Number(values.fundId)] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.fund.detail(Number(values.fundId)) });
 
       if (
         typeof remainingPlannedAmount === "number" &&

@@ -21,6 +21,7 @@ import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/D
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
 import { useEntryForm } from "../forms/useEntryForm";
+import { queryKeys } from "../../lib/queryKeys";
 import { useAppSettings } from "../settings/AppSettings";
 
 function getScheduledMonthFromDisplayDate(value: string) {
@@ -107,17 +108,17 @@ export function PlannedItemForm() {
   const parsedFundId = selectedFundId.length > 0 ? Number(selectedFundId) : Number.NaN;
   const hasSelectedFund = Number.isInteger(parsedFundId) && parsedFundId > 0;
   const { data: overviewData } = useQuery({
-    queryKey: ["overview", requestedFiscalYear ?? "auto"],
+    queryKey: queryKeys.overview.detail(requestedFiscalYear),
     queryFn: () => apiGet<OverviewFundOptionsResponse>(buildOverviewApiPath(requestedFiscalYear)),
     enabled: lockedFundId === null,
   });
   const { data: fundDetailData } = useQuery({
-    queryKey: ["fund-category-options", parsedFundId],
+    queryKey: queryKeys.fund.categoryOptions(parsedFundId),
     queryFn: () => apiGet<FundEntryOptionsResponse>(`/api/funds/${parsedFundId}`),
     enabled: hasSelectedFund,
   });
   const { data: rawClassificationData } = useQuery({
-    queryKey: ["classifications"],
+    queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
@@ -252,8 +253,8 @@ export function PlannedItemForm() {
       }
 
       const warnings = result.data.warnings ?? [];
-      await queryClient.invalidateQueries({ queryKey: ["overview"] });
-      await queryClient.invalidateQueries({ queryKey: ["fund", Number(values.fundId)] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.fund.detail(Number(values.fundId)) });
 
       return {
         infoMessage: warnings.length > 0 ? "予定項目を保存しました。警告を確認してください。" : "予定項目を保存しました。",
@@ -303,8 +304,8 @@ export function PlannedItemForm() {
       }
 
       const warnings = result.data.warnings ?? [];
-      await queryClient.invalidateQueries({ queryKey: ["overview"] });
-      await queryClient.invalidateQueries({ queryKey: ["fund", Number(values.fundId)] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.fund.detail(Number(values.fundId)) });
 
       return {
         infoMessage:

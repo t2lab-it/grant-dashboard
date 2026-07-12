@@ -1,9 +1,4 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "react-router-dom";
-import { buildOverviewApiPath, getFiscalYearFromSearch } from "../../app/fiscalYear";
-import { apiGet } from "../../lib/api";
-import { queryKeys } from "../../lib/queryKeys";
 import {
   formatRatePercentage,
   getRateThresholdClassName,
@@ -22,26 +17,13 @@ import {
 import { OverviewFundChart } from "../overview/OverviewFundChart";
 import { useDirectManipulationSortableList } from "../../lib/useDirectManipulationSortableList";
 import { ClassificationSettingsSection } from "./ClassificationSettingsSection";
+import { DefaultInputSettingsSection } from "./DefaultInputSettingsSection";
 import { useAppSettings } from "./AppSettings";
 import {
   defaultFundDetailSectionOrder,
   fundDetailSectionLabels,
   moveFundDetailSection,
 } from "./fundDetailSectionOrder";
-
-type OverviewResponse = {
-  funds: Array<{
-    id: number;
-    name: string;
-  }>;
-};
-
-type FundDetailResponse = {
-  categories: Array<{
-    id: number;
-    categoryName: string;
-  }>;
-};
 
 type TwoChoiceToggleOption<Value extends string> = {
   value: Value;
@@ -267,8 +249,6 @@ function TwoChoiceToggleGroup<Value extends string>({
 }
 
 export function SettingsPage() {
-  const location = useLocation();
-  const requestedFiscalYear = getFiscalYearFromSearch(location.search);
   const {
     settings: {
       appThemeMode,
@@ -277,8 +257,6 @@ export function SettingsPage() {
       defaultRateMetric,
       defaultOverviewDisplayMode,
       notesDisplayMode,
-      defaultFundId,
-      defaultCategoryId,
       amountDisplayMode,
       fundDetailSectionOrder,
       executionRateThresholds,
@@ -291,8 +269,6 @@ export function SettingsPage() {
     setDefaultRateMetric,
     setDefaultOverviewDisplayMode,
     setNotesDisplayMode,
-    setDefaultFundId,
-    setDefaultCategoryId,
     setAmountDisplayMode,
     setFundDetailSectionOrder,
     setExecutionRateThresholds,
@@ -300,7 +276,6 @@ export function SettingsPage() {
     resetExecutionRateThresholds,
     resetBalanceRateThresholds,
   } = useAppSettings();
-  const hasDefaultFund = defaultFundId !== null;
   const editedThresholds =
     defaultRateMetric === "balance" ? balanceRateThresholds : executionRateThresholds;
   const thresholdExamples = createThresholdExamples(defaultRateMetric, editedThresholds);
@@ -348,15 +323,6 @@ export function SettingsPage() {
       ? customPresetForm.balanceBorder
       : defaultCustomChartPresetForm.balanceBorder,
   };
-  const { data: overviewData } = useQuery({
-    queryKey: queryKeys.overview.detail(requestedFiscalYear),
-    queryFn: () => apiGet<OverviewResponse>(buildOverviewApiPath(requestedFiscalYear)),
-  });
-  const { data: fundDetailData } = useQuery({
-    queryKey: queryKeys.fund.categoryOptions(defaultFundId),
-    queryFn: () => apiGet<FundDetailResponse>(`/api/funds/${defaultFundId}`),
-    enabled: hasDefaultFund,
-  });
 
   function openCreateCustomPresetEditor() {
     setCustomPresetEditor({ mode: "create" });
@@ -437,19 +403,6 @@ export function SettingsPage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!hasDefaultFund || defaultCategoryId === null || !fundDetailData) {
-      return;
-    }
-
-    const hasMatchingCategory = fundDetailData.categories.some(
-      (category) => category.id === defaultCategoryId,
-    );
-    if (!hasMatchingCategory) {
-      setDefaultCategoryId(null);
-    }
-  }, [defaultCategoryId, fundDetailData, hasDefaultFund, setDefaultCategoryId]);
-
   function updateThreshold(
     field: keyof ExecutionRateThresholds,
     nextValue: number,
@@ -490,53 +443,7 @@ export function SettingsPage() {
     <section className="settings-page">
       <h2>設定</h2>
       <ClassificationSettingsSection />
-      <section className="settings-section">
-        <h3>入力の既定値</h3>
-        <div className="settings-option-grid">
-          <fieldset className="settings-option-group">
-            <legend>新規作成時の既定値</legend>
-            <label className="budget-entry-field">
-              <span>新規作成時の既定予算</span>
-              <select
-                aria-label="新規作成時の既定予算"
-                value={defaultFundId === null ? "" : String(defaultFundId)}
-                onChange={(event) =>
-                  setDefaultFundId(
-                    event.target.value.length > 0 ? Number(event.target.value) : null,
-                  )
-                }
-              >
-                <option value="">設定しない</option>
-                {overviewData?.funds.map((fund) => (
-                  <option key={fund.id} value={String(fund.id)}>
-                    {fund.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="budget-entry-field">
-              <span>新規作成時の既定費目</span>
-              <select
-                aria-label="新規作成時の既定費目"
-                disabled={!hasDefaultFund}
-                value={defaultCategoryId === null ? "" : String(defaultCategoryId)}
-                onChange={(event) =>
-                  setDefaultCategoryId(
-                    event.target.value.length > 0 ? Number(event.target.value) : null,
-                  )
-                }
-              >
-                <option value="">設定しない</option>
-                {fundDetailData?.categories.map((category) => (
-                  <option key={category.id} value={String(category.id)}>
-                    {category.categoryName}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </fieldset>
-        </div>
-      </section>
+      <DefaultInputSettingsSection />
       <section className="settings-section">
         <h3>表示</h3>
         <div className="settings-option-grid">

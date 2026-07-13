@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { formatTokyoDateKey } from "../../src/lib/calendar";
 
 test("overview to fund detail to form flow works", async ({ page }) => {
-  const today = new Date().toISOString().slice(0, 10).replaceAll("-", "/");
+  const today = formatTokyoDateKey(new Date()).replaceAll("-", "/");
   const overviewResponsePromise = page.waitForResponse("**/api/overview");
   await page.goto("/");
   const overviewResponse = await overviewResponsePromise;

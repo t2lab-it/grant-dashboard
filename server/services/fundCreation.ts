@@ -30,6 +30,11 @@ function defaultCategoryCode(categoryId: number) {
   return `category-${categoryId}`;
 }
 
+function getNextCategoryId(db: Database.Database) {
+  const row = db.prepare("SELECT COALESCE(MAX(id), 0) + 1 AS id FROM categories").get() as { id: number };
+  return row.id;
+}
+
 function getNextFundDisplayOrder(db: Database.Database) {
   const row = db.prepare("SELECT COALESCE(MAX(display_order), 0) + 1 AS display_order FROM funds").get() as {
     display_order: number;
@@ -44,8 +49,8 @@ export function createFundWithBudget(db: Database.Database, input: CreateFundInp
       VALUES (@name, @fiscal_year, @awarded_amount, @notes, @display_order)
     `);
     const categoryStmt = db.prepare(`
-      INSERT INTO categories (fund_id, name, cross_aggregate_category, display_order)
-      VALUES (@fund_id, @name, @cross_aggregate_category, @display_order)
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order)
+      VALUES (@id, @fund_id, @category_code, @name, @cross_aggregate_category, @display_order)
     `);
     const budgetLineStmt = db.prepare(`
       INSERT INTO budget_lines (fund_id, category_id, amount, notes)
@@ -71,16 +76,14 @@ export function createFundWithBudget(db: Database.Database, input: CreateFundInp
     });
 
     for (const [index, category] of input.categories.entries()) {
+      const categoryId = getNextCategoryId(db);
       categoryStmt.run({
+        id: categoryId,
         fund_id: fundId,
+        category_code: defaultCategoryCode(categoryId),
         name: category.name,
         cross_aggregate_category: category.crossAggregateCategory,
         display_order: index + 1,
-      });
-      const categoryId = insertAndReadId(db);
-      db.prepare("UPDATE categories SET category_code = @categoryCode WHERE id = @categoryId").run({
-        categoryCode: defaultCategoryCode(categoryId),
-        categoryId,
       });
 
       budgetLineStmt.run({
@@ -177,8 +180,8 @@ export function updateFundWithBudget(db: Database.Database, fundId: number, inpu
     );
     const insertCategoryStmt = db.prepare(
       `
-      INSERT INTO categories (fund_id, name, cross_aggregate_category, display_order)
-      VALUES (@fund_id, @name, @cross_aggregate_category, @display_order)
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order)
+      VALUES (@id, @fund_id, @category_code, @name, @cross_aggregate_category, @display_order)
       `,
     );
     const updateBudgetLineStmt = db.prepare(
@@ -206,16 +209,14 @@ export function updateFundWithBudget(db: Database.Database, fundId: number, inpu
       let categoryId = category.id;
 
       if (categoryId === undefined) {
+        categoryId = getNextCategoryId(db);
         insertCategoryStmt.run({
+          id: categoryId,
           fund_id: fundId,
+          category_code: defaultCategoryCode(categoryId),
           name: category.name,
           cross_aggregate_category: category.crossAggregateCategory,
           display_order: displayOrder,
-        });
-        categoryId = insertAndReadId(db);
-        db.prepare("UPDATE categories SET category_code = @categoryCode WHERE id = @categoryId").run({
-          categoryCode: defaultCategoryCode(categoryId),
-          categoryId,
         });
       } else {
         updateCategoryStmt.run({

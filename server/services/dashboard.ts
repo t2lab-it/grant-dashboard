@@ -48,6 +48,7 @@ type FundActualEntryRow = {
   id: number;
   actualDate: string;
   categoryId: number;
+  categoryCode: string;
   categoryName: string;
   description: string;
   amount: number;
@@ -59,6 +60,7 @@ type FundPlannedItemHistoryRow = {
   plannedDate: string;
   scheduledMonth: string;
   categoryId: number;
+  categoryCode: string;
   categoryName: string;
   description: string;
   amount: number;
@@ -234,6 +236,7 @@ export function getFundSnapshot(db: Database.Database, fundId: number) {
         ae.id,
         ae.actual_date AS actualDate,
         ae.category_id AS categoryId,
+        c.category_code AS categoryCode,
         c.name AS categoryName,
         ae.description,
         ae.amount,
@@ -261,6 +264,7 @@ export function getFundSnapshot(db: Database.Database, fundId: number) {
         p.planned_date AS plannedDate,
         p.scheduled_month AS scheduledMonth,
         p.category_id AS categoryId,
+        c.category_code AS categoryCode,
         c.name AS categoryName,
         p.description,
         p.amount,

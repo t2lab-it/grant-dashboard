@@ -47,7 +47,7 @@ export function createStaticFund(input: ParsedCreateFundRequest) {
       state.categories.push({
         id: categoryId,
         fund_id: fundId,
-        category_code: null,
+        category_code: `category-${categoryId}`,
         name: category.name,
         cross_aggregate_category: requireCrossAggregateCategory(category.crossAggregateCategory),
         display_order: index + 1,
@@ -102,10 +102,11 @@ export function updateStaticFund(fundId: number, input: ParsedUpdateFundRequest)
       }
 
       if (category === undefined) {
+        const categoryId = nextId(state.categories);
         category = {
-          id: nextId(state.categories),
+          id: categoryId,
           fund_id: fundId,
-          category_code: null,
+          category_code: `category-${categoryId}`,
           name: categoryInput.name,
           cross_aggregate_category: requireCrossAggregateCategory(categoryInput.crossAggregateCategory),
           display_order: index + 1,

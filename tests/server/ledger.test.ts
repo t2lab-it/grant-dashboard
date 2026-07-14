@@ -377,8 +377,8 @@ describe("ledger rules", () => {
     db.exec(`
       INSERT INTO funds (id, name, fiscal_year, awarded_amount, display_order) VALUES
         (2, '別基金', 2026, 100000, 2);
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES
-        (2, 2, '消耗品費', 'equipment', 1);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES
+        (2, 2, 'category-2', '消耗品費', 'equipment', 1);
       INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount) VALUES
         (2, 2, 2, '2026-09-15', '2026-09', '別の予定', 5000);
     `);

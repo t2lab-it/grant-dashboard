@@ -16,11 +16,11 @@ describe("cross-fund search service", () => {
         (2, 'ACT-X', 2026, 2000000, '', 2),
         (3, '翌年度基金', 2027, 3000000, '', 3);
 
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES
-        (1, 1, '物品費', 'equipment', 1),
-        (2, 1, '旅費', 'travel', 2),
-        (3, 2, '消耗品費', 'equipment', 1),
-        (4, 3, '物品費', 'equipment', 1);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES
+        (1, 1, 'category-1', '物品費', 'equipment', 1),
+        (2, 1, 'category-2', '旅費', 'travel', 2),
+        (3, 2, 'category-3', '消耗品費', 'equipment', 1),
+        (4, 3, 'category-4', '物品費', 'equipment', 1);
 
       INSERT INTO planned_items (
         id, fund_id, category_id, planned_date, scheduled_month, description, amount, status, notes

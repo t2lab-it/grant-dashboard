@@ -9,6 +9,7 @@ export type OverviewFundOptionsResponse = {
 
 export type FundCategoryOption = {
   id: number;
+  categoryCode: string;
   categoryName: string;
 };
 

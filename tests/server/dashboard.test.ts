@@ -13,10 +13,10 @@ describe("dashboard calculations", () => {
     db.exec(`
       INSERT INTO funds (id, name, fiscal_year, awarded_amount, display_order) VALUES
         (1, '基盤研究費', 2026, 5080000, 1);
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES
-        (1, 1, '物品費', 'equipment', 1),
-        (2, 1, '旅費', 'travel', 2),
-        (3, 1, '消耗品費', 'equipment', 3);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES
+        (1, 1, 'category-1', '物品費', 'equipment', 1),
+        (2, 1, 'category-2', '旅費', 'travel', 2),
+        (3, 1, 'category-3', '消耗品費', 'equipment', 3);
       INSERT INTO budget_lines (id, fund_id, category_id, amount) VALUES
         (1, 1, 1, 900000),
         (2, 1, 1, 500000),
@@ -97,10 +97,10 @@ describe("dashboard calculations", () => {
         (2, '低残高だがリスク外の基金', 2026, 1000000, 2),
         (3, 'マイナス基金', 2026, 1000000, 3),
         (4, '翌年度リスク外', 2027, 1000000, 4);
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES
-        (4, 2, '物品費', 'equipment', 1),
-        (5, 3, '旅費', 'travel', 1),
-        (6, 4, '翌年度', 'other', 1);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES
+        (4, 2, 'category-4', '物品費', 'equipment', 1),
+        (5, 3, 'category-5', '旅費', 'travel', 1),
+        (6, 4, 'category-6', '翌年度', 'other', 1);
       INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount) VALUES
         (7, 2, 4, '2026-09-01', '2026-09', '低残高だがリスク外の予定', 850000),
         (8, 3, 5, '2026-09-01', '2026-09', '超過予定', 1200000),
@@ -138,8 +138,8 @@ describe("dashboard calculations", () => {
     db.exec(`
       INSERT INTO funds (id, name, fiscal_year, awarded_amount, display_order) VALUES
         (2, '翌年度基金', 2027, 2000000, 2);
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES
-        (4, 2, '物品費', 'equipment', 1);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES
+        (4, 2, 'category-4', '物品費', 'equipment', 1);
       INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount) VALUES
         (7, 2, 4, '2027-04-01', '2027-04', '翌年度予定', 300000);
       INSERT INTO actual_entries (id, fund_id, category_id, planned_item_id, actual_date, description, amount) VALUES
@@ -188,10 +188,10 @@ describe("dashboard calculations", () => {
         (2, 'CREST 関連', 2026, 1000, 2),
         (3, 'タグなし', 2026, 2000, 3),
         (4, '翌年度タグ', 2027, 3000, 4);
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES
-        (4, 2, '物品費', 'equipment', 1),
-        (5, 3, '旅費', 'travel', 1),
-        (6, 4, '翌年度', 'other', 1);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES
+        (4, 2, 'category-4', '物品費', 'equipment', 1),
+        (5, 3, 'category-5', '旅費', 'travel', 1),
+        (6, 4, 'category-6', '翌年度', 'other', 1);
       INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount) VALUES
         (7, 2, 4, '2026-05-01', '2026-05', 'CREST 予定', 300),
         (8, 3, 5, '2026-06-01', '2026-06', 'タグなし予定', 400),
@@ -350,11 +350,13 @@ describe("dashboard calculations", () => {
     const fund = getFundSnapshot(db, 1);
 
     expect(fund.categories).toHaveLength(3);
+    expect(fund.categories[0]).toMatchObject({ id: 1, categoryCode: "category-1" });
     expect(fund.categories.map((category) => category.categoryName)).toEqual(["物品費", "旅費", "消耗品費"]);
 
     expect(fund.plannedItems.map((item) => item.id)).toEqual([1, 5, 6, 2, 4]);
     expect(fund.plannedItems[0]).toMatchObject({
       id: 1,
+      categoryCode: "category-1",
       categoryName: "物品費",
       description: "計算サーバ購入",
       amount: 1400000,
@@ -364,6 +366,7 @@ describe("dashboard calculations", () => {
       id: 3,
       actualDate: "2026-08-10",
       categoryId: 2,
+      categoryCode: "category-2",
       categoryName: "旅費",
       description: "資料印刷",
       amount: 150,
@@ -390,6 +393,7 @@ describe("dashboard calculations", () => {
     expect(fund.plannedItemHistory).toEqual([
       expect.objectContaining({
         id: 1,
+        categoryCode: "category-1",
         status: "completed",
         amount: 2000000,
         remainingAmount: 1400000,

@@ -154,6 +154,7 @@ describe("Fund detail interactions", () => {
       body: JSON.stringify({
         fundId: 2,
         categoryId: 2,
+        plannedDate: "2026-07-10",
         scheduledMonth: "2026-08",
         description: "GPU サーバ保守更新 改",
         amount: 300000,

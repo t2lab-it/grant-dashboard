@@ -58,7 +58,7 @@ describe("API error response contract", () => {
 
   it("returns only code and Japanese message for a domain conflict", async () => {
     app.db.exec(`
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES (2, 1, '旅費', 'travel', 2);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES (2, 1, 'category-2', '旅費', 'travel', 2);
       INSERT INTO budget_lines (id, fund_id, category_id, amount, notes) VALUES (2, 1, 2, 30000, '');
       INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount, notes) VALUES
         (2, 1, 2, '2026-11-01', '2026-11', '学会参加', 12000, '');

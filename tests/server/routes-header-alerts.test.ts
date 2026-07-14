@@ -38,10 +38,10 @@ describe("header alerts route", () => {
         (1, '基盤研究費', 2026, 100000, 1),
         (2, '翌年度基金', 2027, 1000000, 2);
 
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES
-        (1, 1, '物品費', 'equipment', 1),
-        (2, 1, '旅費', 'travel', 2),
-        (3, 2, '物品費', 'equipment', 1);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES
+        (1, 1, 'category-1', '物品費', 'equipment', 1),
+        (2, 1, 'category-2', '旅費', 'travel', 2),
+        (3, 2, 'category-3', '物品費', 'equipment', 1);
 
       INSERT INTO budget_lines (id, fund_id, category_id, amount) VALUES
         (1, 1, 1, 50000),
@@ -199,8 +199,8 @@ describe("header alerts route", () => {
       INSERT INTO funds (id, name, fiscal_year, awarded_amount, display_order) VALUES
         (1, '基盤研究費', 2026, 100000, 1);
 
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES
-        (1, 1, '物品費', 'equipment', 1);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES
+        (1, 1, 'category-1', '物品費', 'equipment', 1);
 
       INSERT INTO budget_lines (id, fund_id, category_id, amount) VALUES
         (1, 1, 1, 100000);

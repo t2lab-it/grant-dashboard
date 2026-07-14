@@ -472,6 +472,7 @@ export function getStaticFundSnapshot(fundId: number) {
 
     return {
       id: category.id,
+      categoryCode: category.category_code,
       categoryName: category.name,
       crossAggregateCategory: getCategoryCrossAggregateCategory(category),
       budgetAmount,
@@ -511,19 +512,23 @@ export function getStaticFundSnapshot(fundId: number) {
   const monthlyStatus = getFundMonthlyStatus(state, fundId);
   const plannedItemHistory = state.planned_items
     .filter((item) => item.fund_id === fundId && (item.status === "cancelled" || item.status === "completed"))
-    .map((item) => ({
+    .map((item) => {
+      const category = requireCategoryForFund(state, item.fund_id, item.category_id);
+      return {
       id: item.id,
       plannedDate: item.planned_date,
       scheduledMonth: item.scheduled_month,
       categoryId: item.category_id,
-      categoryName: state.categories.find((category) => category.id === item.category_id)?.name ?? "",
+      categoryCode: category.category_code,
+      categoryName: category.name,
       description: item.description,
       amount: item.amount,
       remainingAmount: item.status === "completed" ? getRemainingPlannedAmount(state, item) : 0,
       status: item.status,
       notes: item.notes,
       auxiliaryLabels: assignedStaticTags(state, "planned_item", item.id).filter((tag) => tag.kind === "auxiliary"),
-    }))
+      };
+    })
     .sort((a, b) => b.scheduledMonth.localeCompare(a.scheduledMonth) || b.id - a.id);
 
   return {
@@ -542,28 +547,37 @@ export function getStaticFundSnapshot(fundId: number) {
     actualEntries: state.actual_entries
       .filter((entry) => entry.fund_id === fundId)
       .sort((a, b) => b.actual_date.localeCompare(a.actual_date) || b.id - a.id)
-      .map((entry) => ({
+      .map((entry) => {
+        const category = requireCategoryForFund(state, entry.fund_id, entry.category_id);
+        return {
         id: entry.id,
         actualDate: entry.actual_date,
-        categoryName: state.categories.find((category) => category.id === entry.category_id)?.name ?? "",
+        categoryId: entry.category_id,
+        categoryCode: category.category_code,
+        categoryName: category.name,
         description: entry.description,
         amount: entry.amount,
         notes: entry.notes,
         auxiliaryLabels: assignedStaticTags(state, "actual_entry", entry.id).filter((tag) => tag.kind === "auxiliary"),
-      })),
+        };
+      }),
     plannedItems: state.planned_items
       .filter((item) => item.fund_id === fundId && item.status === "planned")
-      .map((item) => ({
+      .map((item) => {
+        const category = requireCategoryForFund(state, item.fund_id, item.category_id);
+        return {
         id: item.id,
         plannedDate: item.planned_date,
         scheduledMonth: item.scheduled_month,
         categoryId: item.category_id,
-        categoryName: state.categories.find((category) => category.id === item.category_id)?.name ?? "",
+        categoryCode: category.category_code,
+        categoryName: category.name,
         description: item.description,
         amount: getRemainingPlannedAmount(state, item),
         notes: item.notes,
         auxiliaryLabels: assignedStaticTags(state, "planned_item", item.id).filter((tag) => tag.kind === "auxiliary"),
-      }))
+        };
+      })
       .filter((item) => item.amount > 0)
       .sort((a, b) => a.scheduledMonth.localeCompare(b.scheduledMonth) || a.categoryId - b.categoryId || a.id - b.id),
     plannedItemHistory,

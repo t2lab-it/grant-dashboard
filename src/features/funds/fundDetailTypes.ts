@@ -14,6 +14,7 @@ export type FundDetailResponse = {
   };
   categories: Array<{
     id: number;
+    categoryCode: string;
     categoryName: string;
     crossAggregateCategory: CrossAggregateCategory;
     budgetAmount: number | null;
@@ -36,6 +37,7 @@ export type FundDetailResponse = {
     id: number;
     actualDate: string;
     categoryId: number;
+    categoryCode: string;
     categoryName: string;
     description: string;
     amount: number;
@@ -49,6 +51,7 @@ export type FundDetailResponse = {
     plannedDate: string;
     scheduledMonth: string;
     categoryId: number;
+    categoryCode: string;
     categoryName: string;
     description: string;
     amount: number;
@@ -60,6 +63,7 @@ export type FundDetailResponse = {
     plannedDate: string;
     scheduledMonth: string;
     categoryId: number;
+    categoryCode: string;
     categoryName: string;
     description: string;
     amount: number;

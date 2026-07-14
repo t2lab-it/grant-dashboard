@@ -11,7 +11,10 @@ CREATE TABLE IF NOT EXISTS funds (
 CREATE TABLE IF NOT EXISTS categories (
   id INTEGER PRIMARY KEY,
   fund_id INTEGER NOT NULL REFERENCES funds(id) ON DELETE CASCADE,
-  category_code TEXT,
+  category_code TEXT NOT NULL CHECK (
+    length(category_code) > 0
+    AND category_code = trim(category_code)
+  ),
   name TEXT NOT NULL,
   cross_aggregate_category TEXT NOT NULL,
   display_order INTEGER NOT NULL DEFAULT 0

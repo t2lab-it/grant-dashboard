@@ -122,7 +122,7 @@ describe("API fund routes", () => {
 
   it("updates a fund with edited fields and category rows", async () => {
     app.db.exec(`
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES (2, 1, '旅費', 'travel', 2);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES (2, 1, 'category-2', '旅費', 'travel', 2);
       INSERT INTO budget_lines (id, fund_id, category_id, amount, notes) VALUES (2, 1, 2, 30000, '');
     `);
 
@@ -179,7 +179,7 @@ describe("API fund routes", () => {
 
   it("returns 409 when removing a category that still has planned or actual entries", async () => {
     app.db.exec(`
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES (2, 1, '旅費', 'travel', 2);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES (2, 1, 'category-2', '旅費', 'travel', 2);
       INSERT INTO budget_lines (id, fund_id, category_id, amount, notes) VALUES (2, 1, 2, 30000, '');
       INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount, notes) VALUES
         (2, 1, 2, '2026-11-01', '2026-11', '学会参加', 12000, '');

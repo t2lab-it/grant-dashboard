@@ -115,6 +115,7 @@ describe("static demo API", () => {
     const detail = await readJson(await handleStaticDemoRequest(`/api/funds/${fundId}`, { method: "GET" }));
     expect(detail.categories).toEqual([
       expect.objectContaining({
+        categoryCode: expect.any(String),
         categoryName: "物品費",
         crossAggregateCategory: "equipment",
       }),
@@ -130,16 +131,22 @@ describe("static demo API", () => {
   test("includes a completed planned item in the seeded fund history", async () => {
     const response = await handleStaticDemoRequest("/api/funds/1", { method: "GET" });
     const fund = await readJson(response) as {
-      plannedItems: Array<{ id: number }>;
-      plannedItemHistory: Array<{ id: number; description: string; status: string; remainingAmount: number }>;
+      categories: Array<{ id: number; categoryCode: string }>;
+      actualEntries: Array<{ categoryId: number; categoryCode: string }>;
+      plannedItems: Array<{ id: number; categoryId: number; categoryCode: string }>;
+      plannedItemHistory: Array<{ id: number; categoryCode: string; description: string; status: string; remainingAmount: number }>;
     };
 
     expect(response.ok).toBe(true);
+    expect(fund.categories.every((item) => item.categoryCode.length > 0)).toBe(true);
+    expect(fund.actualEntries.every((item) => item.categoryId > 0 && item.categoryCode.length > 0)).toBe(true);
+    expect(fund.plannedItems.every((item) => item.categoryId > 0 && item.categoryCode.length > 0)).toBe(true);
     expect(fund.plannedItems.some((item) => item.id === 10)).toBe(false);
     expect(fund.plannedItemHistory).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           id: 10,
+          categoryCode: expect.any(String),
           description: "完了済み共同研究旅費",
           status: "completed",
           remainingAmount: 55000,

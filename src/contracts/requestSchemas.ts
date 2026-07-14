@@ -58,7 +58,7 @@ export const plannedItemsBulkSchema = z.object({
   notes: z.string(), auxiliaryLabelIds: classificationIdListSchema,
   items: z.array(plannedItemSchema.pick({ scheduledMonth: true, description: true, amount: true })).min(1),
 }).strict();
-export const plannedItemEditSchema = plannedItemSchema.omit({ plannedDate: true });
+export const plannedItemEditSchema = plannedItemSchema;
 
 export const actualEntrySchema = z.object({
   fundId: z.number().int(), categoryId: z.number().int(), plannedItemId: z.number().int().optional(),

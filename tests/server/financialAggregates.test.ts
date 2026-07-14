@@ -87,6 +87,7 @@ describe("financial aggregate read models", () => {
     expect(listFundCategoryAggregateRows(db, 1)).toEqual([
       {
         id: 1,
+        categoryCode: "TRAVEL",
         categoryName: "Travel",
         crossAggregateCategory: "travel",
         budgetAmount: 300000,
@@ -95,6 +96,7 @@ describe("financial aggregate read models", () => {
       },
       {
         id: 2,
+        categoryCode: "EQUIP",
         categoryName: "Equipment",
         crossAggregateCategory: "equipment",
         budgetAmount: 400000,

@@ -202,7 +202,7 @@ describe("API planned-item routes", () => {
   it("returns 400 for mismatched-but-existing planned-item fund and category references", async () => {
     app.db.exec(`
       INSERT INTO funds (id, name, fiscal_year, awarded_amount, display_order) VALUES (2, '別基金', 2026, 100000, 2);
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES (2, 2, '消耗品費', 'equipment', 1);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES (2, 2, 'category-2', '消耗品費', 'equipment', 1);
     `);
 
     const response = await app.inject({
@@ -377,9 +377,9 @@ describe("API planned-item routes", () => {
   it("updates editable planned item fields", async () => {
     app.db.exec(`
       INSERT INTO funds (id, name, fiscal_year, awarded_amount, display_order) VALUES (2, 'ACT-X', 2026, 100000, 2);
-      INSERT INTO categories (id, fund_id, name, cross_aggregate_category, display_order) VALUES (2, 2, '旅費', 'travel', 1);
-      INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount, notes) VALUES
-        (2, 1, 1, '2026-10-20', '2026-10', '未リンクの予定', 3000, '旧メモ');
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES (2, 2, 'category-2', '旅費', 'travel', 1);
+      INSERT INTO planned_items (id, fund_id, category_id, planned_ref, planned_date, scheduled_month, description, amount, notes) VALUES
+        (2, 1, 1, 'immutable-ref', '2026-10-20', '2026-10', '未リンクの予定', 3000, '旧メモ');
       INSERT INTO actual_entries (id, fund_id, category_id, planned_item_id, actual_date, description, amount, notes) VALUES
         (10, 1, 1, 2, '2026-10-21', '第1回支払', 1000, '');
     `);
@@ -390,6 +390,7 @@ describe("API planned-item routes", () => {
       payload: {
         fundId: 2,
         categoryId: 2,
+        plannedDate: "2026-10-25",
         scheduledMonth: "2026-11",
         description: "更新後の予定",
         amount: 4500,
@@ -404,13 +405,14 @@ describe("API planned-item routes", () => {
     expect(
       app.db
         .prepare(
-          "SELECT fund_id, category_id, planned_date, scheduled_month, description, amount, notes FROM planned_items WHERE id = ?",
+          "SELECT fund_id, category_id, planned_ref, planned_date, scheduled_month, description, amount, notes FROM planned_items WHERE id = ?",
         )
         .get(2),
     ).toEqual({
       fund_id: 2,
       category_id: 2,
-      planned_date: "2026-10-20",
+      planned_ref: "immutable-ref",
+      planned_date: "2026-10-25",
       scheduled_month: "2026-11",
       description: "更新後の予定",
       amount: 4500,

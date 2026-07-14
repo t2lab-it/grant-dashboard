@@ -12,6 +12,7 @@ export type FundAggregateRow = {
 
 export type FundCategoryAggregateRow = {
   id: number;
+  categoryCode: string;
   categoryName: string;
   crossAggregateCategory: CrossAggregateCategory;
   budgetAmount: number | null;
@@ -51,6 +52,7 @@ export type FundRemainingPlannedItemRow = {
   plannedDate: string;
   scheduledMonth: string;
   categoryId: number;
+  categoryCode: string;
   categoryName: string;
   description: string;
   amount: number;
@@ -184,6 +186,7 @@ export function listFundCategoryAggregateRows(
       )
       SELECT
         c.id,
+        c.category_code AS categoryCode,
         c.name AS categoryName,
         c.cross_aggregate_category AS crossAggregateCategory,
         cb.budget_amount AS budgetAmount,
@@ -437,6 +440,7 @@ export function listFundRemainingPlannedItemRows(
         p.planned_date AS plannedDate,
         p.scheduled_month AS scheduledMonth,
         p.category_id AS categoryId,
+        c.category_code AS categoryCode,
         c.name AS categoryName,
         p.description,
         ${REMAINING_PLANNED_AMOUNT_SQL} AS amount,

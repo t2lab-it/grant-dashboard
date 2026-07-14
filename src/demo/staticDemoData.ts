@@ -20,7 +20,7 @@ export type StaticDemoFund = {
 export type StaticDemoCategory = {
   id: number;
   fund_id: number;
-  category_code: string | null;
+  category_code: string;
   name: string;
   cross_aggregate_category: CrossAggregateCategory;
   display_order: number;

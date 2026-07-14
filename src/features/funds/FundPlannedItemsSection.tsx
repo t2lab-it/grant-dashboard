@@ -88,16 +88,6 @@ export function FundPlannedItemsSection({
               </button>
               <button
                 type="button"
-                className="detail-action-button detail-action-button-duplicate"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onDuplicateItem(item);
-                }}
-              >
-                複製
-              </button>
-              <button
-                type="button"
                 className="detail-action-button detail-action-button-edit"
                 onClick={(event) => {
                   event.stopPropagation();
@@ -105,6 +95,16 @@ export function FundPlannedItemsSection({
                 }}
               >
                 編集
+              </button>
+              <button
+                type="button"
+                className="detail-action-button detail-action-button-duplicate"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDuplicateItem(item);
+                }}
+              >
+                複製
               </button>
             </FundHistoryEntry>
           ))}

@@ -196,6 +196,7 @@ export function updateStaticPlannedItem(plannedItemId: number, input: ParsedUpda
 
     plannedItem.fund_id = input.fundId;
     plannedItem.category_id = input.categoryId;
+    plannedItem.planned_date = input.plannedDate;
     plannedItem.scheduled_month = input.scheduledMonth;
     plannedItem.description = input.description;
     plannedItem.amount = input.amount;

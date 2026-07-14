@@ -17,6 +17,7 @@ type PlannedItemInput = CreatePlannedItemRequest & {
 type PlannedItemEditInput = {
   fundId: number;
   categoryId: number;
+  plannedDate: string;
   scheduledMonth: string;
   description: string;
   amount: number;
@@ -513,13 +514,13 @@ export function updatePlannedItem(db: Database.Database, plannedItemId: number, 
     const current = db
       .prepare(
         `
-        SELECT id, planned_date
+        SELECT id
         FROM planned_items
         WHERE id = ?
         `,
       )
       .get(plannedItemId) as
-      | { id: number; planned_date: string }
+      | { id: number }
       | undefined;
 
     if (current === undefined) {
@@ -530,7 +531,7 @@ export function updatePlannedItem(db: Database.Database, plannedItemId: number, 
       id: plannedItemId,
       fundId: input.fundId,
       categoryId: input.categoryId,
-      plannedDate: current.planned_date,
+      plannedDate: input.plannedDate,
       scheduledMonth: input.scheduledMonth,
       description: input.description,
       amount: input.amount,

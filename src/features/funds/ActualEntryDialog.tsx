@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
 import { apiGet, apiMutateJson } from "../../lib/api";
@@ -11,7 +11,7 @@ import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { FormFeedback } from "../forms/FormFeedback";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
-import { useBudgetTargetOptions } from "./fundDetailDialogSupport";
+import { useFundCategorySelection } from "./fundDetailDialogSupport";
 import type { ActualEntry, PlannedItem } from "./fundDetailTypes";
 
 export type ActualEntryDialogProps =
@@ -24,7 +24,6 @@ export type ActualEntryDialogProps =
     }
   | {
       mode: "edit";
-      currentCategoryId: number | null;
       currentFundId: number;
       fiscalYear: number;
       entry: ActualEntry;
@@ -74,51 +73,21 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
     auxiliaryLabelsInitialValue?.map((label) => label.id) ?? [],
   );
   const [keepRemainingPlanned, setKeepRemainingPlanned] = useState(false);
-  const [selectedFundId, setSelectedFundId] = useState(
-    isEditMode || isDuplicateMode ? String(props.currentFundId) : String(props.fundId),
-  );
-  const [selectedCategoryId, setSelectedCategoryId] = useState(
-    isEditMode && props.currentCategoryId !== null
-      ? String(props.currentCategoryId)
-      : isDuplicateMode
-        ? String(props.entry.categoryId)
-        : "",
-  );
-  const currentCategoryName = canChooseDestination ? props.entry.categoryName : "";
   const [blockingMessage, setBlockingMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { funds, categories, areCategoriesLoaded, hasSelectedFund } = useBudgetTargetOptions(
-    selectedFundId,
-    isEditMode || isDuplicateMode ? props.fiscalYear : 0,
-    canChooseDestination,
-  );
+  const selection = useFundCategorySelection({
+    initialFundId: canChooseDestination ? props.currentFundId : props.fundId,
+    initialCategoryId: canChooseDestination ? props.entry.categoryId : props.item.categoryId,
+    initialCategoryCode: canChooseDestination ? props.entry.categoryCode : props.item.categoryCode,
+    fiscalYear: canChooseDestination ? props.fiscalYear : 0,
+    enabled: canChooseDestination,
+  });
+  const { selectedFundId, selectedCategoryId, funds, categories, hasSelectedFund, onFundChange, onCategoryChange } = selection;
   const { data: rawClassificationData } = useQuery({
     queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
-
-  useEffect(() => {
-    if (!canChooseDestination) {
-      return;
-    }
-
-    if (!areCategoriesLoaded) {
-      return;
-    }
-
-    if (selectedCategoryId.length === 0) {
-      const matchedCategory = categories.find((category) => category.categoryName === currentCategoryName);
-      if (matchedCategory) {
-        setSelectedCategoryId(String(matchedCategory.id));
-      }
-      return;
-    }
-
-    if (!categories.some((category) => String(category.id) === selectedCategoryId)) {
-      setSelectedCategoryId("");
-    }
-  }, [areCategoriesLoaded, canChooseDestination, categories, currentCategoryName, selectedCategoryId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -224,11 +193,8 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
               fundLabel="資金ID"
               funds={funds}
               hasSelectedFund={hasSelectedFund}
-              onCategoryChange={setSelectedCategoryId}
-              onFundChange={(value) => {
-                setSelectedFundId(value);
-                setSelectedCategoryId("");
-              }}
+              onCategoryChange={onCategoryChange}
+              onFundChange={onFundChange}
             />
           ) : null}
           <DateField

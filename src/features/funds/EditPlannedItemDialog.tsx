@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
 import { apiGet, apiMutateJson } from "../../lib/api";
@@ -7,9 +7,10 @@ import { ClassificationCheckboxGroup } from "../classifications/ClassificationCh
 import type { ClassificationResponse } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
+import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { FormFeedback } from "../forms/FormFeedback";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
-import { useBudgetTargetOptions } from "./fundDetailDialogSupport";
+import { useFundCategorySelection } from "./fundDetailDialogSupport";
 import type { PlannedItem } from "./fundDetailTypes";
 
 export type EditPlannedItemDialogProps = {
@@ -27,8 +28,7 @@ export function EditPlannedItemDialog({
   onClose,
   onSaved,
 }: EditPlannedItemDialogProps) {
-  const [selectedFundId, setSelectedFundId] = useState(String(fundId));
-  const [selectedCategoryId, setSelectedCategoryId] = useState(String(item.categoryId));
+  const [plannedDate, setPlannedDate] = useState(formatDateForDisplay(item.plannedDate));
   const [scheduledMonth, setScheduledMonth] = useState(item.scheduledMonth);
   const [description, setDescription] = useState(item.description);
   const [amount, setAmount] = useState(String(item.amount));
@@ -40,26 +40,18 @@ export function EditPlannedItemDialog({
   const [infoMessage, setInfoMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
-  const { funds, categories, areCategoriesLoaded, hasSelectedFund } = useBudgetTargetOptions(
-    selectedFundId,
+  const { selectedFundId, selectedCategoryId, funds, categories, hasSelectedFund, onFundChange, onCategoryChange } = useFundCategorySelection({
+    initialFundId: fundId,
+    initialCategoryId: item.categoryId,
+    initialCategoryCode: item.categoryCode,
     fiscalYear,
-    true,
-  );
+    enabled: true,
+  });
   const { data: rawClassificationData } = useQuery({
     queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
   const classificationData = normalizeClassifications(rawClassificationData);
-
-  useEffect(() => {
-    if (selectedCategoryId.length === 0 || !areCategoriesLoaded) {
-      return;
-    }
-
-    if (!categories.some((category) => String(category.id) === selectedCategoryId)) {
-      setSelectedCategoryId("");
-    }
-  }, [areCategoriesLoaded, categories, selectedCategoryId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -81,6 +73,7 @@ export function EditPlannedItemDialog({
       const result = await apiMutateJson<{ warnings?: unknown }>(`/api/planned-items/${item.id}`, "PUT", {
           fundId: Number(selectedFundId),
           categoryId: Number(selectedCategoryId),
+          plannedDate: normalizeDateForApi(plannedDate),
           scheduledMonth,
           description,
           amount: parsedAmount,
@@ -181,11 +174,17 @@ export function EditPlannedItemDialog({
             fundLabel="資金ID"
             funds={funds}
             hasSelectedFund={hasSelectedFund}
-            onCategoryChange={setSelectedCategoryId}
-            onFundChange={(value) => {
-              setSelectedFundId(value);
-              setSelectedCategoryId("");
-            }}
+            onCategoryChange={onCategoryChange}
+            onFundChange={onFundChange}
+          />
+          <DateField
+            buttonAriaLabel="立案日カレンダーを開く"
+            calendarAriaLabel="立案日カレンダー"
+            label="立案日"
+            name="plannedDate"
+            onChange={setPlannedDate}
+            textAriaLabel="立案日"
+            value={plannedDate}
           />
           <label className="budget-entry-field">
             <span>執行予定月</span>

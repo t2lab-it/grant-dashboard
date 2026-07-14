@@ -390,6 +390,7 @@ describe("API planned-item routes", () => {
       payload: {
         fundId: 2,
         categoryId: 2,
+        plannedDate: "2026-10-25",
         scheduledMonth: "2026-11",
         description: "更新後の予定",
         amount: 4500,
@@ -404,13 +405,14 @@ describe("API planned-item routes", () => {
     expect(
       app.db
         .prepare(
-          "SELECT fund_id, category_id, planned_date, scheduled_month, description, amount, notes FROM planned_items WHERE id = ?",
+          "SELECT fund_id, category_id, planned_ref, planned_date, scheduled_month, description, amount, notes FROM planned_items WHERE id = ?",
         )
         .get(2),
     ).toEqual({
       fund_id: 2,
       category_id: 2,
-      planned_date: "2026-10-20",
+      planned_ref: "immutable-ref",
+      planned_date: "2026-10-25",
       scheduled_month: "2026-11",
       description: "更新後の予定",
       amount: 4500,

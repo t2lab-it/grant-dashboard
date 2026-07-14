@@ -8,12 +8,15 @@ import { ClassificationCheckboxGroup } from "../classifications/ClassificationCh
 import type { ClassificationResponse } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
+import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { FormFeedback } from "../forms/FormFeedback";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
 import type { PlannedItem } from "./fundDetailTypes";
+import { useFundCategorySelection } from "./fundDetailDialogSupport";
 
 type DuplicatePlannedItemDialogProps = {
   fundId: number;
+  fiscalYear: number;
   item: PlannedItem;
   onClose: () => void;
   onSaved: () => Promise<void>;
@@ -21,6 +24,7 @@ type DuplicatePlannedItemDialogProps = {
 
 export function DuplicatePlannedItemDialog({
   fundId,
+  fiscalYear,
   item,
   onClose,
   onSaved,
@@ -37,6 +41,13 @@ export function DuplicatePlannedItemDialog({
   const [infoMessage, setInfoMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const { selectedFundId, selectedCategoryId, funds, categories, hasSelectedFund, onFundChange, onCategoryChange } = useFundCategorySelection({
+    initialFundId: fundId,
+    initialCategoryId: item.categoryId,
+    initialCategoryCode: item.categoryCode,
+    fiscalYear,
+    enabled: true,
+  });
   const { data: rawClassificationData } = useQuery({
     queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
@@ -61,8 +72,8 @@ export function DuplicatePlannedItemDialog({
 
     try {
       const result = await apiMutateJson<{ warnings?: unknown }>("/api/planned-items", "POST", {
-          fundId,
-          categoryId: item.categoryId,
+          fundId: Number(selectedFundId),
+          categoryId: Number(selectedCategoryId),
           plannedDate: normalizeDateForApi(plannedDate),
           scheduledMonth,
           description,
@@ -110,6 +121,17 @@ export function DuplicatePlannedItemDialog({
         </div>
 
         <form className="budget-entry-form" onSubmit={handleSubmit}>
+          <FundCategorySelectFields
+            categories={categories}
+            categoryId={selectedCategoryId}
+            categoryLabel="費目ID"
+            fundId={selectedFundId}
+            fundLabel="資金ID"
+            funds={funds}
+            hasSelectedFund={hasSelectedFund}
+            onCategoryChange={onCategoryChange}
+            onFundChange={onFundChange}
+          />
           <DateField
             buttonAriaLabel="立案日カレンダーを開く"
             calendarAriaLabel="立案日カレンダー"

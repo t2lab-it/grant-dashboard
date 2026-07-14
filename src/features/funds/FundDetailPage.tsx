@@ -431,10 +431,6 @@ export function FundDetailPage() {
         <ActualEntryDialog
           key={editingActualEntry.id}
           mode="edit"
-          currentCategoryId={
-            data.categories.find((category) => category.categoryName === editingActualEntry.categoryName)?.id ??
-            null
-          }
           currentFundId={parsedFundId}
           fiscalYear={data.fund.fiscalYear}
           entry={editingActualEntry}
@@ -446,6 +442,7 @@ export function FundDetailPage() {
         <DuplicatePlannedItemDialog
           key={duplicatingPlannedItem.id}
           fundId={parsedFundId}
+          fiscalYear={data.fund.fiscalYear}
           item={duplicatingPlannedItem}
           onClose={() => setDuplicatingPlannedItem(null)}
           onSaved={refreshFundDetail}

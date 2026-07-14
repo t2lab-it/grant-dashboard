@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ActualEntryForm } from "../../src/features/actual-entries/ActualEntryForm";
 import { PlannedItemForm } from "../../src/features/planned-items/PlannedItemForm";
 import { AppSettingsProvider } from "../../src/features/settings/AppSettings";
+import { formatTokyoDateKey, formatTokyoMonthKey } from "../../src/lib/calendar";
 import { renderWithMemoryRouter } from "./testUtils";
 
 const fetchMock = vi.fn();
@@ -138,8 +139,9 @@ describe("PlannedItemForm", () => {
   }
 
   it("renders named fund/category selects, keeps slash-formatted draft dates, and exposes a calendar picker", async () => {
-    const today = new Date().toISOString().slice(0, 10).replaceAll("-", "/");
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    const now = new Date();
+    const today = formatTokyoDateKey(now).replaceAll("-", "/");
+    const currentMonth = formatTokyoMonthKey(now);
 
     mockPlannedItemFetches();
 
@@ -452,7 +454,7 @@ describe("ActualEntryForm", () => {
   }
 
   it("renders named fund/category selects, keeps slash-formatted actual dates, and filters planned-item choices", async () => {
-    const today = new Date().toISOString().slice(0, 10).replaceAll("-", "/");
+    const today = formatTokyoDateKey(new Date()).replaceAll("-", "/");
 
     mockActualEntryFetches();
 

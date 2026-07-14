@@ -9,7 +9,7 @@ describe("Fund detail interactions", () => {
 
   it("shows action buttons for planned items and opens a settlement modal that submits the linked actual entry", async () => {
     const user = userEvent.setup();
-    const today = new Date().toISOString().slice(0, 10).replaceAll("-", "/");
+    const today = formatTokyoDateKey(new Date()).replaceAll("-", "/");
     let currentFundDetail: {
       fund: { id: number; name: string; awarded_amount: number };
       categories: Array<{
@@ -146,7 +146,7 @@ describe("Fund detail interactions", () => {
 
   it("keeps the remaining planned amount when the settlement checkbox is enabled", async () => {
     const user = userEvent.setup();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = formatTokyoDateKey(new Date());
     const currentFundDetail = {
       fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
       categories: [],
@@ -209,7 +209,7 @@ describe("Fund detail interactions", () => {
 
   it("duplicates planned items from the planned list with today as the planned date", async () => {
     const user = userEvent.setup();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = formatTokyoDateKey(new Date());
     const currentFundDetail = {
       fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
       categories: [

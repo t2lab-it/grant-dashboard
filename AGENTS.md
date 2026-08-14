@@ -3,11 +3,12 @@
 ## Superpowers Docs Policy
 
 - Do not add new files under `docs/superpowers/specs/` or `docs/superpowers/plans/` for small, localized changes.
-- Do not create or keep implementation plan files under `docs/superpowers/plans/`. Treat that directory as non-repository working context.
+- Keep implementation plans under `docs/superpowers/plans/` only when the task spans a meaningful subsystem or the user explicitly authorizes that location.
 - "Small, localized changes" includes narrow UI tweaks, single-route navigation changes, copy edits, styling-only adjustments, and other work that does not introduce a durable architectural decision.
 - Add a new spec or plan document only when the task spans a meaningful subsystem, records a durable design decision, or the user explicitly asks for the document to be kept in the repository.
-- If a workflow suggests creating a spec or plan for a small task, treat it as temporary working context only. Keep it outside the repository or under a gitignored location, not under `docs/superpowers/plans/`.
-- Before committing, review `docs/superpowers/` changes and delete any temporary task-specific docs that are not intended to remain as project documentation.
+- If a workflow suggests creating a spec or plan for a small task without explicit user authorization, treat it as temporary working context and keep it outside the repository or under a gitignored location.
+- Treat files under `docs/superpowers/plans/` as local-only by default. Do not add, stage, commit, or push them unless the user explicitly asks for versioned plan documentation.
+- Before committing, review `docs/superpowers/` changes and delete or leave untracked any temporary task-specific docs that are not intended to remain as project documentation.
 
 ## Budget Dashboard Test Policy
 

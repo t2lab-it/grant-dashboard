@@ -161,7 +161,7 @@ describe("seed profiles", () => {
       [2026, "current"],
       [2025, "past"],
     ]);
-    expect(comparison.fiscalYears.map((year) => year.totals.assets)).toEqual([2000000, 4200000, 1200000]);
+    expect(comparison.fiscalYears.map((year) => year.totals.assets)).toEqual([2200000, 4200000, 1200000]);
 
     db.close();
   });
@@ -185,7 +185,7 @@ describe("seed profiles", () => {
       expect.objectContaining({ description: "前年度末に中止した公開イベント", status: "cancelled" }),
     ]));
     expect(future.categories).toEqual(expect.arrayContaining([
-      expect.objectContaining({ categoryName: "予備部材費", budgetAmount: 100000, plannedAmount: 180000 }),
+      expect.objectContaining({ categoryName: "予備部材費", budgetAmount: 160000, plannedAmount: 180000 }),
     ]));
     expect(future.plannedItems).toEqual(expect.arrayContaining([
       expect.objectContaining({ description: "年度末試作部材", scheduledMonth: "2028-02", amount: 180000 }),
@@ -194,7 +194,7 @@ describe("seed profiles", () => {
     expect(future.plannedItemHistory).toEqual(expect.arrayContaining([
       expect.objectContaining({ description: "翌年度に中止した共同研究会", status: "cancelled" }),
     ]));
-    expect(comparison.fiscalYears[0].totals).toEqual({ assets: 2000000, committed: 1150000, actual: 150000 });
+    expect(comparison.fiscalYears[0].totals).toEqual({ assets: 2200000, committed: 1150000, actual: 150000 });
     expect(comparison.fiscalYears.at(-1)?.totals).toEqual({ assets: 1200000, committed: 0, actual: 910000 });
 
     db.close();

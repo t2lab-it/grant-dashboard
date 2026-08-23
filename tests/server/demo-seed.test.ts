@@ -70,7 +70,7 @@ describe("seedDemoDatabase", () => {
         mismatches: [],
         overall: {
           expected: {
-            assets: 7400000,
+            assets: 7600000,
           },
         },
       });

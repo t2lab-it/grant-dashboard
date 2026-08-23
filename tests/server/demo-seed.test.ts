@@ -57,11 +57,11 @@ describe("seedDemoDatabase", () => {
       };
 
       expect(importRow.imported_at).toBe("2026-04-23T00:00:00.000Z");
-      expect(importRow.warning_count).toBe(1);
+      expect(importRow.warning_count).toBe(5);
       expect(importRow.workbook_path).toBe(summary.workbookPath);
       expect(JSON.parse(importRow.mapping_summary)).toMatchObject({
         mode: "initial",
-        counts: { funds: 4, warnings: 1 },
+        counts: { funds: 8, warnings: 5 },
       });
       expect(JSON.parse(importRow.reconciliation_json)).toMatchObject({
         workbook_path: summary.workbookPath,
@@ -70,7 +70,7 @@ describe("seedDemoDatabase", () => {
         mismatches: [],
         overall: {
           expected: {
-            assets: 4200000,
+            assets: 8600000,
           },
         },
       });

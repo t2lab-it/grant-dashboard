@@ -82,16 +82,16 @@ describe("static demo fiscal year comparison API", () => {
 
     expect(response.ok).toBe(true);
     expect(data.currentFiscalYear).toBe(2026);
-    expect(data.fiscalYears.map((year) => year.fiscalYear)).toEqual([2027, 2026]);
+    expect(data.fiscalYears.map((year) => year.fiscalYear)).toEqual([2027, 2026, 2025]);
     expect(data.fiscalYears[0]).toMatchObject({
       fiscalYear: 2027,
       state: "future",
-      totals: { assets: 2000000, committed: 300000, actual: 50000 },
+      totals: { assets: 4800000, committed: 1450000, actual: 200000 },
     });
     expect(data.fiscalYears[0].crossAggregateCategories).toHaveLength(5);
     expect(data.fiscalYears[0].crossAggregateCategories).toContainEqual({
       crossAggregateCategory: "other",
-      plannedAmount: 300000,
+      plannedAmount: 700000,
       actualAmount: 50000,
     });
     expect(data.fiscalYears[0].monthlyStatus).toHaveLength(12);

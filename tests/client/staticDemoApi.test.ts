@@ -117,7 +117,7 @@ describe("static demo API", () => {
     const data = await readJson(response);
 
     expect(response.ok).toBe(true);
-    expect(data.availableFiscalYears).toEqual([2026]);
+    expect(data.availableFiscalYears).toEqual([2025, 2026, 2027]);
     expect(data.selectedFiscalYear).toBe(2026);
     expect(data.totals).toMatchObject({
       assets: 4200000,
@@ -171,21 +171,21 @@ describe("static demo API", () => {
     const data = await readJson(response);
 
     expect(response.ok).toBe(true);
-    expect(data.availableFiscalYears).toEqual([2026, 2027]);
+    expect(data.availableFiscalYears).toEqual([2025, 2026, 2027]);
     expect(data.selectedFiscalYear).toBe(2027);
     expect(data.totals).toMatchObject({
-      assets: 2000000,
-      committed: 0,
-      actual: 0,
-      freeBalance: 2000000,
+      assets: 4800000,
+      committed: 1150000,
+      actual: 150000,
+      freeBalance: 3500000,
     });
     expect(data.crossAggregateCategories).toEqual([
-      expect.objectContaining({
-        crossAggregateCategory: "equipment",
-        budgetAmount: 2000000,
-      }),
+      { crossAggregateCategory: "travel", budgetAmount: 1200000, plannedAmount: 570000, actualAmount: 150000 },
+      { crossAggregateCategory: "personnel", budgetAmount: 600000, plannedAmount: 0, actualAmount: 0 },
+      { crossAggregateCategory: "equipment", budgetAmount: 2160000, plannedAmount: 180000, actualAmount: 0 },
+      { crossAggregateCategory: "other", budgetAmount: 800000, plannedAmount: 400000, actualAmount: 0 },
     ]);
-    expect((data.funds as Array<{ name: string }>).map((fund) => fund.name)).toEqual(["翌年度基金"]);
+    expect((data.funds as Array<{ name: string }>).map((fund) => fund.name)).toEqual(["デモ研究費F（翌年度）", "デモ研究費H（翌年度）", "翌年度基金"]);
 
     const detail = await readJson(await handleStaticDemoRequest(`/api/funds/${fundId}`, { method: "GET" }));
     expect(detail.categories).toEqual([

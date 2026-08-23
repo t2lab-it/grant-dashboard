@@ -8,5 +8,7 @@
   { "id": 7, "fund_id": 5, "category_code": "legacy-equipment", "name": "物品費", "cross_aggregate_category": "equipment", "display_order": 1 },
   { "id": 8, "fund_id": 5, "category_code": "legacy-personnel", "name": "人件費", "cross_aggregate_category": "personnel", "display_order": 2 },
   { "id": 9, "fund_id": 6, "category_code": "future-travel", "name": "旅費", "cross_aggregate_category": "travel", "display_order": 1 },
-  { "id": 10, "fund_id": 6, "category_code": "future-other", "name": "その他費", "cross_aggregate_category": "other", "display_order": 2 }
+  { "id": 10, "fund_id": 6, "category_code": "future-other", "name": "その他費", "cross_aggregate_category": "other", "display_order": 2 },
+  { "id": 11, "fund_id": 5, "category_code": "legacy-reserve", "name": "予備費", "cross_aggregate_category": "other", "display_order": 3 },
+  { "id": 12, "fund_id": 6, "category_code": "future-supplies", "name": "予備部材費", "cross_aggregate_category": "equipment", "display_order": 3 }
 ]

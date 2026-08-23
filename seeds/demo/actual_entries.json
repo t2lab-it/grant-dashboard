@@ -7,7 +7,10 @@
   { "id": 6, "fund_id": 3, "category_id": 5, "planned_item_id": 6, "actual_date": "2026-06-25", "description": "RA謝金", "amount": 90000, "notes": "実験補助RAの6月勤務分を計上" },
   { "id": 7, "fund_id": 4, "category_id": 6, "planned_item_id": 9, "actual_date": "2026-10-20", "description": "年度末調整用消耗品", "amount": 90000, "notes": "予定に紐づく一部執行" },
   { "id": 8, "fund_id": 1, "category_id": 2, "planned_item_id": 10, "actual_date": "2026-07-22", "description": "共同研究旅費精算", "amount": 125000, "notes": "計画額との差額55,000円を放棄して完了" },
-  { "id": 9, "fund_id": 5, "category_id": 7, "planned_item_id": 11, "actual_date": "2025-07-25", "description": "前年度計測機器更新", "amount": 560000, "notes": "前年度の検収・支払済み金額" },
+  { "id": 9, "fund_id": 5, "category_id": 7, "planned_item_id": 11, "actual_date": "2025-07-25", "description": "前年度計測機器更新（中間支払）", "amount": 350000, "notes": "前年度の検収後に支払った中間金" },
   { "id": 10, "fund_id": 5, "category_id": 8, "planned_item_id": 12, "actual_date": "2025-10-20", "description": "前年度RA謝金", "amount": 300000, "notes": "前年度後期分として支払済み" },
-  { "id": 11, "fund_id": 6, "category_id": 9, "planned_item_id": 13, "actual_date": "2027-05-25", "description": "国際共同研究旅費の先行手配", "amount": 150000, "notes": "航空券と参加登録の先行支払分" }
+  { "id": 11, "fund_id": 6, "category_id": 9, "planned_item_id": 13, "actual_date": "2027-05-25", "description": "国際共同研究旅費の先行手配", "amount": 90000, "notes": "航空券の先行支払分" },
+  { "id": 12, "fund_id": 5, "category_id": 7, "planned_item_id": 11, "actual_date": "2025-08-20", "description": "前年度計測機器更新（最終支払）", "amount": 210000, "notes": "検収後の最終支払分" },
+  { "id": 13, "fund_id": 5, "category_id": 11, "planned_item_id": 16, "actual_date": "2026-03-18", "description": "前年度未予算調整", "amount": 50000, "notes": "年度末の未予算支出を精算" },
+  { "id": 14, "fund_id": 6, "category_id": 9, "planned_item_id": 13, "actual_date": "2027-06-30", "description": "国際共同研究旅費の追加精算", "amount": 60000, "notes": "共同研究先訪問の追加精算分" }
 ]

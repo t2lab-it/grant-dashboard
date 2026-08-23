@@ -50,6 +50,7 @@ repo に置かれた `seeds/demo/demo-budget.xlsx` を直接上書きするこ�
 
 - overview で複数 fund の状態差を確認できます
 - 2025・2026・2027年度のデータにより、年度横断サマリーで過去・現行・将来の状態を初期表示から比較できます
+- 2025/2027年度には未予算実績・取消・複数回精算・費目予算超過・翌暦年の年度末予定を含め、履歴と集計のedge caseを確認できます
 - fund detail で category 別の予算と planned / actual の流れを確認できます
 - imports に履歴が入るので import review が空になりません
 - workbook export preview と上書き保存も最初から試せます

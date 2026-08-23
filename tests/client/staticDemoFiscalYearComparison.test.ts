@@ -86,7 +86,7 @@ describe("static demo fiscal year comparison API", () => {
     expect(data.fiscalYears[0]).toMatchObject({
       fiscalYear: 2027,
       state: "future",
-      totals: { assets: 4000000, committed: 1270000, actual: 200000 },
+      totals: { assets: 4000000, committed: 1450000, actual: 200000 },
     });
     expect(data.fiscalYears[0].crossAggregateCategories).toHaveLength(5);
     expect(data.fiscalYears[0].crossAggregateCategories).toContainEqual({

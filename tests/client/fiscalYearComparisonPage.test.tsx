@@ -8,7 +8,9 @@ import type {
   FiscalYearState,
 } from "../../src/contracts/fiscalYearComparison";
 import { FiscalYearComparisonPage } from "../../src/features/fiscal-years/FiscalYearComparisonPage";
+import { APP_SETTINGS_STORAGE_KEY, AppSettingsProvider } from "../../src/features/settings/AppSettings";
 import { listFiscalYearMonths } from "../../src/lib/calendar";
+import { storedAppSettings } from "./testUtils";
 
 const fetchMock = vi.fn();
 
@@ -54,7 +56,9 @@ function renderPage() {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={["/fiscal-years?year=2026"]}>
-        <FiscalYearComparisonPage />
+        <AppSettingsProvider>
+          <FiscalYearComparisonPage />
+        </AppSettingsProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -64,6 +68,7 @@ describe("FiscalYearComparisonPage", () => {
   beforeEach(() => {
     fetchMock.mockReset();
     vi.stubGlobal("fetch", fetchMock);
+    window.localStorage.clear();
   });
 
   afterEach(() => {
@@ -169,5 +174,33 @@ describe("FiscalYearComparisonPage", () => {
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith("/api/fiscal-year-comparison", {});
     });
+  });
+
+  test("uses the selected overview palette for fiscal-year category donuts", async () => {
+    window.localStorage.setItem(
+      APP_SETTINGS_STORAGE_KEY,
+      storedAppSettings({
+        themePreset: "custom:lab-standard",
+        customChartPresets: [
+          {
+            id: "lab-standard",
+            label: "研究室標準",
+            palette: {
+              actual: "#7c3aed",
+              committed: "#f97316",
+              balance: "#fff7ed",
+              balanceBorder: "#c2410c",
+            },
+          },
+        ],
+      }),
+    );
+    okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current")] });
+    const view = renderPage();
+
+    await screen.findByRole("heading", { name: "年度横断サマリー" });
+
+    expect(view.container.querySelector<HTMLElement>(".fiscal-year-category-donut")?.style.background)
+      .toContain("#7c3aed");
   });
 });

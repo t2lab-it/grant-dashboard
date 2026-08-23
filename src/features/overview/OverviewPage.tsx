@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { PageStatusMessage } from "../../app/PageStatusMessage";
 import {
   buildOverviewApiPath,
@@ -17,7 +17,9 @@ import { useAppSettings } from "../settings/AppSettings";
 import { useWorkbookExportStatus } from "../exports/WorkbookExportStatus";
 import type { ClassificationTag } from "../classifications/classificationTypes";
 import type { YearEndRiskSummary } from "../../contracts/yearEndRisk";
+import { isFiscalYearMonth, isMonthKey } from "../../contracts/monthlySummary";
 import { OverviewFundChart } from "./OverviewFundChart";
+import { MonthlySummaryDialog } from "./MonthlySummaryDialog";
 import { OverviewSummaryPanel, type OverviewSummaryMetricKey } from "./OverviewSummaryPanel";
 import {
   getOverviewChartPalette,
@@ -106,6 +108,10 @@ function isProjectTagFilterKey(value: string | null): value is ProjectTagFilterK
   return value === "all" || value === "unassigned" || /^tag-\d+$/.test(value ?? "");
 }
 
+function isOverviewSummaryMetric(value: string | null): value is OverviewSummaryMetricKey {
+  return value === "assets" || value === "actual" || value === "committed" || value === "balance";
+}
+
 function projectTagFilterMatchesFund(
   filterKey: ProjectTagFilterKey,
   fund: { projectTags?: ClassificationTag[] },
@@ -149,6 +155,8 @@ export function OverviewPage() {
   const { status } = useWorkbookExportStatus();
   const staticDemoMode = isStaticDemoMode();
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const requestedFiscalYear = getFiscalYearFromSearch(`?${searchParams.toString()}`);
   const [activeSummaryMetric, setActiveSummaryMetric] = useState<OverviewSummaryMetricKey>("assets");
   const {
@@ -175,6 +183,7 @@ export function OverviewPage() {
   if (!data) {
     return <PageStatusMessage kind="loading">読み込み中...</PageStatusMessage>;
   }
+  const selectedFiscalYear = data.selectedFiscalYear;
 
   const rateMetric = getRateMetricKey(searchParams.get("rate") ?? defaultRateMetric);
   const projectTagFilterOptions = getProjectTagFilterOptions(data.funds);
@@ -236,7 +245,57 @@ export function OverviewPage() {
 
     setSearchParams(nextParams, { replace: true });
   }
+  function openMonthlySummary(month: string) {
+    if (selectedFiscalYear === null) {
+      return;
+    }
 
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("year", String(selectedFiscalYear));
+    nextParams.set("month", month);
+    nextParams.set("summaryMetric", activeSummaryMetric);
+    setSearchParams(nextParams, {
+      state: { monthlySummaryBackgroundSearch: searchParams.toString() },
+    });
+  }
+
+  function changeMonthlySummaryMonth(month: string) {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("month", month);
+    setSearchParams(nextParams, {
+      replace: true,
+      state: location.state,
+    });
+  }
+
+  function closeMonthlySummary() {
+    const backgroundSearch =
+      typeof location.state === "object"
+      && location.state !== null
+      && "monthlySummaryBackgroundSearch" in location.state
+        ? location.state.monthlySummaryBackgroundSearch
+        : undefined;
+
+    if (typeof backgroundSearch === "string") {
+      navigate(-1);
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("month");
+    nextParams.delete("summaryMetric");
+    setSearchParams(nextParams, { replace: true });
+  }
+
+  const requestedSummaryMonth = searchParams.get("month");
+  const requestedSummaryMetric = searchParams.get("summaryMetric");
+  const visibleSummaryMonth = data.selectedFiscalYear !== null
+    && requestedSummaryMonth !== null
+    && isMonthKey(requestedSummaryMonth)
+    && isFiscalYearMonth(data.selectedFiscalYear, requestedSummaryMonth)
+    && isOverviewSummaryMetric(requestedSummaryMetric)
+      ? requestedSummaryMonth
+      : null;
   const heroCards: Array<{
     key: OverviewSummaryMetricKey;
     label: string;
@@ -329,6 +388,7 @@ export function OverviewPage() {
         totals={data.totals}
         funds={data.funds}
         monthlyStatus={monthlyStatus}
+        onSelectMonth={openMonthlySummary}
         linkedActualAmount={data.linkedActualAmount ?? 0}
         pendingPlannedCount={data.pendingPlannedCount ?? 0}
         crossAggregateCategories={data.crossAggregateCategories ?? []}
@@ -336,6 +396,16 @@ export function OverviewPage() {
         balanceRateThresholds={balanceRateThresholds}
         amountDisplayMode={amountDisplayMode}
       />
+      {visibleSummaryMonth !== null && data.selectedFiscalYear !== null && isOverviewSummaryMetric(requestedSummaryMetric) ? (
+        <MonthlySummaryDialog
+          onMonthChange={changeMonthlySummaryMonth}
+          amountDisplayMode={amountDisplayMode}
+          fiscalYear={data.selectedFiscalYear}
+          metric={requestedSummaryMetric}
+          month={visibleSummaryMonth}
+          onClose={closeMonthlySummary}
+        />
+      ) : null}
       <header className="overview-section-header">
         <div className="overview-section-title-actions">
           <h2>予算別の状況</h2>

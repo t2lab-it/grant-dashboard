@@ -826,3 +826,247 @@
 :root[data-theme="dark"] .overview-latest-import-status.warn {
   color: #fdba74;
 }
+
+.overview-context-trend-point-control,
+.overview-context-trend-hit-target {
+  cursor: pointer;
+}
+
+.overview-context-trend-hit-target {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.overview-context-trend-point-control:focus {
+  outline: none;
+}
+
+.overview-context-trend-point-control:focus-visible .overview-context-trend-point {
+  stroke: var(--interactive-strong);
+  stroke-width: 4;
+}
+
+.overview-context-trend-axis-button {
+  min-width: 0;
+  border: 0;
+  border-radius: 6px;
+  padding: 4px 1px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+}
+
+.overview-context-trend-axis-button:hover,
+.overview-context-trend-axis-button:focus-visible {
+  color: var(--interactive-strong);
+  background: var(--surface-muted);
+  outline: 2px solid var(--interactive-strong);
+  outline-offset: 1px;
+}
+
+.budget-modal.overview-monthly-summary-modal {
+  width: min(1120px, 100%);
+  padding: clamp(18px, 2vw, 28px);
+}
+
+.budget-modal.overview-monthly-summary-modal .budget-modal-header {
+  margin-bottom: 14px;
+}
+
+.budget-modal.overview-monthly-summary-modal .budget-modal-header h2 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.2vw, 1.65rem);
+}
+
+.monthly-summary-month-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.monthly-summary-month-navigation .budget-modal-secondary {
+  padding: 7px 14px;
+}
+
+.monthly-summary-month-navigation .budget-modal-secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.monthly-summary-content {
+  display: grid;
+  gap: 22px;
+}
+
+.monthly-summary-basis-note,
+.monthly-summary-error {
+  margin: 0;
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--app-text-subtle);
+  background: var(--surface-soft);
+}
+
+.monthly-summary-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.monthly-summary-error p {
+  margin: 0;
+}
+
+.monthly-summary-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 10px;
+}
+
+.monthly-summary-card-grid article {
+  display: grid;
+  align-content: space-between;
+  gap: 8px;
+  min-height: 104px;
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  padding: 13px 14px;
+  background: var(--surface-raised);
+}
+
+.monthly-summary-card-grid article span {
+  color: var(--app-text-muted);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.monthly-summary-card-grid article strong {
+  font-size: 1.08rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.monthly-summary-highlight {
+  color: var(--accent-text);
+  background: var(--accent-surface);
+}
+
+.monthly-summary-card-grid article.monthly-summary-highlight {
+  border: 2px solid var(--accent-border);
+  padding: 12px 13px;
+  box-shadow: 0 8px 18px rgba(234, 88, 12, 0.12);
+}
+
+.monthly-summary-card-grid article.monthly-summary-highlight span {
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+.monthly-summary-card-grid article.monthly-summary-highlight strong {
+  font-size: 1.3rem;
+}
+
+.monthly-summary-table-section {
+  min-width: 0;
+}
+
+.monthly-summary-table-section h3 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+}
+
+.monthly-summary-table-scroll {
+  max-width: 100%;
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.monthly-summary-table-scroll table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.monthly-summary-table-scroll th,
+.monthly-summary-table-scroll td {
+  border-bottom: 1px solid var(--surface-border);
+  padding: 10px 12px;
+  white-space: nowrap;
+}
+
+.monthly-summary-table-scroll thead th {
+  color: var(--app-text-subtle);
+  background: var(--surface-muted);
+  font-size: 0.82rem;
+  text-align: right;
+}
+
+.monthly-summary-table-scroll th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 12rem;
+  color: var(--app-text);
+  background: var(--surface-bg);
+  text-align: left;
+}
+
+.monthly-summary-table-scroll thead th:first-child {
+  z-index: 2;
+  background: var(--surface-muted);
+}
+
+.monthly-summary-table-scroll td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.monthly-summary-table-scroll tbody tr:last-child th,
+.monthly-summary-table-scroll tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.monthly-summary-table-scroll th.monthly-summary-highlight,
+.monthly-summary-table-scroll td.monthly-summary-highlight {
+  color: var(--accent-text);
+  background: var(--accent-surface);
+  font-size: 1.02em;
+  font-weight: 800;
+}
+
+.monthly-summary-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 600px) {
+  .budget-modal.overview-monthly-summary-modal {
+    max-height: calc(100dvh - 32px);
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  .budget-modal.overview-monthly-summary-modal .budget-modal-header {
+    gap: 10px;
+  }
+
+  .monthly-summary-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .monthly-summary-card-grid article {
+    min-height: 88px;
+  }
+
+  .monthly-summary-actions .detail-action-button {
+    width: 100%;
+  }
+}

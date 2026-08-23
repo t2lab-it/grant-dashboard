@@ -43,6 +43,7 @@ export type OverviewSummaryPanelProps = {
   linkedActualAmount: number;
   metric: OverviewSummaryMetricKey;
   monthlyStatus: OverviewMonthlyStatus[];
+  onSelectMonth: (month: string) => void;
   pendingPlannedCount: number;
   crossAggregateCategories: OverviewCrossAggregateCategory[];
   palette: OverviewChartPalette;

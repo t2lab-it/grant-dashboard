@@ -35,6 +35,13 @@ export type OverviewMonthlyAggregateRow = {
   actual: number;
 };
 
+export type OverviewCrossAggregateCategoryMonthlyAggregateRow = {
+  crossAggregateCategory: CrossAggregateCategory;
+  month: string;
+  plannedAmount: number;
+  actualAmount: number;
+};
+
 export type FundOverduePlannedAmountRow = {
   fundId: number;
   overduePlannedAmount: number;
@@ -355,6 +362,59 @@ export function listOverviewMonthlyAggregateRows(
       `,
     )
     .all(...parameters) as OverviewMonthlyAggregateRow[];
+}
+
+export function listOverviewCrossAggregateCategoryMonthlyAggregateRows(
+  db: Database.Database,
+  fiscalYear: number,
+): OverviewCrossAggregateCategoryMonthlyAggregateRow[] {
+  return db
+    .prepare(
+      `
+      WITH
+      ${LINKED_ACTUALS_CTE},
+      planned_by_month AS (
+        SELECT
+          c.cross_aggregate_category AS crossAggregateCategory,
+          p.scheduled_month AS month,
+          SUM(${REMAINING_PLANNED_AMOUNT_SQL}) AS plannedAmount
+        FROM planned_items p
+        INNER JOIN funds f ON f.id = p.fund_id
+        INNER JOIN categories c ON c.id = p.category_id
+        LEFT JOIN linked_actuals la ON la.planned_item_id = p.id
+        WHERE p.status = 'planned' AND f.fiscal_year = ?
+        GROUP BY c.cross_aggregate_category, p.scheduled_month
+      ),
+      actual_by_month AS (
+        SELECT
+          c.cross_aggregate_category AS crossAggregateCategory,
+          SUBSTR(ae.actual_date, 1, 7) AS month,
+          SUM(ae.amount) AS actualAmount
+        FROM actual_entries ae
+        INNER JOIN funds f ON f.id = ae.fund_id
+        INNER JOIN categories c ON c.id = ae.category_id
+        WHERE f.fiscal_year = ?
+        GROUP BY c.cross_aggregate_category, SUBSTR(ae.actual_date, 1, 7)
+      ),
+      months AS (
+        SELECT crossAggregateCategory, month FROM planned_by_month
+        UNION
+        SELECT crossAggregateCategory, month FROM actual_by_month
+      )
+      SELECT
+        m.crossAggregateCategory,
+        m.month,
+        COALESCE(pbm.plannedAmount, 0) AS plannedAmount,
+        COALESCE(abm.actualAmount, 0) AS actualAmount
+      FROM months m
+      LEFT JOIN planned_by_month pbm
+        ON pbm.crossAggregateCategory = m.crossAggregateCategory AND pbm.month = m.month
+      LEFT JOIN actual_by_month abm
+        ON abm.crossAggregateCategory = m.crossAggregateCategory AND abm.month = m.month
+      ORDER BY m.crossAggregateCategory, m.month
+      `,
+    )
+    .all(fiscalYear, fiscalYear) as OverviewCrossAggregateCategoryMonthlyAggregateRow[];
 }
 
 export function listFundOverduePlannedAmountRows(

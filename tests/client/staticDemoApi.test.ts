@@ -15,6 +15,81 @@ describe("static demo API", () => {
     resetStaticDemoStore();
   });
 
+  test("serves the same lazy monthly summary contract from static demo data", async () => {
+    const response = await handleStaticDemoRequest(
+      "/api/overview/monthly-summary?year=2026&month=2026-06",
+      { method: "GET" },
+    );
+    const data = await readJson(response) as {
+      summary: Record<string, number>;
+      funds: Array<Record<string, number | string>>;
+      crossAggregateCategories: Array<Record<string, number | string>>;
+    };
+
+    expect(response.ok).toBe(true);
+    expect(data).toMatchObject({
+      fiscalYear: 2026,
+      month: "2026-06",
+      calculationBasis: "current_data",
+      summary: {
+        budgetAmount: 4200000,
+        actualCumulativeAmount: 905000,
+        actualAmount: 135000,
+        plannedAmount: 90000,
+        plannedRemainingAmount: 1045000,
+        spendAndPlannedCumulativeAmount: 1405000,
+        calculatedBalance: 2795000,
+      },
+    });
+    expect(data.funds).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          fundName: "デモ研究費D",
+          actualAmount: 0,
+          plannedAmount: 0,
+          actualCumulativeAmount: 0,
+          calculatedBalance: 500000,
+        }),
+      ]),
+    );
+    expect(data.crossAggregateCategories).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          crossAggregateCategory: "equipment",
+          actualAmount: 45000,
+          plannedAmount: 0,
+          calculatedBalance: 455000,
+        }),
+      ]),
+    );
+  });
+
+  test.each([
+    [
+      "/api/overview/monthly-summary?month=2026-06",
+      "invalid_fiscal_year",
+      "年度を正の整数で指定してください。",
+    ],
+    [
+      "/api/overview/monthly-summary?year=2026&month=2026-13",
+      "invalid_month",
+      "月を YYYY-MM 形式で指定してください。",
+    ],
+    [
+      "/api/overview/monthly-summary?year=2026&month=2027-04",
+      "month_outside_fiscal_year",
+      "指定した月は年度の範囲外です。",
+    ],
+  ])("matches monthly summary validation for %s", async (path, code, message) => {
+    const response = await handleStaticDemoRequest(path, { method: "GET" });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      code,
+      message,
+    });
+  });
+
   test("rejects malformed request bodies with the shared API error contract", async () => {
     const response = await handleStaticDemoRequest("/api/planned-items", {
       method: "POST",

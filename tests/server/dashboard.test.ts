@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import Database from "better-sqlite3";
 import { runMigrations } from "../../server/db/migrate";
-import { getOverviewSnapshot, getFundSnapshot } from "../../server/services/dashboard";
+import { getFundSnapshot, getMonthlySummarySnapshot, getOverviewSnapshot } from "../../server/services/dashboard";
 
 describe("dashboard calculations", () => {
   let db: Database.Database;
@@ -89,6 +89,72 @@ describe("dashboard calculations", () => {
         actualAmount: 150,
       },
     ]);
+  });
+
+  it("builds a current-data monthly summary from the same fiscal-month movements as overview", () => {
+    const monthlySummary = getMonthlySummarySnapshot(db, { fiscalYear: 2026, month: "2026-06" });
+    const overview = getOverviewSnapshot(db, { fiscalYear: 2026 });
+    expect(monthlySummary).toEqual({
+      fiscalYear: 2026,
+      month: "2026-06",
+      calculationBasis: "current_data",
+      summary: {
+        budgetAmount: 5080000,
+        actualCumulativeAmount: 647590,
+        actualAmount: 600000,
+        plannedAmount: 1400000,
+        plannedRemainingAmount: 1825000,
+        spendAndPlannedCumulativeAmount: 2047590,
+        calculatedBalance: 3032410,
+      },
+      funds: [
+        {
+          fundId: 1,
+          fundName: "基盤研究費",
+          budgetAmount: 5080000,
+          actualCumulativeAmount: 647590,
+          actualAmount: 600000,
+          plannedAmount: 1400000,
+          plannedRemainingAmount: 1825000,
+          spendAndPlannedCumulativeAmount: 2047590,
+          calculatedBalance: 3032410,
+        },
+      ],
+      crossAggregateCategories: [
+        {
+          crossAggregateCategory: "equipment",
+          budgetAmount: 1400000,
+          actualCumulativeAmount: 647590,
+          actualAmount: 600000,
+          plannedAmount: 1400000,
+          plannedRemainingAmount: 1725000,
+          spendAndPlannedCumulativeAmount: 2047590,
+          calculatedBalance: -647590,
+        },
+        {
+          crossAggregateCategory: "travel",
+          budgetAmount: 2100000,
+          actualCumulativeAmount: 0,
+          actualAmount: 0,
+          plannedAmount: 0,
+          plannedRemainingAmount: 100000,
+          spendAndPlannedCumulativeAmount: 0,
+          calculatedBalance: 2100000,
+        },
+      ],
+    });
+
+    const monthIndex = overview.monthlyStatus.findIndex((row) => row.month === "2026-06");
+    const monthStatus = overview.monthlyStatus[monthIndex];
+    expect(monthlySummary.summary.spendAndPlannedCumulativeAmount).toBe(
+      overview.totals.assets - monthStatus.balance,
+    );
+    expect(monthlySummary.summary.actualCumulativeAmount).toBe(
+      overview.monthlyStatus.slice(0, monthIndex + 1).reduce((sum, row) => sum + row.actual, 0),
+    );
+    expect(monthlySummary.summary.plannedRemainingAmount).toBe(
+      overview.monthlyStatus.slice(monthIndex).reduce((sum, row) => sum + row.committed, 0),
+    );
   });
 
   it("summarizes year-end risks for the selected fiscal year", () => {

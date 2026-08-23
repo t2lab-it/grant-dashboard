@@ -45,6 +45,77 @@ describe("API overview and export routes", () => {
     }
   });
 
+  it("returns the lazy monthly summary contract for the requested fiscal month", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/overview/monthly-summary?year=2026&month=2026-10",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      fiscalYear: 2026,
+      month: "2026-10",
+      calculationBasis: "current_data",
+      summary: {
+        budgetAmount: 5080000,
+        actualCumulativeAmount: 50000,
+        actualAmount: 50000,
+        plannedAmount: 150000,
+        plannedRemainingAmount: 150000,
+        spendAndPlannedCumulativeAmount: 200000,
+        calculatedBalance: 4880000,
+      },
+      funds: [
+        {
+          fundId: 1,
+          fundName: "基盤研究費",
+          budgetAmount: 5080000,
+          actualCumulativeAmount: 50000,
+          actualAmount: 50000,
+          plannedAmount: 150000,
+          plannedRemainingAmount: 150000,
+          spendAndPlannedCumulativeAmount: 200000,
+          calculatedBalance: 4880000,
+        },
+      ],
+      crossAggregateCategories: [
+        {
+          crossAggregateCategory: "equipment",
+          budgetAmount: 20000,
+          actualCumulativeAmount: 50000,
+          actualAmount: 50000,
+          plannedAmount: 150000,
+          plannedRemainingAmount: 150000,
+          spendAndPlannedCumulativeAmount: 200000,
+          calculatedBalance: -180000,
+        },
+      ],
+    });
+  });
+
+  it.each([
+    [
+      "/api/overview/monthly-summary?month=2026-10",
+      "invalid_fiscal_year",
+      "年度を正の整数で指定してください。",
+    ],
+    [
+      "/api/overview/monthly-summary?year=2026&month=2026-13",
+      "invalid_month",
+      "月を YYYY-MM 形式で指定してください。",
+    ],
+    [
+      "/api/overview/monthly-summary?year=2026&month=2027-04",
+      "month_outside_fiscal_year",
+      "指定した月は年度の範囲外です。",
+    ],
+  ])("validates monthly summary query %s", async (url, code, message) => {
+    const response = await app.inject({ method: "GET", url });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({ code, message });
+  });
+
   it("returns a ledger workbook export with summary and detail sheets", async () => {
     app.db.exec(`
       UPDATE funds SET fund_code = 'basic-research' WHERE id = 1;

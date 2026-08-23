@@ -8,6 +8,7 @@ import { buildServer } from "../../server/app";
 import { loadSeedProfile } from "../../server/seeds/loadProfile";
 import { seedDatabase } from "../../server/seeds/seedDatabase";
 import { getFundSnapshot, getOverviewSnapshot } from "../../server/services/dashboard";
+import { getFiscalYearComparisonSnapshot } from "../../server/services/fiscalYearComparison";
 import { type SeedProfileTables, writeSeedProfile } from "../support/seed";
 
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -112,7 +113,7 @@ describe("seed profiles", () => {
         expect.objectContaining({ name: "デモ研究費D", freeBalance: 30000, projectTags: [] }),
       ]),
     );
-    expect(plannedRefs).toHaveLength(10);
+    expect(plannedRefs).toHaveLength(18);
     expect(plannedRefs).toEqual(
       expect.arrayContaining([
         { planned_ref: "demo-a-equipment-202605-001" },
@@ -143,6 +144,62 @@ describe("seed profiles", () => {
     db.close();
   });
 
+  it("demo profile provides past, current, and future fiscal years for the initial comparison", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "budget-seed-demo-fiscal-years-"));
+    const dbPath = join(tempDir, "demo.db");
+    tempDirs.push(tempDir);
+
+    seedDatabase({ rootDir, profile: "demo", dbPath });
+
+    const db = new Database(dbPath, { readonly: true });
+    const comparison = getFiscalYearComparisonSnapshot(db, {
+      today: new Date("2026-08-15T00:00:00+09:00"),
+    });
+
+    expect(comparison.fiscalYears.map((year) => [year.fiscalYear, year.state])).toEqual([
+      [2027, "future"],
+      [2026, "current"],
+      [2025, "past"],
+    ]);
+    expect(comparison.fiscalYears.map((year) => year.totals.assets)).toEqual([2800000, 4200000, 1600000]);
+    expect([2025, 2026, 2027].map((fiscalYear) => getOverviewSnapshot(db, { fiscalYear }).funds.length)).toEqual([2, 4, 2]);
+
+    db.close();
+  });
+
+  it("demo profile makes past and future fiscal year edge cases observable", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "budget-seed-demo-edge-cases-"));
+    const dbPath = join(tempDir, "demo.db");
+    tempDirs.push(tempDir);
+
+    seedDatabase({ rootDir, profile: "demo", dbPath });
+
+    const db = new Database(dbPath, { readonly: true });
+    const past = getFundSnapshot(db, 5);
+    const future = getFundSnapshot(db, 6);
+    const comparison = getFiscalYearComparisonSnapshot(db, { today: new Date("2026-08-15T00:00:00+09:00") });
+
+    expect(past.categories).toEqual(expect.arrayContaining([
+      expect.objectContaining({ categoryName: "予備費", budgetAmount: null, actualAmount: 50000 }),
+    ]));
+    expect(past.plannedItemHistory).toEqual(expect.arrayContaining([
+      expect.objectContaining({ description: "前年度末に中止した公開イベント", status: "cancelled" }),
+    ]));
+    expect(future.categories).toEqual(expect.arrayContaining([
+      expect.objectContaining({ categoryName: "予備部材費", budgetAmount: 160000, plannedAmount: 180000 }),
+    ]));
+    expect(future.plannedItems).toEqual(expect.arrayContaining([
+      expect.objectContaining({ description: "年度末試作部材", scheduledMonth: "2028-02", amount: 180000 }),
+    ]));
+    expect(future.actualEntries.filter((entry) => entry.description.includes("国際共同研究旅費"))).toHaveLength(2);
+    expect(future.plannedItemHistory).toEqual(expect.arrayContaining([
+      expect.objectContaining({ description: "翌年度に中止した共同研究会", status: "cancelled" }),
+    ]));
+    expect(comparison.fiscalYears[0].totals).toEqual({ assets: 2800000, committed: 1150000, actual: 150000 });
+    expect(comparison.fiscalYears.at(-1)?.totals).toEqual({ assets: 1600000, committed: 0, actual: 910000 });
+
+    db.close();
+  });
   it("rejects whitespace-padded duplicate fund_code values while loading a profile", () => {
     const tempDir = mkdtempSync(join(tmpdir(), "budget-seed-identity-"));
     const profileDir = join(tempDir, "seeds", "dup-identity");

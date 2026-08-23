@@ -8,6 +8,7 @@ import { buildServer } from "../../server/app";
 import { loadSeedProfile } from "../../server/seeds/loadProfile";
 import { seedDatabase } from "../../server/seeds/seedDatabase";
 import { getFundSnapshot, getOverviewSnapshot } from "../../server/services/dashboard";
+import { getFiscalYearComparisonSnapshot } from "../../server/services/fiscalYearComparison";
 import { type SeedProfileTables, writeSeedProfile } from "../support/seed";
 
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -112,7 +113,7 @@ describe("seed profiles", () => {
         expect.objectContaining({ name: "デモ研究費D", freeBalance: 30000, projectTags: [] }),
       ]),
     );
-    expect(plannedRefs).toHaveLength(10);
+    expect(plannedRefs).toHaveLength(14);
     expect(plannedRefs).toEqual(
       expect.arrayContaining([
         { planned_ref: "demo-a-equipment-202605-001" },
@@ -140,6 +141,28 @@ describe("seed profiles", () => {
         }),
       ]),
     );
+    db.close();
+  });
+
+  it("demo profile provides past, current, and future fiscal years for the initial comparison", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "budget-seed-demo-fiscal-years-"));
+    const dbPath = join(tempDir, "demo.db");
+    tempDirs.push(tempDir);
+
+    seedDatabase({ rootDir, profile: "demo", dbPath });
+
+    const db = new Database(dbPath, { readonly: true });
+    const comparison = getFiscalYearComparisonSnapshot(db, {
+      today: new Date("2026-08-15T00:00:00+09:00"),
+    });
+
+    expect(comparison.fiscalYears.map((year) => [year.fiscalYear, year.state])).toEqual([
+      [2027, "future"],
+      [2026, "current"],
+      [2025, "past"],
+    ]);
+    expect(comparison.fiscalYears.map((year) => year.totals.assets)).toEqual([2000000, 4200000, 1200000]);
+
     db.close();
   });
 

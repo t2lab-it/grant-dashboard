@@ -49,6 +49,7 @@ repo に置かれた `seeds/demo/demo-budget.xlsx` を直接上書きするこ�
 `seed:demo` は、初回確認や画面デモのために「いま実装されている機能をひととおり触れる状態」を 1 command で作る用途を想定しています。
 
 - overview で複数 fund の状態差を確認できます
+- 2025・2026・2027年度のデータにより、年度横断サマリーで過去・現行・将来の状態を初期表示から比較できます
 - fund detail で category 別の予算と planned / actual の流れを確認できます
 - imports に履歴が入るので import review が空になりません
 - workbook export preview と上書き保存も最初から試せます

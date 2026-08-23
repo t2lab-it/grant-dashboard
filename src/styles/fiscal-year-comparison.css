@@ -1,0 +1,388 @@
+.fiscal-year-comparison-page {
+  --fiscal-year-actual: #0f766e;
+  --fiscal-year-planned: #d97706;
+  --fiscal-year-balance: #a9b7c8;
+  --fiscal-year-category-equipment: #2563eb;
+  --fiscal-year-category-travel: #ea580c;
+  --fiscal-year-category-personnel: #7c3aed;
+  --fiscal-year-category-other: #15803d;
+  --fiscal-year-category-unset: #94a3b8;
+  --fiscal-year-line-0: #0f766e;
+  --fiscal-year-line-1: #2563eb;
+  --fiscal-year-line-2: #d97706;
+  --fiscal-year-line-3: #7c3aed;
+  --fiscal-year-line-4: #15803d;
+  --fiscal-year-line-5: #be123c;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+:root[data-theme="dark"] .fiscal-year-comparison-page {
+  --fiscal-year-actual: #5eead4;
+  --fiscal-year-planned: #fbbf24;
+  --fiscal-year-balance: #586d88;
+  --fiscal-year-category-equipment: #60a5fa;
+  --fiscal-year-category-travel: #fb923c;
+  --fiscal-year-category-personnel: #a78bfa;
+  --fiscal-year-category-other: #4ade80;
+  --fiscal-year-category-unset: #64748b;
+  --fiscal-year-line-0: #5eead4;
+  --fiscal-year-line-1: #60a5fa;
+  --fiscal-year-line-2: #fbbf24;
+  --fiscal-year-line-3: #c4b5fd;
+  --fiscal-year-line-4: #4ade80;
+  --fiscal-year-line-5: #fda4af;
+}
+
+.app-fiscal-year-comparison-link {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--surface-border-strong);
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: var(--surface-muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.app-fiscal-year-comparison-link:hover,
+.app-fiscal-year-comparison-link:focus-visible,
+.app-fiscal-year-comparison-link[aria-current="page"] {
+  border-color: var(--interactive-strong);
+  color: var(--interactive-strong);
+  background: var(--surface-soft);
+}
+
+.app-fiscal-year-comparison-link:focus-visible,
+.fiscal-year-budget-row:focus-visible,
+.fiscal-year-category-card:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--interactive-strong) 55%, transparent);
+  outline-offset: 3px;
+}
+
+.fiscal-year-comparison-page-heading h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  line-height: 1.2;
+}
+
+.fiscal-year-comparison-page-heading p,
+.fiscal-year-comparison-section-heading p {
+  margin: 6px 0 0;
+  color: var(--app-text-muted);
+}
+
+.fiscal-year-comparison-section {
+  min-width: 0;
+  margin-top: 36px;
+}
+
+.fiscal-year-comparison-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.fiscal-year-comparison-section-heading h2 {
+  margin: 0;
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+}
+
+.fiscal-year-comparison-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+  color: var(--app-text-muted);
+  font-size: 0.82rem;
+}
+
+.fiscal-year-comparison-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.fiscal-year-swatch {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  border-radius: 3px;
+  background: var(--surface-muted);
+}
+
+.fiscal-year-swatch-actual,
+.fiscal-year-budget-segment-actual { background: var(--fiscal-year-actual); }
+.fiscal-year-swatch-planned,
+.fiscal-year-budget-segment-planned { background: var(--fiscal-year-planned); }
+.fiscal-year-swatch-balance,
+.fiscal-year-budget-segment-balance { background: var(--fiscal-year-balance); }
+.fiscal-year-swatch-equipment { background: var(--fiscal-year-category-equipment); }
+.fiscal-year-swatch-travel { background: var(--fiscal-year-category-travel); }
+.fiscal-year-swatch-personnel { background: var(--fiscal-year-category-personnel); }
+.fiscal-year-swatch-other { background: var(--fiscal-year-category-other); }
+.fiscal-year-swatch-unset { background: var(--fiscal-year-category-unset); }
+
+.fiscal-year-budget-chart {
+  min-width: 0;
+  margin-top: 16px;
+}
+
+.fiscal-year-budget-axis {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 132px 4px 104px;
+  color: var(--app-text-muted);
+  font-size: 0.72rem;
+}
+
+.fiscal-year-budget-row {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) 116px;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  margin: 4px 0;
+  border-radius: 10px;
+  padding: 9px 8px;
+}
+
+.fiscal-year-budget-row:hover,
+.fiscal-year-category-card:hover {
+  background: var(--surface-soft);
+}
+
+.fiscal-year-budget-year,
+.fiscal-year-budget-value strong,
+.fiscal-year-budget-value small {
+  white-space: nowrap;
+}
+
+.fiscal-year-budget-year {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.fiscal-year-budget-scale {
+  min-width: 0;
+  height: 28px;
+  display: block;
+  border-radius: 6px;
+  background-image: linear-gradient(to right, transparent 49.8%, var(--surface-border) 50%, transparent 50.2%);
+}
+
+.fiscal-year-budget-bar {
+  min-width: 2px;
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.fiscal-year-budget-segment {
+  height: 100%;
+  display: block;
+}
+
+.fiscal-year-budget-value {
+  min-width: 0;
+  display: grid;
+  justify-items: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.fiscal-year-budget-value strong { font-size: 0.88rem; }
+.fiscal-year-budget-value small { color: var(--app-text-muted); font-size: 0.72rem; }
+
+.fiscal-year-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.fiscal-year-category-card {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  border-radius: 12px;
+  padding: 14px 8px;
+  text-align: center;
+}
+
+.fiscal-year-category-card small {
+  color: var(--app-text-muted);
+}
+
+.fiscal-year-category-donut {
+  position: relative;
+  width: 126px;
+  height: 126px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.fiscal-year-category-donut::before {
+  content: "";
+  position: absolute;
+  inset: 27px;
+  border-radius: 50%;
+  background: var(--surface-bg);
+}
+
+.fiscal-year-category-donut > span {
+  position: relative;
+  z-index: 1;
+  max-width: 74px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.fiscal-year-category-donut-empty {
+  background: var(--chart-track) !important;
+}
+
+.fiscal-year-pace-figure {
+  min-width: 0;
+  margin: 18px 0 0;
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--surface-soft);
+  overflow: hidden;
+}
+
+.fiscal-year-pace-chart {
+  width: 100%;
+  height: auto;
+  max-height: 340px;
+  display: block;
+  overflow: visible;
+}
+
+.fiscal-year-pace-chart text {
+  fill: var(--app-text-muted);
+  font-size: 11px;
+}
+
+.fiscal-year-pace-grid-line {
+  stroke: var(--surface-border);
+  stroke-width: 1;
+}
+
+.fiscal-year-line-sample {
+  width: 24px;
+  height: 0;
+  display: inline-block;
+  border-top: 3px solid var(--fiscal-year-actual);
+}
+
+.fiscal-year-line-sample-dashed {
+  border-top-style: dashed;
+  border-top-color: var(--fiscal-year-planned);
+}
+
+.fiscal-year-pace-year-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 8px 0 0;
+  padding: 0;
+  color: var(--app-text-muted);
+  font-size: 0.78rem;
+  list-style: none;
+}
+
+.fiscal-year-pace-year-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fiscal-year-pace-year-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+@media (max-width: 760px) {
+  .app-shell-fiscal-year-comparison {
+    padding: 16px;
+  }
+
+  .app-shell-fiscal-year-comparison .app-header-primary-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .app-shell-fiscal-year-comparison .app-header nav {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .app-shell-fiscal-year-comparison .app-main {
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .fiscal-year-budget-axis {
+    margin-right: 112px;
+    margin-left: 88px;
+  }
+
+  .fiscal-year-budget-row {
+    grid-template-columns: 72px minmax(0, 1fr) 96px;
+    gap: 8px;
+    padding-inline: 4px;
+  }
+
+  .fiscal-year-category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fiscal-year-pace-tick-optional {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .fiscal-year-comparison-section {
+    margin-top: 30px;
+  }
+
+  .fiscal-year-budget-axis {
+    margin-right: 100px;
+    margin-left: 76px;
+  }
+
+  .fiscal-year-budget-row {
+    grid-template-columns: 64px minmax(0, 1fr) 88px;
+    gap: 6px;
+  }
+
+  .fiscal-year-budget-year,
+  .fiscal-year-budget-value strong {
+    font-size: 0.76rem;
+  }
+
+  .fiscal-year-budget-value small {
+    font-size: 0.66rem;
+  }
+
+  .fiscal-year-category-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fiscal-year-pace-figure {
+    padding: 8px;
+  }
+}

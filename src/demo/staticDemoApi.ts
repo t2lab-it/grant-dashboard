@@ -18,6 +18,7 @@ import {
 } from "./staticDemoMutations";
 import {
   getStaticClassifications,
+  getStaticFiscalYearComparisonSnapshot,
   getStaticFundSnapshot,
   getStaticHeaderAlertsSnapshot,
   getStaticImportDetail,
@@ -276,6 +277,10 @@ export async function handleStaticDemoRequest(path: string, init: StaticDemoRequ
 
     if (method === "GET" && pathname === "/api/overview") {
       return jsonResponse(getStaticOverviewSnapshot(parseFiscalYear(searchParams.get("year"))));
+    }
+
+    if (method === "GET" && pathname === "/api/fiscal-year-comparison") {
+      return jsonResponse(getStaticFiscalYearComparisonSnapshot());
     }
 
     if (method === "GET" && pathname === "/api/search") {

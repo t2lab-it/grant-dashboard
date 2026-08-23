@@ -13,6 +13,11 @@ const FundDetailPage = lazy(() =>
     default: module.FundDetailPage,
   })),
 );
+const FiscalYearComparisonPage = lazy(() =>
+  import("../features/fiscal-years/FiscalYearComparisonPage").then((module) => ({
+    default: module.FiscalYearComparisonPage,
+  })),
+);
 const NewFundForm = lazy(() =>
   import("../features/funds/NewFundForm").then((module) => ({
     default: module.NewFundForm,
@@ -54,6 +59,7 @@ function lazyRoute(element: ReactElement) {
 
 export const shellRoutes: RouteObject[] = [
   { index: true, element: <OverviewPage /> },
+  { path: "fiscal-years", element: lazyRoute(<FiscalYearComparisonPage />) },
   { path: "imports", element: lazyRoute(<ImportHistoryPage />) },
   { path: "imports/:importId", element: lazyRoute(<ImportDetailPage />) },
   { path: "search", element: lazyRoute(<SearchPage />) },

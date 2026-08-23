@@ -66,7 +66,7 @@ export type FundRemainingPlannedItemRow = {
   notes: string;
 };
 
-const LINKED_ACTUALS_CTE = `
+export const LINKED_ACTUALS_CTE = `
   linked_actuals AS (
     SELECT planned_item_id, SUM(amount) AS linked_amount, COUNT(*) AS linked_count
     FROM actual_entries
@@ -75,7 +75,7 @@ const LINKED_ACTUALS_CTE = `
   )
 `;
 
-const REMAINING_PLANNED_AMOUNT_SQL = `
+export const REMAINING_PLANNED_AMOUNT_SQL = `
   CASE
     WHEN p.amount - COALESCE(la.linked_amount, 0) > 0 THEN p.amount - COALESCE(la.linked_amount, 0)
     ELSE 0

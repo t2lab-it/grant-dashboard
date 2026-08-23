@@ -169,14 +169,33 @@
 }
 
 .fiscal-year-budget-scale {
+  position: relative;
   min-width: 0;
   height: 28px;
   display: block;
+  overflow: hidden;
   border-radius: 6px;
-  background-image: linear-gradient(to right, transparent 49.8%, var(--surface-border) 50%, transparent 50.2%);
+}
+
+.fiscal-year-budget-tick-guides {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.fiscal-year-budget-tick-guides i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: color-mix(in srgb, var(--surface-border) 80%, transparent);
+  transform: translateX(-50%);
 }
 
 .fiscal-year-budget-bar {
+  position: relative;
+  z-index: 1;
   min-width: 2px;
   height: 100%;
   display: flex;

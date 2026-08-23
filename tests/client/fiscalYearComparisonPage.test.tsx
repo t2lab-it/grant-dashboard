@@ -131,6 +131,25 @@ describe("FiscalYearComparisonPage", () => {
     expect(view.container.querySelectorAll(".fiscal-year-category-donut")).toHaveLength(2);
   });
 
+  test("uses rounded shared-axis ticks for budget totals that do not end on a clean amount", async () => {
+    const current = comparisonYear(2026, "current");
+    const future = comparisonYear(2027, "future");
+    current.totals.assets = 987654;
+    future.totals.assets = 1234567;
+    okResponse({ currentFiscalYear: 2026, fiscalYears: [current, future] });
+    renderPage();
+
+    const budgetChart = await screen.findByRole("group", { name: /年度別の予算総額/ });
+    const axis = budgetChart.querySelector<HTMLElement>(".fiscal-year-budget-axis");
+    expect(axis).not.toBeNull();
+    expect(within(axis!).getByText("0円")).toBeInTheDocument();
+    expect(within(axis!).getByText("500,000円")).toBeInTheDocument();
+    expect(within(axis!).getByText("1,000,000円")).toBeInTheDocument();
+    expect(within(axis!).getByText("1,500,000円")).toBeInTheDocument();
+    expect(within(axis!).queryByText("617,284円")).not.toBeInTheDocument();
+    expect(within(axis!).queryByText("1,234,567円")).not.toBeInTheDocument();
+  });
+
   test("describes April-to-March actual and forecast pace without linking chart lines", async () => {
     okResponse({
       currentFiscalYear: 2026,

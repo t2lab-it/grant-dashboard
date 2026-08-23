@@ -215,7 +215,27 @@ describe("FiscalYearComparisonPage", () => {
 
     await screen.findByRole("heading", { name: "年度横断サマリー" });
 
-    expect(view.container.querySelector<HTMLElement>(".fiscal-year-category-donut")?.style.background)
-      .toContain("#7c3aed");
+    expect(view.container.querySelector(".fiscal-year-category-donut circle[stroke='#7c3aed']")).toBeInTheDocument();
+  });
+
+  test("omits fiscal-year category state labels", async () => {
+    okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current"), comparisonYear(2025, "past")] });
+    renderPage();
+
+    await screen.findByRole("heading", { name: "年度横断サマリー" });
+
+    expect(screen.queryByText("進行中・消化見込み")).not.toBeInTheDocument();
+    expect(screen.queryByText("終了・最終実績")).not.toBeInTheDocument();
+  });
+
+  test("uses the overview donut geometry for fiscal-year category charts", async () => {
+    okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current")] });
+    const view = renderPage();
+
+    await screen.findByRole("heading", { name: "年度横断サマリー" });
+
+    const donut = view.container.querySelector(".fiscal-year-category-donut svg");
+    expect(donut).toHaveAttribute("viewBox", "0 0 128 128");
+    expect(donut?.querySelector("circle[r='45'][stroke-width='16']")).toBeInTheDocument();
   });
 });

@@ -229,45 +229,30 @@
   min-width: 0;
   display: grid;
   justify-items: center;
-  gap: 9px;
+  gap: 6px;
   border-radius: 12px;
   padding: 14px 8px;
   text-align: center;
 }
 
-.fiscal-year-category-card small {
-  color: var(--app-text-muted);
-}
-
 .fiscal-year-category-donut {
-  position: relative;
-  width: 126px;
-  height: 126px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
+  width: 106px;
 }
 
-.fiscal-year-category-donut::before {
-  content: "";
-  position: absolute;
-  inset: 27px;
-  border-radius: 50%;
-  background: var(--surface-bg);
+.fiscal-year-category-donut svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
-.fiscal-year-category-donut > span {
-  position: relative;
-  z-index: 1;
-  max-width: 74px;
-  font-size: 0.75rem;
+.fiscal-year-category-track {
+  stroke: var(--chart-track);
+}
+
+.fiscal-year-category-donut text {
+  fill: var(--app-text);
+  font-size: 10px;
   font-weight: 700;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
-.fiscal-year-category-donut-empty {
-  background: var(--chart-track) !important;
 }
 
 .fiscal-year-pace-figure {

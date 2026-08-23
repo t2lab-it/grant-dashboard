@@ -5,21 +5,32 @@ import { formatAmount } from "../../lib/format";
 import type { CrossAggregateChartColors } from "../overview/overviewChart";
 import type { FiscalYearComparisonViewYear } from "./fiscalYearComparisonModel";
 
-function donutBackground(colors: CrossAggregateChartColors, year: FiscalYearComparisonViewYear) {
-  if (year.categoryTotal <= 0) return undefined;
-  let offset = 0;
-  const stops = year.categories.map((category) => {
-    const start = offset;
-    offset += category.percentage ?? 0;
-    return `${colors[category.code]} ${start}% ${offset}%`;
-  });
-  return `conic-gradient(${stops.join(", ")})`;
-}
+function FiscalYearCategoryDonut({ amountDisplayMode, colors, year }: {
+  amountDisplayMode: AmountDisplayMode;
+  colors: CrossAggregateChartColors;
+  year: FiscalYearComparisonViewYear;
+}) {
+  const chartRadius = 45;
+  const chartStroke = 16;
+  const chartCircumference = 2 * Math.PI * chartRadius;
+  const positiveCategories = year.categories.filter((category) => (category.percentage ?? 0) > 0);
+  let accumulatedPercentage = 0;
+  const centerLabel = year.categoryTotal <= 0 ? "データなし" : formatAmount(year.categoryTotal, amountDisplayMode);
 
-function stateCopy(year: FiscalYearComparisonViewYear) {
-  if (year.state === "past") return "終了・最終実績";
-  if (year.state === "future") return "未来・予定";
-  return "進行中・消化見込み";
+  return (
+    <svg viewBox="0 0 128 128" role="img" aria-label={`${year.fiscalYear}年度の横断集計カテゴリ構成比グラフ`} focusable="false">
+      <circle className="fiscal-year-category-track" cx="64" cy="64" r={chartRadius} fill="none" strokeWidth={chartStroke} />
+      {positiveCategories.map((category) => {
+        const percentage = category.percentage ?? 0;
+        const dashLength = (percentage / 100) * chartCircumference;
+        const dashOffset = chartCircumference * (1 - accumulatedPercentage / 100);
+        accumulatedPercentage += percentage;
+
+        return <circle key={category.code} cx="64" cy="64" r={chartRadius} fill="none" stroke={colors[category.code]} strokeDasharray={`${dashLength} ${chartCircumference - dashLength}`} strokeDashoffset={dashOffset} strokeLinecap="butt" strokeWidth={chartStroke} transform="rotate(-90 64 64)" />;
+      })}
+      <text x="64" y="64" textAnchor="middle" dominantBaseline="middle">{centerLabel}</text>
+    </svg>
+  );
 }
 
 export function FiscalYearCategoryDonuts({ amountDisplayMode, colors, years }: {
@@ -39,10 +50,7 @@ export function FiscalYearCategoryDonuts({ amountDisplayMode, colors, years }: {
         {years.map((year) => (
           <Link key={year.fiscalYear} className="fiscal-year-category-card" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
             <strong>{year.fiscalYear}年度</strong>
-            <span className={`fiscal-year-category-donut${year.categoryTotal <= 0 ? " fiscal-year-category-donut-empty" : ""}`} style={{ background: donutBackground(colors, year) }} aria-hidden="true">
-              <span>{year.categoryTotal <= 0 ? "データなし" : formatAmount(year.categoryTotal, amountDisplayMode)}</span>
-            </span>
-            <small>{stateCopy(year)}</small>
+            <span className="fiscal-year-category-donut"><FiscalYearCategoryDonut amountDisplayMode={amountDisplayMode} colors={colors} year={year} /></span>
             <ul className="sr-only">
               {year.categories.map((category) => <li key={category.code}>{year.fiscalYear}年度 {category.label} {formatAmount(category.displayAmount, amountDisplayMode)} {category.percentage === null ? "割合なし" : `${category.percentage.toFixed(1)}%`}</li>)}
             </ul>

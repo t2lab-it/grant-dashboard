@@ -21,6 +21,7 @@ import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/D
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
 import { useEntryForm } from "../forms/useEntryForm";
+import { invalidateFinancialSummaryQueries } from "../../lib/invalidateFinancialSummaryQueries";
 import { queryKeys } from "../../lib/queryKeys";
 import { useAppSettings } from "../settings/AppSettings";
 
@@ -253,7 +254,7 @@ export function PlannedItemForm() {
       }
 
       const warnings = result.data.warnings ?? [];
-      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+      await invalidateFinancialSummaryQueries(queryClient);
       await queryClient.invalidateQueries({ queryKey: queryKeys.fund.detail(Number(values.fundId)) });
 
       return {
@@ -304,7 +305,7 @@ export function PlannedItemForm() {
       }
 
       const warnings = result.data.warnings ?? [];
-      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+      await invalidateFinancialSummaryQueries(queryClient);
       await queryClient.invalidateQueries({ queryKey: queryKeys.fund.detail(Number(values.fundId)) });
 
       return {

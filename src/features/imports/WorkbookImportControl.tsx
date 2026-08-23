@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
 import type { WorkbookImportPreview, WorkbookImportResult } from "../../contracts/imports";
 import { apiPostFile } from "../../lib/api";
-import { queryKeys } from "../../lib/queryKeys";
+import { invalidateFinancialSummaryQueries } from "../../lib/invalidateFinancialSummaryQueries";
 
 export function WorkbookImportControl() {
   const queryClient = useQueryClient();
@@ -52,7 +52,7 @@ export function WorkbookImportControl() {
       const payload = (await uploadWorkbook("/api/imports/workbook")) as WorkbookImportResult;
       setStatusMessage(`workbook を取り込みました: ${payload.source_filename}`);
       setIsOpen(false);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+      await invalidateFinancialSummaryQueries(queryClient);
       await queryClient.invalidateQueries({ queryKey: ["imports"] });
     } catch (error) {
       setDialogError(error instanceof Error ? error.message : "workbook を取り込めませんでした。");

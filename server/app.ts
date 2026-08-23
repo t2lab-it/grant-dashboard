@@ -4,6 +4,7 @@ import { runMigrations } from "./db/migrate";
 import { registerActualEntryRoutes } from "./routes/actual-entries";
 import { registerClassificationRoutes } from "./routes/classifications";
 import { registerExportRoutes } from "./routes/exports";
+import { registerFiscalYearComparisonRoutes } from "./routes/fiscal-year-comparison";
 import { registerFundRoutes } from "./routes/funds";
 import { registerImportRoutes } from "./routes/imports";
 import { registerHeaderAlertRoutes } from "./routes/header-alerts";
@@ -79,6 +80,7 @@ export async function buildServer({
   });
 
   registerOverviewRoutes(app, { now });
+  registerFiscalYearComparisonRoutes(app, { now });
   registerHeaderAlertRoutes(app, { now });
   registerSearchRoutes(app, { now });
   registerClassificationRoutes(app);

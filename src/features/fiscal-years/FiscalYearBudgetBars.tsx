@@ -18,10 +18,9 @@ function buildBudgetAxis(maxAssets: number) {
   const magnitude = 10 ** Math.floor(Math.log10(roughStep));
   const normalized = roughStep / magnitude;
   const step = (normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10) * magnitude;
-  const maximum = Math.ceil(maxAssets / step) * step;
-  const intervals = Math.round(maximum / step);
+  const ticks = Array.from({ length: Math.floor(maxAssets / step) + 1 }, (_, index) => index * step);
 
-  return { maximum, ticks: Array.from({ length: intervals + 1 }, (_, index) => index * step) };
+  return { maximum: maxAssets, ticks: ticks.at(-1) === maxAssets ? ticks : [...ticks, maxAssets] };
 }
 
 export function FiscalYearBudgetBars({ amountDisplayMode, maxAssets, years }: {

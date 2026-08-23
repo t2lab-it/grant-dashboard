@@ -111,6 +111,9 @@ describe("FiscalYearComparisonPage", () => {
     expect(screen.getByRole("heading", { name: "年度別の予算総額" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "横断集計カテゴリの構成比" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "月別の執行ペース" })).toBeInTheDocument();
+    expect(screen.queryByText("予算総額、カテゴリ構成、執行時期を年度間で比較します。")).not.toBeInTheDocument();
+    expect(screen.queryByText("終了年度は最終実績、進行年度と未来年度は消化見込み")).not.toBeInTheDocument();
+    expect(screen.queryByText("4月から3月までの累積執行率を年度間で比較")).not.toBeInTheDocument();
   });
 
   test("renders descending linked budget rows and donut regions with accessible values", async () => {
@@ -136,7 +139,7 @@ describe("FiscalYearComparisonPage", () => {
     expect(view.container.querySelectorAll(".fiscal-year-category-donut")).toHaveLength(2);
   });
 
-  test("uses rounded shared-axis ticks for budget totals that do not end on a clean amount", async () => {
+  test("uses the largest budget total as the shared-axis endpoint", async () => {
     const current = comparisonYear(2026, "current");
     const future = comparisonYear(2027, "future");
     current.totals.assets = 987654;
@@ -150,9 +153,9 @@ describe("FiscalYearComparisonPage", () => {
     expect(within(axis!).getByText("0円")).toBeInTheDocument();
     expect(within(axis!).getByText("500,000円")).toBeInTheDocument();
     expect(within(axis!).getByText("1,000,000円")).toBeInTheDocument();
-    expect(within(axis!).getByText("1,500,000円")).toBeInTheDocument();
-    expect(within(axis!).queryByText("617,284円")).not.toBeInTheDocument();
-    expect(within(axis!).queryByText("1,234,567円")).not.toBeInTheDocument();
+    expect(within(axis!).getByText("1,234,567円")).toBeInTheDocument();
+    expect(within(axis!).queryByText("1,500,000円")).not.toBeInTheDocument();
+    expect(budgetChart).toHaveAccessibleName("年度別の予算総額。共通軸の最大値は1,234,567円です。");
   });
 
   test("describes April-to-March actual and forecast pace without linking chart lines", async () => {
@@ -237,5 +240,15 @@ describe("FiscalYearComparisonPage", () => {
     const donut = view.container.querySelector(".fiscal-year-category-donut svg");
     expect(donut).toHaveAttribute("viewBox", "0 0 128 128");
     expect(donut?.querySelector("circle[r='45'][stroke-width='16']")).toBeInTheDocument();
+  });
+
+  test("shows the donut center total in thousands of yen", async () => {
+    okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current")] });
+    const view = renderPage();
+
+    await screen.findByRole("heading", { name: "年度横断サマリー" });
+
+    expect(view.container.querySelector(".fiscal-year-category-donut text")).toHaveTextContent("650k円");
+    expect(view.container.querySelector(".fiscal-year-category-donut text")).toHaveClass("fiscal-year-category-total");
   });
 });

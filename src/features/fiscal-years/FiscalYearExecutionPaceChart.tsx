@@ -38,7 +38,7 @@ export function FiscalYearExecutionPaceChart({ maxPaceRate, years }: {
   return (
     <section className="fiscal-year-comparison-section" aria-labelledby="fiscal-year-pace-title">
       <div className="fiscal-year-comparison-section-heading">
-        <div><h2 id="fiscal-year-pace-title">月別の執行ペース</h2><p>4月から3月までの累積執行率を年度間で比較</p></div>
+        <div><h2 id="fiscal-year-pace-title">月別の執行ペース</h2></div>
         <div className="fiscal-year-comparison-legend" aria-label="月別執行ペースの凡例">
           <span><i className="fiscal-year-line-sample" aria-hidden="true" />実績（実線）</span>
           <span><i className="fiscal-year-line-sample fiscal-year-line-sample-dashed" aria-hidden="true" />見込み・予定（破線）</span>

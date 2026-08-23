@@ -25,7 +25,7 @@ export function FiscalYearComparisonPage() {
   const categoryColors = getCrossAggregateChartColors(getOverviewChartPalette(themePreset, customChartPresets));
   return (
     <div className="fiscal-year-comparison-page">
-      <header className="fiscal-year-comparison-page-heading"><h1>年度横断サマリー</h1><p>予算総額、カテゴリ構成、執行時期を年度間で比較します。</p></header>
+      <header className="fiscal-year-comparison-page-heading"><h1>年度横断サマリー</h1></header>
       <FiscalYearBudgetBars amountDisplayMode={amountDisplayMode} maxAssets={model.maxAssets} years={model.years} />
       <FiscalYearCategoryDonuts amountDisplayMode={amountDisplayMode} colors={categoryColors} years={model.years} />
       <FiscalYearExecutionPaceChart maxPaceRate={model.maxPaceRate} years={model.years} />

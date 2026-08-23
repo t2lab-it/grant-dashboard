@@ -236,7 +236,7 @@
 }
 
 .fiscal-year-category-donut {
-  width: 106px;
+  width: 128px;
 }
 
 .fiscal-year-category-donut svg {
@@ -249,9 +249,9 @@
   stroke: var(--chart-track);
 }
 
-.fiscal-year-category-donut text {
+.fiscal-year-category-total {
   fill: var(--app-text);
-  font-size: 10px;
+  font-size: 16px;
   font-weight: 700;
 }
 

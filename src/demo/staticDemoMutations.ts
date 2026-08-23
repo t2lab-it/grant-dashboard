@@ -136,6 +136,35 @@ export function updateStaticFund(fundId: number, input: ParsedUpdateFundRequest)
   });
 }
 
+export function deleteStaticFund(fundId: number) {
+  return mutateStaticDemoState((state) => {
+    requireFund(state, fundId);
+
+    const plannedItemIds = new Set(
+      state.planned_items.filter((item) => item.fund_id === fundId).map((item) => item.id),
+    );
+    const actualEntryIds = new Set(
+      state.actual_entries.filter((entry) => entry.fund_id === fundId).map((entry) => entry.id),
+    );
+
+    state.classification_assignments = state.classification_assignments.filter(
+      (assignment) =>
+        !(
+          (assignment.target_type === "fund" && assignment.target_id === fundId) ||
+          (assignment.target_type === "planned_item" && plannedItemIds.has(assignment.target_id)) ||
+          (assignment.target_type === "actual_entry" && actualEntryIds.has(assignment.target_id))
+        ),
+    );
+    state.funds = state.funds.filter((fund) => fund.id !== fundId);
+    state.categories = state.categories.filter((category) => category.fund_id !== fundId);
+    state.budget_lines = state.budget_lines.filter((line) => line.fund_id !== fundId);
+    state.planned_items = state.planned_items.filter((item) => item.fund_id !== fundId);
+    state.actual_entries = state.actual_entries.filter((entry) => entry.fund_id !== fundId);
+
+    return { success: true };
+  });
+}
+
 export function createStaticPlannedItem(input: ParsedCreatePlannedItemRequest) {
   return mutateStaticDemoState((state) => {
     requireCategoryForFund(state, input.fundId, input.categoryId);

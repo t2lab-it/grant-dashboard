@@ -254,3 +254,35 @@ export function updateFundWithBudget(db: Database.Database, fundId: number, inpu
 
   return updateFund();
 }
+
+export function deleteFund(db: Database.Database, fundId: number) {
+  const deleteFundTransaction = db.transaction(() => {
+    const fundRow = db.prepare("SELECT id FROM funds WHERE id = ?").get(fundId) as
+      | { id: number }
+      | undefined;
+    if (fundRow === undefined) {
+      throw new Error(FUND_NOT_FOUND_ERROR);
+    }
+
+    db.prepare(
+      `
+      DELETE FROM classification_assignments
+      WHERE (target_type = 'fund' AND target_id = @fundId)
+         OR (
+           target_type = 'planned_item'
+           AND target_id IN (SELECT id FROM planned_items WHERE fund_id = @fundId)
+         )
+         OR (
+           target_type = 'actual_entry'
+           AND target_id IN (SELECT id FROM actual_entries WHERE fund_id = @fundId)
+         )
+      `,
+    ).run({ fundId });
+
+    db.prepare("DELETE FROM funds WHERE id = ?").run(fundId);
+
+    return { success: true };
+  });
+
+  return deleteFundTransaction();
+}

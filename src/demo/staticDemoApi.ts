@@ -7,6 +7,7 @@ import {
   createStaticFund,
   createStaticPlannedItemsBulk,
   createStaticPlannedItem,
+  deleteStaticFund,
   deleteStaticPlannedItem,
   deleteStaticClassification,
   restoreStaticCancelledPlannedItem,
@@ -80,7 +81,7 @@ function invalidRouteIdResponse(method: string, pathname: string) {
     payload: ApiErrorResponse;
   }> = [
     {
-      methods: ["GET", "PUT"],
+      methods: ["GET", "PUT", "DELETE"],
       pattern: /^\/api\/funds\/[^/]+$/,
       payload: { code: "invalid_fund_id", message: "予算IDを確認してください。" },
     },
@@ -330,6 +331,13 @@ export async function handleStaticDemoRequest(path: string, init: StaticDemoRequ
       const fundId = parseId(pathname, /^\/api\/funds\/(\d+)$/);
       if (fundId !== null) {
         return jsonResponse(updateStaticFund(fundId, await readJsonBody(init, fundUpdateSchema)));
+      }
+    }
+
+    if (method === "DELETE") {
+      const fundId = parseId(pathname, /^\/api\/funds\/(\d+)$/);
+      if (fundId !== null) {
+        return jsonResponse(deleteStaticFund(fundId));
       }
     }
 

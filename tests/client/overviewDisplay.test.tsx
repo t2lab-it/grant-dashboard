@@ -1,8 +1,9 @@
-import { cleanup, fireEvent, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildOverviewFund,
+  buildOverviewResponse,
   fetchMock,
   mockOverviewResponse,
   renderAppRoute,
@@ -32,6 +33,25 @@ function formatExpectedLocalDateTime(value: string) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function buildEmptyMonthlySummary(month = "2026-06") {
+  return {
+    fiscalYear: 2026,
+    month,
+    calculationBasis: "current_data",
+    summary: {
+      budgetAmount: 100000,
+      actualCumulativeAmount: 0,
+      actualAmount: 0,
+      plannedAmount: 0,
+      plannedRemainingAmount: 0,
+      spendAndPlannedCumulativeAmount: 0,
+      calculatedBalance: 100000,
+    },
+    funds: [],
+    crossAggregateCategories: [],
+  };
 }
 
 describe("Overview display", () => {
@@ -320,6 +340,438 @@ describe("Overview display", () => {
     renderOverviewPage();
 
     expect(await screen.findByRole("alert")).toHaveTextContent("概要を読み込めませんでした。");
+  });
+
+  it("opens a lazy monthly summary from a month label while preserving overview query parameters", async () => {
+    const user = userEvent.setup();
+    const overview = buildOverviewResponse({
+      totals: { assets: 1000000, committed: 250000, actual: 150000, freeBalance: 600000 },
+      monthlyStatus: [
+        { month: "2026-04", committed: 50000, actual: 20000, balance: 930000 },
+        { month: "2026-05", committed: 100000, actual: 60000, balance: 770000 },
+        { month: "2026-06", committed: 100000, actual: 70000, balance: 600000 },
+      ],
+    });
+    const monthlySummary = {
+      fiscalYear: 2026,
+      month: "2026-06",
+      calculationBasis: "current_data",
+      summary: {
+        budgetAmount: 1000000,
+        actualCumulativeAmount: 150000,
+        actualAmount: 70000,
+        plannedAmount: 100000,
+        plannedRemainingAmount: 100000,
+        spendAndPlannedCumulativeAmount: 400000,
+        calculatedBalance: 600000,
+      },
+      funds: [],
+      crossAggregateCategories: [],
+    };
+    fetchMock.mockImplementation(async (input) => ({
+      ok: true,
+      status: 200,
+      json: async () => String(input).startsWith("/api/overview/monthly-summary")
+        ? monthlySummary
+        : overview,
+    }));
+
+    const view = renderAppRoute("/?rate=balance&projectTag=tag-1");
+
+    const monthLabel = await screen.findByRole("button", {
+      name: "2026年6月の月ラベルから予算総額サマリを開く",
+    });
+    expect(
+      fetchMock.mock.calls.some(([input]) => String(input).startsWith("/api/overview/monthly-summary")),
+    ).toBe(false);
+
+    await user.click(monthLabel);
+
+    expect(await screen.findByRole("dialog", { name: "2026年6月の予算横断サマリ" })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith("/api/overview/monthly-summary?year=2026&month=2026-06", {});
+    const nextSearch = new URLSearchParams(view.router.state.location.search);
+    expect(Object.fromEntries(nextSearch)).toEqual({
+      rate: "balance",
+      projectTag: "tag-1",
+      year: "2026",
+      month: "2026-06",
+      summaryMetric: "assets",
+    });
+  });
+
+  it("shows the four core values and only the source-specific extra value while sorting by the selected metric", async () => {
+    const overview = buildOverviewResponse({
+      totals: { assets: 300000, committed: 80000, actual: 60000, freeBalance: 160000 },
+      monthlyStatus: [
+        { month: "2026-04", committed: 10000, actual: 10000, balance: 280000 },
+        { month: "2026-05", committed: 20000, actual: 10000, balance: 250000 },
+        { month: "2026-06", committed: 30000, actual: 40000, balance: 180000 },
+      ],
+    });
+    const monthlySummary = {
+      fiscalYear: 2026,
+      month: "2026-06",
+      calculationBasis: "current_data",
+      summary: {
+        budgetAmount: 300000,
+        actualCumulativeAmount: 60000,
+        actualAmount: 40000,
+        plannedAmount: 30000,
+        plannedRemainingAmount: 140000,
+        spendAndPlannedCumulativeAmount: 170000,
+        calculatedBalance: 130000,
+      },
+      funds: [
+        {
+          fundId: 1,
+          fundName: "予算A",
+          budgetAmount: 100000,
+          actualCumulativeAmount: 20000,
+          actualAmount: 10000,
+          plannedAmount: 30000,
+          plannedRemainingAmount: 90000,
+          spendAndPlannedCumulativeAmount: 90000,
+          calculatedBalance: 10000,
+        },
+        {
+          fundId: 2,
+          fundName: "予算B",
+          budgetAmount: 200000,
+          actualCumulativeAmount: 40000,
+          actualAmount: 0,
+          plannedAmount: 0,
+          plannedRemainingAmount: 50000,
+          spendAndPlannedCumulativeAmount: 80000,
+          calculatedBalance: 120000,
+        },
+      ],
+      crossAggregateCategories: [
+        {
+          crossAggregateCategory: "travel",
+          budgetAmount: 120000,
+          actualCumulativeAmount: 10000,
+          actualAmount: 0,
+          plannedAmount: 0,
+          plannedRemainingAmount: 30000,
+          spendAndPlannedCumulativeAmount: 20000,
+          calculatedBalance: 100000,
+        },
+        {
+          crossAggregateCategory: "equipment",
+          budgetAmount: 180000,
+          actualCumulativeAmount: 50000,
+          actualAmount: 40000,
+          plannedAmount: 30000,
+          plannedRemainingAmount: 50000,
+          spendAndPlannedCumulativeAmount: 120000,
+          calculatedBalance: 60000,
+        },
+      ],
+    };
+    fetchMock.mockImplementation(async (input) => ({
+      ok: true,
+      status: 200,
+      json: async () => String(input).startsWith("/api/overview/monthly-summary")
+        ? monthlySummary
+        : overview,
+    }));
+
+    const view = renderAppRoute("/?year=2026&month=2026-06&summaryMetric=actual");
+
+    const dialog = await screen.findByRole("dialog", { name: "2026年6月の予算横断サマリ" });
+    const dialogScope = within(dialog);
+    expect(await dialogScope.findByText("その月までの累計執行済額")).toBeInTheDocument();
+    expect(dialogScope.getByText("その月の実績額")).toBeInTheDocument();
+    expect(dialogScope.getByText("現在、その月に割り当てられている未実行予定額")).toBeInTheDocument();
+    expect(
+      dialogScope.getByText("現在、その月に割り当てられている未実行予定額").closest("article"),
+    ).toHaveTextContent("30,000円");
+    expect(dialogScope.getByText("6月終了時点の計算上の残高")).toBeInTheDocument();
+    expect(dialogScope.queryByText("6月以降の未実行予定残高")).not.toBeInTheDocument();
+    expect(dialogScope.queryByText("6月までの執行＋予定累計")).not.toBeInTheDocument();
+    const summaryRegion = dialogScope.getByRole("region", { name: "月別概要" });
+    expect(within(summaryRegion).getAllByRole("article")).toHaveLength(4);
+    expect(dialogScope.getByText(/現在登録されている予定・実績を月別に配分した計算値/)).toBeInTheDocument();
+
+    const fundTable = dialogScope.getByRole("table", { name: "予算別一覧" });
+    expect(within(fundTable).getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual([
+      "予算名",
+      "当月実績",
+      "当月の未実行予定",
+      "その月までの累計執行済",
+      "その月終了時点の計算残高",
+    ]);
+    const fundRows = within(fundTable).getAllByRole("row");
+    expect(fundRows[1]).toHaveTextContent("予算B");
+    expect(fundRows[1]).toHaveTextContent("0円");
+    expect(fundRows[2]).toHaveTextContent("予算A");
+    expect(within(fundTable).getByRole("columnheader", { name: "その月までの累計執行済" })).toHaveAttribute(
+      "data-highlighted",
+      "true",
+    );
+
+    const categoryTable = dialogScope.getByRole("table", { name: "大費目別内訳" });
+    const categoryRows = within(categoryTable).getAllByRole("row");
+    expect(categoryRows[1]).toHaveTextContent("物品系");
+    expect(categoryRows[2]).toHaveTextContent("旅費系");
+    expect(dialogScope.getByRole("link", { name: "この月の明細を見る" })).toHaveAttribute(
+      "href",
+      "/search?year=2026&monthFrom=2026-06&monthTo=2026-06",
+    );
+
+    await view.router.navigate("/?year=2026&month=2026-06&summaryMetric=committed");
+    await waitFor(() => {
+      const rows = within(fundTable).getAllByRole("row");
+      expect(rows[1]).toHaveTextContent("予算A");
+      expect(rows[2]).toHaveTextContent("予算B");
+      expect(dialogScope.getByText("6月以降の未実行予定残高").closest("article")).toHaveTextContent("140,000円");
+      expect(dialogScope.queryByText("6月までの執行＋予定累計")).not.toBeInTheDocument();
+      expect(within(summaryRegion).getAllByRole("article")).toHaveLength(5);
+      expect(within(fundTable).getByRole("columnheader", { name: "その月以降の未実行予定残高" })).toHaveAttribute(
+        "data-highlighted",
+        "true",
+      );
+    });
+
+    await view.router.navigate("/?year=2026&month=2026-06&summaryMetric=assets");
+    await waitFor(() => {
+      const rows = within(fundTable).getAllByRole("row");
+      expect(rows[1]).toHaveTextContent("予算A");
+      expect(rows[2]).toHaveTextContent("予算B");
+      expect(dialogScope.getByText("6月までの執行＋予定累計").closest("article")).toHaveTextContent("170,000円");
+      expect(dialogScope.queryByText("6月以降の未実行予定残高")).not.toBeInTheDocument();
+      expect(within(summaryRegion).getAllByRole("article")).toHaveLength(5);
+      expect(within(fundTable).getByRole("columnheader", { name: "その月までの執行＋予定累計" })).toHaveAttribute(
+        "data-highlighted",
+        "true",
+      );
+    });
+
+    await view.router.navigate("/?year=2026&month=2026-06&summaryMetric=balance");
+    await waitFor(() => {
+      const rows = within(fundTable).getAllByRole("row");
+      expect(rows[1]).toHaveTextContent("予算B");
+      expect(rows[2]).toHaveTextContent("予算A");
+      expect(dialogScope.queryByText("6月以降の未実行予定残高")).not.toBeInTheDocument();
+      expect(dialogScope.queryByText("6月までの執行＋予定累計")).not.toBeInTheDocument();
+      expect(within(summaryRegion).getAllByRole("article")).toHaveLength(4);
+      expect(within(fundTable).getByRole("columnheader", { name: "その月終了時点の計算残高" })).toHaveAttribute(
+        "data-highlighted",
+        "true",
+      );
+      const categoryRowsAfterMetricChange = within(categoryTable).getAllByRole("row");
+      expect(categoryRowsAfterMetricChange[1]).toHaveTextContent("旅費系");
+      expect(categoryRowsAfterMetricChange[2]).toHaveTextContent("物品系");
+    });
+
+    fireEvent.click(dialogScope.getByRole("button", { name: "月別サマリを閉じる" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(view.router.state.location.search).toBe("?year=2026");
+  });
+
+  it("switches months in place and closes through controls, Escape, backdrop, and browser back", async () => {
+    const user = userEvent.setup();
+    const overview = buildOverviewResponse({
+      monthlyStatus: [
+        { month: "2026-04", committed: 0, actual: 0, balance: 100000 },
+        { month: "2026-05", committed: 0, actual: 0, balance: 100000 },
+        { month: "2026-06", committed: 0, actual: 0, balance: 100000 },
+        { month: "2026-07", committed: 0, actual: 0, balance: 100000 },
+      ],
+    });
+    fetchMock.mockImplementation(async (input) => {
+      const path = String(input);
+      const requestedMonth = new URL(path, "http://example.test").searchParams.get("month") ?? "2026-06";
+      return {
+        ok: true,
+        status: 200,
+        json: async () => path.startsWith("/api/overview/monthly-summary")
+          ? {
+              fiscalYear: 2026,
+              month: requestedMonth,
+              calculationBasis: "current_data",
+              summary: {
+                budgetAmount: 100000,
+                actualCumulativeAmount: 0,
+                actualAmount: 0,
+                plannedAmount: 0,
+                plannedRemainingAmount: 0,
+                spendAndPlannedCumulativeAmount: 0,
+                calculatedBalance: 100000,
+              },
+              funds: [],
+              crossAggregateCategories: [],
+            }
+          : overview,
+      };
+    });
+    const view = renderAppRoute("/?rate=balance");
+    const monthLabel = await screen.findByRole("button", {
+      name: "2026年6月の月ラベルから予算総額サマリを開く",
+    });
+
+    monthLabel.focus();
+    await user.click(monthLabel);
+    expect(await screen.findByRole("dialog", { name: "2026年6月の予算横断サマリ" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "翌月" }));
+    expect(await screen.findByRole("dialog", { name: "2026年7月の予算横断サマリ" })).toBeInTheDocument();
+    expect(new URLSearchParams(view.router.state.location.search).get("month")).toBe("2026-07");
+
+    await user.click(screen.getByRole("button", { name: "前月" }));
+    expect(await screen.findByRole("dialog", { name: "2026年6月の予算横断サマリ" })).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(view.router.state.location.search).toBe("?rate=balance&year=2026");
+    expect(document.activeElement).toBe(monthLabel);
+
+    await user.click(monthLabel);
+    await screen.findByRole("dialog");
+    await user.click(screen.getByRole("button", { name: "月別サマリを閉じる" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(document.activeElement).toBe(monthLabel);
+
+    await user.click(monthLabel);
+    await screen.findByRole("dialog");
+    fireEvent.click(document.querySelector(".budget-modal-backdrop") as HTMLElement);
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(document.activeElement).toBe(monthLabel);
+
+    await user.click(monthLabel);
+    await screen.findByRole("dialog");
+    await view.router.navigate(-1);
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(view.router.state.location.search).toBe("?rate=balance&year=2026");
+    expect(document.activeElement).toBe(monthLabel);
+  });
+
+  it("shows a loading state inside the open dialog while the monthly request is pending", async () => {
+    let resolveMonthlyRequest: ((value: {
+      ok: boolean;
+      status: number;
+      json: () => Promise<ReturnType<typeof buildEmptyMonthlySummary>>;
+    }) => void) | undefined;
+    const monthlyRequest = new Promise<{
+      ok: boolean;
+      status: number;
+      json: () => Promise<ReturnType<typeof buildEmptyMonthlySummary>>;
+    }>((resolve) => {
+      resolveMonthlyRequest = resolve;
+    });
+    const overview = buildOverviewResponse();
+    fetchMock.mockImplementation(async (input) => {
+      if (String(input).startsWith("/api/overview/monthly-summary")) {
+        return monthlyRequest;
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => overview,
+      };
+    });
+
+    renderAppRoute("/?year=2026&month=2026-06&summaryMetric=balance");
+
+    const dialog = await screen.findByRole("dialog", { name: "2026年6月の予算横断サマリ" });
+    expect(within(dialog).getByRole("status")).toHaveTextContent("月別サマリを読み込み中");
+
+    resolveMonthlyRequest?.({
+      ok: true,
+      status: 200,
+      json: async () => buildEmptyMonthlySummary(),
+    });
+    expect(await within(dialog).findByText(/現在登録されている予定・実績/)).toBeInTheDocument();
+  });
+
+  it("keeps the dialog open and retries after a monthly summary request fails", async () => {
+    const user = userEvent.setup();
+    const overview = buildOverviewResponse();
+    let monthlyAttempts = 0;
+    fetchMock.mockImplementation(async (input) => {
+      if (!String(input).startsWith("/api/overview/monthly-summary")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => overview,
+        };
+      }
+
+      monthlyAttempts += 1;
+      if (monthlyAttempts === 1) {
+        return {
+          ok: false,
+          status: 503,
+          json: async () => ({ code: "monthly_summary_unavailable", message: "temporary" }),
+        };
+      }
+
+      return {
+        ok: true,
+        status: 200,
+        json: async () => buildEmptyMonthlySummary(),
+      };
+    });
+
+    renderAppRoute("/?year=2026&month=2026-06&summaryMetric=committed");
+
+    const dialog = await screen.findByRole("dialog", { name: "2026年6月の予算横断サマリ" });
+    const dialogScope = within(dialog);
+    expect(await dialogScope.findByRole("alert")).toHaveTextContent("月別サマリを読み込めませんでした");
+    expect(dialog).toBeInTheDocument();
+
+    await user.click(dialogScope.getByRole("button", { name: "再試行" }));
+
+    expect(await dialogScope.findByText(/現在登録されている予定・実績/)).toBeInTheDocument();
+    expect(monthlyAttempts).toBe(2);
+    expect(dialog).toBeInTheDocument();
+  });
+
+  it("opens from a wide data-point target and supports keyboard activation for points and month labels", async () => {
+    const user = userEvent.setup();
+    const overview = buildOverviewResponse({
+      monthlyStatus: [
+        { month: "2026-04", committed: 10000, actual: 10000, balance: 80000 },
+        { month: "2026-05", committed: 0, actual: 10000, balance: 70000 },
+        { month: "2026-06", committed: 10000, actual: 0, balance: 60000 },
+      ],
+    });
+    fetchMock.mockImplementation(async (input) => ({
+      ok: true,
+      status: 200,
+      json: async () => String(input).startsWith("/api/overview/monthly-summary")
+        ? buildEmptyMonthlySummary()
+        : overview,
+    }));
+    const view = renderAppRoute("/?year=2026");
+
+    const dataPoint = await screen.findByRole("button", {
+      name: "2026年6月の予算総額データ点からサマリを開く",
+    });
+    expect(dataPoint.querySelector(".overview-context-trend-hit-target")).toHaveAttribute("r", "12");
+
+    dataPoint.focus();
+    await user.keyboard("{Enter}");
+
+    let dialog = await screen.findByRole("dialog", { name: "2026年6月の予算横断サマリ" });
+    expect(new URLSearchParams(view.router.state.location.search).get("summaryMetric")).toBe("assets");
+    expect(
+      within(within(dialog).getByRole("table", { name: "予算別一覧" })).getByRole("columnheader", {
+        name: "その月までの執行＋予定累計",
+      }),
+    ).toHaveAttribute("data-highlighted", "true");
+
+    await user.click(within(dialog).getByRole("button", { name: "月別サマリを閉じる" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+    const monthLabel = screen.getByRole("button", {
+      name: "2026年6月の月ラベルから予算総額サマリを開く",
+    });
+    monthLabel.focus();
+    await user.keyboard(" ");
+
+    dialog = await screen.findByRole("dialog", { name: "2026年6月の予算横断サマリ" });
+    expect(dialog).toBeInTheDocument();
   });
 
   it("keeps the summary context panel open by default and swaps the metric-specific content", async () => {

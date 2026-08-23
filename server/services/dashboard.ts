@@ -8,6 +8,7 @@ import {
   listFundCrossAggregateCategoryRows,
   listFundMonthlyAggregateRows,
   listFundRemainingPlannedItemRows,
+  listOverviewCrossAggregateCategoryMonthlyAggregateRows,
   listOverviewCrossAggregateCategoryRows,
   listOverviewMonthlyAggregateRows,
   toFreeBalance,
@@ -19,8 +20,14 @@ import {
 } from "./financialAggregates";
 import { isDemoTutorialEligible } from "./demoMetadata";
 import { listAssignedClassifications } from "./classifications";
+import {
+  buildMonthlySummaryAmounts,
+  buildOverviewMonthlyStatus,
+  type MonthlyMovement,
+  type MonthlySummaryResponse,
+} from "../../src/contracts/monthlySummary";
 import { buildYearEndRiskSummary, defaultYearEndRiskThresholds } from "../../src/contracts/yearEndRisk";
-import { formatTokyoMonthKey, inferJapaneseFiscalYear, listFiscalYearMonths } from "../../src/lib/calendar";
+import { formatTokyoMonthKey, inferJapaneseFiscalYear } from "../../src/lib/calendar";
 
 type OverviewTotalsRow = {
   assets: number;
@@ -121,19 +128,23 @@ function resolveFiscalYear(availableFiscalYears: number[], options: OverviewSnap
 
 function listOverviewMonthlyStatus(db: Database.Database, totalAssets: number, fiscalYear: number) {
   const rows = listOverviewMonthlyAggregateRows(db, fiscalYear) as OverviewMonthlyAggregateRow[];
-  const rowsByMonth = new Map(rows.map((row) => [row.month, row]));
+  return buildOverviewMonthlyStatus(
+    totalAssets,
+    fiscalYear,
+    rows.map((row) => ({
+      month: row.month,
+      plannedAmount: row.committed,
+      actualAmount: row.actual,
+    })),
+  );
+}
 
-  let remainingBalance = totalAssets;
-
-  return listFiscalYearMonths(fiscalYear).map((month) => {
-    const row = rowsByMonth.get(month) ?? { month, committed: 0, actual: 0 };
-    remainingBalance -= row.committed + row.actual;
-
-    return {
-      ...row,
-      balance: remainingBalance,
-    };
-  });
+function toMonthlyMovements(rows: FundMonthlyAggregateRow[]): MonthlyMovement[] {
+  return rows.map((row) => ({
+    month: row.month,
+    plannedAmount: row.plannedAmount,
+    actualAmount: row.actualAmount,
+  }));
 }
 
 function getFundOverduePlannedAmountMap(db: Database.Database, fiscalYear: number, today: Date) {
@@ -207,6 +218,54 @@ export function getOverviewSnapshot(db: Database.Database, options: OverviewSnap
       eligibleDemoData: isDemoTutorialEligible(db),
     },
     funds,
+  };
+}
+
+export function getMonthlySummarySnapshot(
+  db: Database.Database,
+  { fiscalYear, month }: { fiscalYear: number; month: string },
+): MonthlySummaryResponse {
+  const fundAggregateRows = listFundAggregateRows(db, fiscalYear);
+  const totalBudgetAmount = fundAggregateRows.reduce((sum, fund) => sum + fund.awarded_amount, 0);
+  const overviewMovements = (listOverviewMonthlyAggregateRows(db, fiscalYear) as OverviewMonthlyAggregateRow[])
+    .map((row) => ({
+      month: row.month,
+      plannedAmount: row.committed,
+      actualAmount: row.actual,
+    }));
+  const categoryMovements = listOverviewCrossAggregateCategoryMonthlyAggregateRows(db, fiscalYear);
+  const categoryMovementsByKey = new Map<string, MonthlyMovement[]>();
+
+  for (const movement of categoryMovements) {
+    const rows = categoryMovementsByKey.get(movement.crossAggregateCategory) ?? [];
+    rows.push(movement);
+    categoryMovementsByKey.set(movement.crossAggregateCategory, rows);
+  }
+
+  return {
+    fiscalYear,
+    month,
+    calculationBasis: "current_data",
+    summary: buildMonthlySummaryAmounts(totalBudgetAmount, fiscalYear, month, overviewMovements),
+    funds: fundAggregateRows.map((fund) => ({
+      fundId: fund.id,
+      fundName: fund.name,
+      ...buildMonthlySummaryAmounts(
+        fund.awarded_amount,
+        fiscalYear,
+        month,
+        toMonthlyMovements(listFundMonthlyAggregateRows(db, fund.id) as FundMonthlyAggregateRow[]),
+      ),
+    })),
+    crossAggregateCategories: listOverviewCrossAggregateCategoryRows(db, fiscalYear).map((category) => ({
+      crossAggregateCategory: category.crossAggregateCategory,
+      ...buildMonthlySummaryAmounts(
+        category.budgetAmount ?? 0,
+        fiscalYear,
+        month,
+        categoryMovementsByKey.get(category.crossAggregateCategory) ?? [],
+      ),
+    })),
   };
 }
 

@@ -118,6 +118,7 @@ export function OverviewSummaryPanel({
   linkedActualAmount,
   metric,
   monthlyStatus,
+  onSelectMonth,
   pendingPlannedCount,
   palette,
   totals,
@@ -215,6 +216,7 @@ export function OverviewSummaryPanel({
             amountDisplayMode={amountDisplayMode}
             label={copy.label}
             metric={metric}
+            onSelectMonth={onSelectMonth}
             points={monthlySeries}
             targetValue={trendTargetValue}
           />

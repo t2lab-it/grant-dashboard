@@ -23,10 +23,12 @@ import {
   getStaticHeaderAlertsSnapshot,
   getStaticImportDetail,
   getStaticImportHistory,
+  getStaticMonthlySummarySnapshot,
   getStaticOverviewSnapshot,
   getStaticSearchSnapshot,
 } from "./staticDemoReadModels";
 import type { ApiErrorResponse } from "../contracts/apiError";
+import { isFiscalYearMonth, isMonthKey } from "../contracts/monthlySummary";
 import {
   actualEntryEditSchema,
   actualEntrySchema,
@@ -239,6 +241,40 @@ export async function handleStaticDemoRequest(path: string, init: StaticDemoRequ
   const { pathname, searchParams } = parseStaticDemoPath(path);
 
   try {
+    if (method === "GET" && pathname === "/api/overview/monthly-summary") {
+      const fiscalYear = parseFiscalYear(searchParams.get("year"));
+      const month = searchParams.get("month");
+      if (fiscalYear === undefined) {
+        return errorResponse(
+          {
+            code: "invalid_fiscal_year",
+            message: "年度を正の整数で指定してください。",
+          },
+          400,
+        );
+      }
+      if (month === null || !isMonthKey(month)) {
+        return errorResponse(
+          {
+            code: "invalid_month",
+            message: "月を YYYY-MM 形式で指定してください。",
+          },
+          400,
+        );
+      }
+      if (!isFiscalYearMonth(fiscalYear, month)) {
+        return errorResponse(
+          {
+            code: "month_outside_fiscal_year",
+            message: "指定した月は年度の範囲外です。",
+          },
+          400,
+        );
+      }
+
+      return jsonResponse(getStaticMonthlySummarySnapshot(fiscalYear, month));
+    }
+
     if (method === "GET" && pathname === "/api/overview") {
       return jsonResponse(getStaticOverviewSnapshot(parseFiscalYear(searchParams.get("year"))));
     }

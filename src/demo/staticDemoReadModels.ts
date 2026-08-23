@@ -2,12 +2,13 @@ import type { StaticDemoState } from "./staticDemoData";
 import { CROSS_AGGREGATE_CATEGORY_CODES } from "../contracts/crossAggregateCategory";
 import type { CrossAggregateCategory } from "../contracts/crossAggregateCategory";
 import type { FiscalYearComparisonResponse } from "../contracts/fiscalYearComparison";
+import { buildMonthlySummaryAmounts, type MonthlySummaryResponse } from "../contracts/monthlySummary";
 import type { HeaderAlertCategory, HeaderAlertDetail, HeaderAlertItem } from "../contracts/headerAlerts";
 import { toHeaderYearEndRisks } from "../contracts/headerAlerts";
 import { buildYearEndRiskSummary, defaultYearEndRiskThresholds } from "../contracts/yearEndRisk";
 import { formatTokyoMonthKey, inferJapaneseFiscalYear } from "../lib/calendar";
 import { readStaticDemoState } from "./staticDemoState";
-import { assignedStaticTags, auxiliaryLabelsForSearchResult, compareSearchResults, getCategoryCrossAggregateCategory, getFundActualAmount, getFundCommittedAmount, getOverviewMonthlyStatus, getPlannedStatusLabel, getRemainingPlannedAmount, getStaticFundOverduePlannedAmountMap, getStaticOverviewCrossAggregateCategories, listAvailableFiscalYears, listStaticClassifications, matchesSearchFilters, matchesSearchTab, requireCategoryForFund, requireFund, resolveFiscalYear, sortCategories, sortFunds, sumBudgetLines, toFreeBalance, type StaticSearchOptions, type StaticSearchResult } from "./staticDemoDomain";
+import { assignedStaticTags, auxiliaryLabelsForSearchResult, compareSearchResults, getCategoryCrossAggregateCategory, getFundActualAmount, getFundCommittedAmount, getOverviewMonthlyStatus, getPlannedStatusLabel, getRemainingPlannedAmount, getStaticFundOverduePlannedAmountMap, getStaticMonthlyMovements, getStaticOverviewCrossAggregateCategories, listAvailableFiscalYears, listStaticClassifications, matchesSearchFilters, matchesSearchTab, requireCategoryForFund, requireFund, resolveFiscalYear, sortCategories, sortFunds, sumBudgetLines, toFreeBalance, type StaticSearchOptions, type StaticSearchResult } from "./staticDemoDomain";
 const DEMO_IMPORTED_AT = "2026-04-23T00:00:00.000Z"; const DEMO_WORKBOOK_FILENAME = "demo-budget.xlsx"; const SEARCH_RESULT_LIMIT = 200; const HEADER_ALERT_ITEM_LIMIT = 3;
 export function getStaticFiscalYearComparisonSnapshot(): FiscalYearComparisonResponse {
   const state = readStaticDemoState();
@@ -123,6 +124,49 @@ export function getStaticOverviewSnapshot(requestedFiscalYear?: number) {
       eligibleDemoData: true,
     },
     funds,
+  };
+}
+
+export function getStaticMonthlySummarySnapshot(fiscalYear: number, month: string): MonthlySummaryResponse {
+  const state = readStaticDemoState();
+  const scopedFunds = sortFunds(state.funds.filter((fund) => fund.fiscal_year === fiscalYear));
+  const scopedFundIds = new Set(scopedFunds.map((fund) => fund.id));
+  const totalBudgetAmount = scopedFunds.reduce((sum, fund) => sum + fund.awarded_amount, 0);
+  const crossAggregateCategories = getStaticOverviewCrossAggregateCategories(state, fiscalYear);
+
+  return {
+    fiscalYear,
+    month,
+    calculationBasis: "current_data",
+    summary: buildMonthlySummaryAmounts(
+      totalBudgetAmount,
+      fiscalYear,
+      month,
+      getStaticMonthlyMovements(state, scopedFundIds),
+    ),
+    funds: scopedFunds.map((fund) => ({
+      fundId: fund.id,
+      fundName: fund.name,
+      ...buildMonthlySummaryAmounts(
+        fund.awarded_amount,
+        fiscalYear,
+        month,
+        getStaticMonthlyMovements(state, new Set([fund.id])),
+      ),
+    })),
+    crossAggregateCategories: crossAggregateCategories.map((category) => ({
+      crossAggregateCategory: category.crossAggregateCategory,
+      ...buildMonthlySummaryAmounts(
+        category.budgetAmount ?? 0,
+        fiscalYear,
+        month,
+        getStaticMonthlyMovements(
+          state,
+          scopedFundIds,
+          category.crossAggregateCategory,
+        ),
+      ),
+    })),
   };
 }
 

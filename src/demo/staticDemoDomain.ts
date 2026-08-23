@@ -1,6 +1,7 @@
 import type { StaticDemoBudgetLine, StaticDemoCategory, StaticDemoFund, StaticDemoPlannedItem, StaticDemoState } from "./staticDemoData";
 import { isCrossAggregateCategory, type CrossAggregateCategory } from "../contracts/crossAggregateCategory";
-import { formatTokyoMonthKey, inferJapaneseFiscalYear, listFiscalYearMonths } from "../lib/calendar";
+import { buildOverviewMonthlyStatus, type MonthlyMovement } from "../contracts/monthlySummary";
+import { formatTokyoMonthKey, inferJapaneseFiscalYear } from "../lib/calendar";
 export type FundInput = {
   name: string;
   fiscalYear: number;
@@ -419,43 +420,58 @@ export function getPlannedStatusLabel(status: StaticDemoPlannedItem["status"], r
 }
 
 export function getOverviewMonthlyStatus(state: StaticDemoState, totalAssets: number, fiscalYear: number) {
-  const byMonth = new Map<string, { month: string; committed: number; actual: number }>();
   const matchingFundIds = new Set(
     state.funds.filter((fund) => fund.fiscal_year === fiscalYear).map((fund) => fund.id),
   );
 
+  return buildOverviewMonthlyStatus(
+    totalAssets,
+    fiscalYear,
+    getStaticMonthlyMovements(state, matchingFundIds),
+  );
+}
+
+export function getStaticMonthlyMovements(
+  state: StaticDemoState,
+  matchingFundIds: Set<number>,
+  crossAggregateCategory?: CrossAggregateCategory,
+): MonthlyMovement[] {
+  const byMonth = new Map<string, MonthlyMovement>();
+  const matchesCategory = (categoryId: number) => {
+    if (crossAggregateCategory === undefined) {
+      return true;
+    }
+
+    const category = state.categories.find((row) => row.id === categoryId);
+    return category !== undefined && getCategoryCrossAggregateCategory(category) === crossAggregateCategory;
+  };
+
   for (const item of state.planned_items) {
-    if (item.status !== "planned" || !matchingFundIds.has(item.fund_id)) {
+    if (item.status !== "planned" || !matchingFundIds.has(item.fund_id) || !matchesCategory(item.category_id)) {
       continue;
     }
 
     const current = byMonth.get(item.scheduled_month) ?? {
       month: item.scheduled_month,
-      committed: 0,
-      actual: 0,
+      plannedAmount: 0,
+      actualAmount: 0,
     };
-    current.committed += getRemainingPlannedAmount(state, item);
+    current.plannedAmount += getRemainingPlannedAmount(state, item);
     byMonth.set(item.scheduled_month, current);
   }
 
   for (const entry of state.actual_entries) {
-    if (!matchingFundIds.has(entry.fund_id)) {
+    if (!matchingFundIds.has(entry.fund_id) || !matchesCategory(entry.category_id)) {
       continue;
     }
 
     const month = entry.actual_date.slice(0, 7);
-    const current = byMonth.get(month) ?? { month, committed: 0, actual: 0 };
-    current.actual += entry.amount;
+    const current = byMonth.get(month) ?? { month, plannedAmount: 0, actualAmount: 0 };
+    current.actualAmount += entry.amount;
     byMonth.set(month, current);
   }
 
-  let remainingBalance = totalAssets;
-  return listFiscalYearMonths(fiscalYear)
-    .map((month) => byMonth.get(month) ?? { month, committed: 0, actual: 0 })
-    .map((row) => {
-      remainingBalance -= row.committed + row.actual;
-      return { ...row, balance: remainingBalance };
-    });
+  return Array.from(byMonth.values());
 }
 
 export function getStaticFundOverduePlannedAmountMap(state: StaticDemoState, fiscalYear: number, today: Date) {

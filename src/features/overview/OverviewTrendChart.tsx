@@ -7,12 +7,14 @@ export function OverviewTrendChart({
   amountDisplayMode,
   label,
   metric,
+  onSelectMonth,
   points,
   targetValue,
 }: {
   amountDisplayMode: AmountDisplayMode;
   label: string;
   metric: OverviewSummaryMetricKey;
+  onSelectMonth: (month: string) => void;
   points: OverviewTrendPoint[];
   targetValue: number;
 }) {
@@ -82,11 +84,10 @@ export function OverviewTrendChart({
       <figure className="overview-context-trend-figure">
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          role="img"
+          role="group"
           aria-label={`${label}の月次推移グラフ`}
           aria-describedby={summaryId}
           className="overview-context-trend-chart"
-          focusable="false"
         >
           <rect
             x={padding.left}
@@ -123,15 +124,40 @@ export function OverviewTrendChart({
           {chartPoints.length > 1 ? (
             <polyline points={polylinePoints} fill="none" className="overview-context-trend-series-line" />
           ) : null}
-          {chartPoints.map((point, index) => (
-            <circle
-              key={point.month}
-              cx={point.x}
-              cy={point.y}
-              r={index === chartPoints.length - 1 ? 4.5 : 3.5}
-              className="overview-context-trend-point"
-            />
-          ))}
+          {chartPoints.map((point, index) => {
+            const [year, month] = point.month.split("-");
+            return (
+              <g
+                key={point.month}
+                role="button"
+                tabIndex={0}
+                aria-label={`${year}年${Number(month)}月の${label}データ点からサマリを開く`}
+                className="overview-context-trend-point-control"
+                onClick={() => onSelectMonth(point.month)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onSelectMonth(point.month);
+                  }
+                }}
+              >
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r="12"
+                  className="overview-context-trend-hit-target"
+                  aria-hidden="true"
+                />
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r={index === chartPoints.length - 1 ? 4.5 : 3.5}
+                  className="overview-context-trend-point"
+                  aria-hidden="true"
+                />
+              </g>
+            );
+          })}
           {todayMarker && todayLabels.length > 0 ? (
             <g aria-hidden="true">
               <rect
@@ -167,9 +193,20 @@ export function OverviewTrendChart({
         className="overview-context-trend-axis"
         style={{ gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))` }}
       >
-        {points.map((point) => (
-          <span key={point.month}>{formatMonthAxisLabel(point.month)}</span>
-        ))}
+        {points.map((point) => {
+          const [year, month] = point.month.split("-");
+          return (
+            <button
+              key={point.month}
+              type="button"
+              className="overview-context-trend-axis-button"
+              aria-label={`${year}年${Number(month)}月の月ラベルから${label}サマリを開く`}
+              onClick={() => onSelectMonth(point.month)}
+            >
+              {formatMonthAxisLabel(point.month)}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

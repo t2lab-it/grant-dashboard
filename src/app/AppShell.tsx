@@ -129,7 +129,7 @@ function AppShellInner() {
                   onChange={(event) => handleFiscalYearChange(Number(event.target.value))}
                   value={String(selectedFiscalYear)}
                 >
-                  {availableFiscalYears.map((fiscalYear) => (
+                  {[...availableFiscalYears].sort((a, b) => b - a).map((fiscalYear) => (
                     <option key={fiscalYear} value={String(fiscalYear)}>
                       {`${fiscalYear}年度`}
                     </option>

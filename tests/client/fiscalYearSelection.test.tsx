@@ -92,6 +92,17 @@ describe("global fiscal year selection", () => {
     });
   });
 
+  it("lists newer fiscal years before older fiscal years", async () => {
+    renderAppRoute("/");
+
+    const selector = await screen.findByRole("combobox", { name: "年度" });
+
+    expect(within(selector).getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "2027年度",
+      "2026年度",
+    ]);
+  });
+
   it("returns detail pages to overview when the user switches fiscal year manually", async () => {
     const user = userEvent.setup();
     mockApi({ fundFiscalYear: 2026 });

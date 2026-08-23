@@ -1,12 +1,62 @@
 import type { StaticDemoState } from "./staticDemoData";
+import { CROSS_AGGREGATE_CATEGORY_CODES } from "../contracts/crossAggregateCategory";
 import type { CrossAggregateCategory } from "../contracts/crossAggregateCategory";
+import type { FiscalYearComparisonResponse } from "../contracts/fiscalYearComparison";
 import type { HeaderAlertCategory, HeaderAlertDetail, HeaderAlertItem } from "../contracts/headerAlerts";
 import { toHeaderYearEndRisks } from "../contracts/headerAlerts";
 import { buildYearEndRiskSummary, defaultYearEndRiskThresholds } from "../contracts/yearEndRisk";
-import { formatTokyoMonthKey } from "../lib/calendar";
+import { formatTokyoMonthKey, inferJapaneseFiscalYear } from "../lib/calendar";
 import { readStaticDemoState } from "./staticDemoState";
 import { assignedStaticTags, auxiliaryLabelsForSearchResult, compareSearchResults, getCategoryCrossAggregateCategory, getFundActualAmount, getFundCommittedAmount, getOverviewMonthlyStatus, getPlannedStatusLabel, getRemainingPlannedAmount, getStaticFundOverduePlannedAmountMap, getStaticOverviewCrossAggregateCategories, listAvailableFiscalYears, listStaticClassifications, matchesSearchFilters, matchesSearchTab, requireCategoryForFund, requireFund, resolveFiscalYear, sortCategories, sortFunds, sumBudgetLines, toFreeBalance, type StaticSearchOptions, type StaticSearchResult } from "./staticDemoDomain";
 const DEMO_IMPORTED_AT = "2026-04-23T00:00:00.000Z"; const DEMO_WORKBOOK_FILENAME = "demo-budget.xlsx"; const SEARCH_RESULT_LIMIT = 200; const HEADER_ALERT_ITEM_LIMIT = 3;
+export function getStaticFiscalYearComparisonSnapshot(): FiscalYearComparisonResponse {
+  const state = readStaticDemoState();
+  const currentFiscalYear = inferJapaneseFiscalYear(new Date());
+
+  return {
+    currentFiscalYear,
+    fiscalYears: listAvailableFiscalYears(state).sort((a, b) => b - a).map((fiscalYear) => {
+      const funds = state.funds.filter((fund) => fund.fiscal_year === fiscalYear);
+      const totals = funds.reduce(
+        (sum, fund) => ({
+          assets: sum.assets + fund.awarded_amount,
+          committed: sum.committed + getFundCommittedAmount(state, fund.id),
+          actual: sum.actual + getFundActualAmount(state, fund.id),
+        }),
+        { assets: 0, committed: 0, actual: 0 },
+      );
+      const categories = new Map(
+        getStaticOverviewCrossAggregateCategories(state, fiscalYear).map((row) => [
+          row.crossAggregateCategory,
+          row,
+        ]),
+      );
+
+      return {
+        fiscalYear,
+        state: fiscalYear < currentFiscalYear
+          ? "past" as const
+          : fiscalYear > currentFiscalYear
+            ? "future" as const
+            : "current" as const,
+        totals,
+        crossAggregateCategories: CROSS_AGGREGATE_CATEGORY_CODES.map((crossAggregateCategory) => {
+          const category = categories.get(crossAggregateCategory);
+          return {
+            crossAggregateCategory,
+            plannedAmount: category?.plannedAmount ?? 0,
+            actualAmount: category?.actualAmount ?? 0,
+          };
+        }),
+        monthlyStatus: getOverviewMonthlyStatus(state, totals.assets, fiscalYear).map((row) => ({
+          month: row.month,
+          committed: row.committed,
+          actual: row.actual,
+        })),
+      };
+    }),
+  };
+}
 export function getStaticOverviewSnapshot(requestedFiscalYear?: number) {
   const state = readStaticDemoState();
   const availableFiscalYears = listAvailableFiscalYears(state);

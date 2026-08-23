@@ -7,12 +7,12 @@
   --fiscal-year-category-personnel: #7c3aed;
   --fiscal-year-category-other: #15803d;
   --fiscal-year-category-unset: #94a3b8;
-  --fiscal-year-line-0: #0f766e;
-  --fiscal-year-line-1: #2563eb;
-  --fiscal-year-line-2: #d97706;
-  --fiscal-year-line-3: #7c3aed;
-  --fiscal-year-line-4: #15803d;
-  --fiscal-year-line-5: #be123c;
+  --fiscal-year-line-0: #440154;
+  --fiscal-year-line-1: #414487;
+  --fiscal-year-line-2: #2a788e;
+  --fiscal-year-line-3: #22a884;
+  --fiscal-year-line-4: #7ad151;
+  --fiscal-year-line-5: #fde725;
   min-width: 0;
   max-width: 100%;
   overflow: hidden;
@@ -27,12 +27,12 @@
   --fiscal-year-category-personnel: #a78bfa;
   --fiscal-year-category-other: #4ade80;
   --fiscal-year-category-unset: #64748b;
-  --fiscal-year-line-0: #5eead4;
-  --fiscal-year-line-1: #60a5fa;
-  --fiscal-year-line-2: #fbbf24;
-  --fiscal-year-line-3: #c4b5fd;
-  --fiscal-year-line-4: #4ade80;
-  --fiscal-year-line-5: #fda4af;
+  --fiscal-year-line-0: #2a788e;
+  --fiscal-year-line-1: #25908c;
+  --fiscal-year-line-2: #22a884;
+  --fiscal-year-line-3: #44bf70;
+  --fiscal-year-line-4: #a5db36;
+  --fiscal-year-line-5: #fde725;
 }
 
 .app-fiscal-year-comparison-link {
@@ -302,7 +302,7 @@
   width: 24px;
   height: 0;
   display: inline-block;
-  border-top: 3px solid var(--fiscal-year-actual);
+  border-top: 4px solid var(--fiscal-year-actual);
 }
 
 .fiscal-year-line-sample-dashed {

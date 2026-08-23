@@ -9,6 +9,14 @@ const BOTTOM = 54;
 const PLOT_WIDTH = WIDTH - LEFT - RIGHT;
 const PLOT_HEIGHT = HEIGHT - TOP - BOTTOM;
 const MONTH_LABELS = ["4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月", "1月", "2月", "3月"];
+const VIRIDIS_COLOR_COUNT = 6;
+
+function colorForFiscalYear(index: number, yearCount: number) {
+  const oldestFirstIndex = yearCount - 1 - index;
+  const scale = Math.max(yearCount - 1, 1);
+  const colorIndex = Math.round((oldestFirstIndex / scale) * (VIRIDIS_COLOR_COUNT - 1));
+  return `var(--fiscal-year-line-${colorIndex})`;
+}
 
 function pathFor(points: FiscalYearPacePoint[], yMax: number) {
   return points.filter((point): point is FiscalYearPacePoint & { rate: number } => point.rate !== null).map((point, index) => {
@@ -46,16 +54,16 @@ export function FiscalYearExecutionPaceChart({ maxPaceRate, years }: {
           })}
           {MONTH_LABELS.map((label, index) => <text key={label} x={LEFT + (index / 11) * PLOT_WIDTH} y={HEIGHT - 22} textAnchor="middle" className={index % 2 === 1 ? "fiscal-year-pace-tick-optional" : undefined}>{label}</text>)}
           {years.map((year, index) => {
-            const color = `var(--fiscal-year-line-${index % 6})`;
+            const color = colorForFiscalYear(index, years.length);
             const actualPath = pathFor(year.pace.actualPoints, yMax);
             const projectedPath = pathFor(year.pace.projectedPoints, yMax);
             return <g key={year.fiscalYear}>
-              {actualPath ? <path d={actualPath} fill="none" stroke={color} strokeWidth={year.state === "current" ? 4 : 2.5} data-series={year.state === "current" ? "current-actual" : "past-actual"} /> : null}
-              {projectedPath ? <path d={projectedPath} fill="none" stroke={color} strokeWidth={year.state === "current" ? 4 : 2.5} strokeDasharray="8 6" data-series={year.state === "current" ? "current-projection" : "future-projection"} /> : null}
+              {actualPath ? <path d={actualPath} fill="none" stroke={color} strokeWidth={year.state === "current" ? 5 : 3.5} data-series={year.state === "current" ? "current-actual" : "past-actual"} /> : null}
+              {projectedPath ? <path d={projectedPath} fill="none" stroke={color} strokeWidth={year.state === "current" ? 5 : 3.5} strokeDasharray="8 6" data-series={year.state === "current" ? "current-projection" : "future-projection"} /> : null}
             </g>;
           })}
         </svg>
-        <figcaption><ul className="fiscal-year-pace-year-legend">{years.map((year, index) => <li key={year.fiscalYear}><i style={{ backgroundColor: `var(--fiscal-year-line-${index % 6})` }} aria-hidden="true" />{year.fiscalYear}年度{year.pace.hasBudget ? "" : " 予算総額なし"}</li>)}</ul></figcaption>
+        <figcaption><ul className="fiscal-year-pace-year-legend">{years.map((year, index) => <li key={year.fiscalYear}><i style={{ backgroundColor: colorForFiscalYear(index, years.length) }} aria-hidden="true" />{year.fiscalYear}年度{year.pace.hasBudget ? "" : " 予算総額なし"}</li>)}</ul></figcaption>
       </figure>
     </section>
   );

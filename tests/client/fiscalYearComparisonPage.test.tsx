@@ -167,7 +167,22 @@ describe("FiscalYearComparisonPage", () => {
     expect(within(paceChart).getByText("3月")).toBeInTheDocument();
     expect(screen.getByText("実績（実線）")).toBeInTheDocument();
     expect(screen.getByText("見込み・予定（破線）")).toBeInTheDocument();
-    expect(view.container.querySelector("path[data-series='current-actual']")).toBeInTheDocument();
+    expect(view.container.querySelector("path[data-series='current-actual']")).toHaveAttribute(
+      "stroke",
+      "var(--fiscal-year-line-5)",
+    );
+    expect(view.container.querySelector("path[data-series='current-actual']")).toHaveAttribute(
+      "stroke-width",
+      "5",
+    );
+    expect(view.container.querySelector("path[data-series='past-actual']")).toHaveAttribute(
+      "stroke",
+      "var(--fiscal-year-line-0)",
+    );
+    expect(view.container.querySelector("path[data-series='past-actual']")).toHaveAttribute(
+      "stroke-width",
+      "3.5",
+    );
     expect(view.container.querySelector("path[data-series='current-projection']")).toHaveAttribute(
       "stroke-dasharray",
     );

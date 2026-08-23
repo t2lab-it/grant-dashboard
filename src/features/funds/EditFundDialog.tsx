@@ -33,10 +33,11 @@ type EditFundDialogProps = {
     }>;
   };
   onClose: () => void;
+  onDeleted: () => Promise<void>;
   onSaved: () => Promise<void>;
 };
 
-export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: EditFundDialogProps) {
+export function EditFundDialog({ fundId, initialValues, onClose, onDeleted, onSaved }: EditFundDialogProps) {
   const [values, setValues] = useState({
     name: initialValues.name,
     fiscalYear: String(initialValues.fiscalYear),
@@ -61,6 +62,8 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
   );
   const [blockingMessage, setBlockingMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [deleteConfirmationName, setDeleteConfirmationName] = useState("");
   const { awardedAmount, categoryTotal } = buildFundBudgetSummary(
     categories.map((category) => category.amount),
     values.awardedAmount,
@@ -159,6 +162,30 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
     }
   }
 
+  async function handleDelete() {
+    if (deleteConfirmationName !== initialValues.name) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setBlockingMessage("");
+
+    try {
+      const result = await apiMutateJson(`/api/funds/${fundId}`, "DELETE");
+
+      if (!result.ok) {
+        setBlockingMessage(result.error.message);
+        return;
+      }
+
+      await onDeleted();
+    } catch {
+      setBlockingMessage("予算を削除できませんでした。");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <ModalShell
       ariaLabelledBy="edit-fund-dialog-title"
@@ -168,53 +195,108 @@ export function EditFundDialog({ fundId, initialValues, onClose, onSaved }: Edit
       <>
         <div className="budget-modal-header">
           <div>
-            <h3 id="edit-fund-dialog-title">予算を編集</h3>
+            <h3 id="edit-fund-dialog-title">{isConfirmingDelete ? "予算を削除" : "予算を編集"}</h3>
             <p className="budget-modal-description">{initialValues.name}</p>
           </div>
         </div>
 
-        <form
-          className="budget-entry-form"
-          data-testid="tour-target-fund-edit-form"
-          data-tour-id="fund-edit-form"
-          onSubmit={handleSubmit}
-        >
-          <FundFormFields
-            addCategoryRow={addCategoryRow}
-            categories={categories}
-            isSubmitting={isSubmitting}
-            projectTagOptions={classificationData.projectTags}
-            auxiliaryLabelOptions={classificationData.auxiliaryLabels}
-            selectedProjectTagIds={selectedProjectTagIds}
-            selectedAuxiliaryLabelIds={selectedAuxiliaryLabelIds}
-            onProjectTagIdsChange={setSelectedProjectTagIds}
-            onAuxiliaryLabelIdsChange={setSelectedAuxiliaryLabelIds}
-            removeCategoryRow={removeCategoryRow}
-            setValue={setValue}
-            updateCategory={updateCategory}
-            values={values}
-          />
-          <div className="budget-modal-actions">
-            <button
-              type="button"
-              className="budget-modal-secondary"
-              disabled={isSubmitting}
-              onClick={onClose}
-            >
-              閉じる
-            </button>
-            <button
-              className={`budget-entry-submit${categoryBudgetError ? " budget-entry-submit-disabled" : ""}`}
-              disabled={isSubmitting || Boolean(categoryBudgetError)}
-              type="submit"
-            >
-              {isSubmitting ? "保存中..." : "保存"}
-            </button>
+        {isConfirmingDelete ? (
+          <div className="budget-entry-form">
+            <p className="budget-modal-copy">
+              この予算を削除すると、費目、計画項目、精算項目もすべて削除されます。この操作は取り消せません。
+            </p>
+            <label className="budget-entry-field">
+              <span>確認のため予算名「{initialValues.name}」を入力してください。</span>
+              <input
+                aria-label="削除する予算名"
+                autoComplete="off"
+                disabled={isSubmitting}
+                onChange={(event) => setDeleteConfirmationName(event.target.value)}
+                value={deleteConfirmationName}
+              />
+            </label>
+            <div className="budget-modal-actions">
+              <button
+                type="button"
+                className="budget-modal-secondary"
+                disabled={isSubmitting}
+                onClick={() => {
+                  setBlockingMessage("");
+                  setDeleteConfirmationName("");
+                  setIsConfirmingDelete(false);
+                }}
+              >
+                編集に戻る
+              </button>
+              <button
+                type="button"
+                className="detail-action-button detail-action-button-danger"
+                disabled={isSubmitting || deleteConfirmationName !== initialValues.name}
+                onClick={handleDelete}
+              >
+                {isSubmitting ? "削除中..." : "予算を完全に削除"}
+              </button>
+            </div>
           </div>
-        </form>
+        ) : (
+          <form
+            className="budget-entry-form"
+            data-testid="tour-target-fund-edit-form"
+            data-tour-id="fund-edit-form"
+            onSubmit={handleSubmit}
+          >
+            <FundFormFields
+              addCategoryRow={addCategoryRow}
+              categories={categories}
+              isSubmitting={isSubmitting}
+              projectTagOptions={classificationData.projectTags}
+              auxiliaryLabelOptions={classificationData.auxiliaryLabels}
+              selectedProjectTagIds={selectedProjectTagIds}
+              selectedAuxiliaryLabelIds={selectedAuxiliaryLabelIds}
+              onProjectTagIdsChange={setSelectedProjectTagIds}
+              onAuxiliaryLabelIdsChange={setSelectedAuxiliaryLabelIds}
+              removeCategoryRow={removeCategoryRow}
+              setValue={setValue}
+              updateCategory={updateCategory}
+              values={values}
+            />
+            <div className="budget-modal-actions budget-modal-actions-between">
+              <button
+                type="button"
+                aria-label="予算を削除"
+                className="detail-action-button detail-action-button-danger"
+                disabled={isSubmitting}
+                onClick={() => {
+                  setBlockingMessage("");
+                  setDeleteConfirmationName("");
+                  setIsConfirmingDelete(true);
+                }}
+              >
+                削除
+              </button>
+              <div className="budget-modal-actions">
+                <button
+                  type="button"
+                  className="budget-modal-secondary"
+                  disabled={isSubmitting}
+                  onClick={onClose}
+                >
+                  閉じる
+                </button>
+                <button
+                  className={`budget-entry-submit${categoryBudgetError ? " budget-entry-submit-disabled" : ""}`}
+                  disabled={isSubmitting || Boolean(categoryBudgetError)}
+                  type="submit"
+                >
+                  {isSubmitting ? "保存中..." : "保存"}
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
 
         <FormFeedback
-          blockingMessage={categoryBudgetError || blockingMessage}
+          blockingMessage={isConfirmingDelete ? blockingMessage : categoryBudgetError || blockingMessage}
           infoMessage=""
           warnings={[]}
         />

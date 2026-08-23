@@ -47,6 +47,7 @@ function AppShellInner() {
   const createEntryModalTitle = getCreateEntryModalTitle(location.pathname);
   const isCreateEntryModal = createEntryModalTitle !== null && backgroundLocation !== null;
   const baseLocation = backgroundLocation ?? location;
+  const isFiscalYearComparisonPage = baseLocation.pathname === "/fiscal-years";
   const pageContent = useRoutes(shellRoutes, isCreateEntryModal ? backgroundLocation : location);
   const modalContent = useRoutes(shellRoutes, location);
   const requestedFiscalYear = getFiscalYearFromSearch(location.search);
@@ -115,7 +116,7 @@ function AppShellInner() {
 
   return (
     <WorkbookExportStatusProvider>
-      <div className="app-shell">
+      <div className={`app-shell${isFiscalYearComparisonPage ? " app-shell-fiscal-year-comparison" : ""}`}>
         <header className="app-header">
           <div className="app-header-primary-row">
             <div className="app-header-title-group">
@@ -136,6 +137,9 @@ function AppShellInner() {
                   ))}
                 </select>
               ) : null}
+              <NavLink className="app-fiscal-year-comparison-link" to={pathWithCurrentFiscalYear("/fiscal-years")}>
+                年度比較
+              </NavLink>
             </div>
             <nav aria-label="メインナビゲーション">
               <NavLink to={pathWithCurrentFiscalYear("/search")}>検索</NavLink>
@@ -168,7 +172,7 @@ function AppShellInner() {
               <a href="https://github.com/t2lab-it/grant-dashboard#readme">ローカル利用の手順を読む</a>
             </div>
           ) : null}
-          <HeaderAlerts selectedFiscalYear={selectedFiscalYear} />
+          {isFiscalYearComparisonPage ? null : <HeaderAlerts selectedFiscalYear={selectedFiscalYear} />}
         </header>
         <main className="app-main">{needsFiscalYearSync ? <div>読み込み中...</div> : pageContent}</main>
         <DemoTutorial

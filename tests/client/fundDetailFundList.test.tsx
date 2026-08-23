@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { fetchMock, renderAppRoute, setupFundDetailTests, setHoverCapablePointer } from "./fundDetailTestUtils";
+import { buildOverviewResponse } from "./overviewTestUtils";
 import { storedAppSettings } from "./testUtils";
 
 describe("Fund detail interactions", () => {
@@ -109,7 +110,7 @@ describe("Fund detail interactions", () => {
     await user.click(within(categoryPanel as HTMLElement).getByRole("button", { name: "予算を編集" }));
 
     const dialog = await screen.findByRole("dialog", { name: "予算を編集" });
-    expect(within(dialog).getByRole("button", { name: "削除" })).toHaveClass(
+    expect(within(dialog).getByRole("button", { name: "予算を削除" })).toHaveClass(
       "detail-action-button-danger",
     );
     expect(within(dialog).getByLabelText("予算名")).toHaveValue("基盤研究費");
@@ -180,6 +181,109 @@ describe("Fund detail interactions", () => {
     const categoryTable = fundPage.getByRole("table", { name: "費目別の状況" });
     expect(within(categoryTable).getByText("設備費")).toBeInTheDocument();
     expect(within(categoryTable).getByText("外注費")).toBeInTheDocument();
+  }, 10_000);
+
+  it("requires the exact fund name before deleting and returns to the same fiscal-year overview", async () => {
+    const user = userEvent.setup();
+    const fundDetail = {
+      fund: {
+        id: 1,
+        name: "基盤研究費",
+        fiscalYear: 2026,
+        awarded_amount: 5080000,
+        notes: "削除対象",
+      },
+      categories: [
+        {
+          id: 1,
+          categoryName: "物品費",
+          crossAggregateCategory: "equipment",
+          budgetAmount: 1000000,
+          plannedAmount: 500000,
+          actualAmount: 250000,
+        },
+      ],
+      crossAggregateCategories: [],
+      monthlyStatus: [],
+      actualEntries: [],
+      plannedItems: [],
+    };
+
+    fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/funds/1" && method === "GET") {
+        return {
+          ok: true,
+          json: async () => fundDetail,
+        };
+      }
+
+      if (url === "/api/funds/1" && method === "DELETE") {
+        return {
+          ok: true,
+          json: async () => ({ success: true }),
+        };
+      }
+
+      if (url.startsWith("/api/overview")) {
+        return {
+          ok: true,
+          json: async () => buildOverviewResponse({ funds: [] }),
+        };
+      }
+
+      if (url === "/api/classifications") {
+        return {
+          ok: true,
+          json: async () => ({ projectTags: [], auxiliaryLabels: [] }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch: ${method} ${url}`);
+    });
+
+    const view = renderAppRoute("/funds/1");
+    const fundPage = within(view.container);
+    await fundPage.findByRole("heading", { name: "費目別の状況" }, { timeout: 5_000 });
+    await waitFor(() => {
+      expect(view.router.state.location.search).toBe("?year=2026");
+    });
+    const categoryPanel = (
+      await fundPage.findByRole("heading", { name: "費目別の状況" }, { timeout: 5_000 })
+    ).closest(".detail-panel");
+    expect(categoryPanel).not.toBeNull();
+
+    await user.click(within(categoryPanel as HTMLElement).getByRole("button", { name: "予算を編集" }));
+    const editDialog = await screen.findByRole("dialog", { name: "予算を編集" });
+    await user.click(within(editDialog).getByRole("button", { name: "予算を削除" }));
+
+    const deleteDialog = await screen.findByRole("dialog", { name: "予算を削除" });
+    expect(
+      within(deleteDialog).getByText(
+        "この予算を削除すると、費目、計画項目、精算項目もすべて削除されます。この操作は取り消せません。",
+      ),
+    ).toBeInTheDocument();
+    const confirmationInput = within(deleteDialog).getByLabelText("削除する予算名");
+    const finalDeleteButton = within(deleteDialog).getByRole("button", { name: "予算を完全に削除" });
+    expect(finalDeleteButton).toBeDisabled();
+
+    await user.type(confirmationInput, "基盤研究費（確認）");
+    expect(finalDeleteButton).toBeDisabled();
+    await user.clear(confirmationInput);
+    await user.type(confirmationInput, "基盤研究費");
+    expect(finalDeleteButton).toBeEnabled();
+    await user.click(finalDeleteButton);
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/funds/1", { method: "DELETE" });
+    await waitFor(() => {
+      expect(view.router.state.location.pathname).toBe("/");
+      expect(view.router.state.location.search).toBe("?year=2026");
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "予算を削除" })).not.toBeInTheDocument();
+    });
   }, 10_000);
 
   it("applies the list-wide search text and category filters to actual, planned, and cancelled lists", async () => {

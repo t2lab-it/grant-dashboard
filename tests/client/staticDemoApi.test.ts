@@ -128,6 +128,51 @@ describe("static demo API", () => {
     ]);
   });
 
+  test("deletes only the selected fund and all of its browser-local related data", async () => {
+    const before = readClonedStaticDemoState();
+    const deletedPlannedItemIds = new Set(
+      before.planned_items.filter((item) => item.fund_id === 1).map((item) => item.id),
+    );
+    const deletedActualEntryIds = new Set(
+      before.actual_entries.filter((entry) => entry.fund_id === 1).map((entry) => entry.id),
+    );
+    const expectedAssignments = before.classification_assignments.filter(
+      (assignment) =>
+        !(
+          (assignment.target_type === "fund" && assignment.target_id === 1) ||
+          (assignment.target_type === "planned_item" && deletedPlannedItemIds.has(assignment.target_id)) ||
+          (assignment.target_type === "actual_entry" && deletedActualEntryIds.has(assignment.target_id))
+        ),
+    );
+
+    const response = await handleStaticDemoRequest("/api/funds/1", { method: "DELETE" });
+
+    expect(response.ok).toBe(true);
+    expect(await readJson(response)).toEqual({ success: true });
+    const after = readClonedStaticDemoState();
+    expect(after.funds).toEqual(before.funds.filter((fund) => fund.id !== 1));
+    expect(after.categories).toEqual(before.categories.filter((category) => category.fund_id !== 1));
+    expect(after.budget_lines).toEqual(before.budget_lines.filter((line) => line.fund_id !== 1));
+    expect(after.planned_items).toEqual(before.planned_items.filter((item) => item.fund_id !== 1));
+    expect(after.actual_entries).toEqual(before.actual_entries.filter((entry) => entry.fund_id !== 1));
+    expect(after.classification_assignments).toEqual(expectedAssignments);
+
+    const deletedDetail = await handleStaticDemoRequest("/api/funds/1", { method: "GET" });
+    expect(deletedDetail.status).toBe(404);
+    const remainingDetail = await handleStaticDemoRequest("/api/funds/2", { method: "GET" });
+    expect(remainingDetail.ok).toBe(true);
+  });
+
+  test("returns the shared not-found error when deleting a missing browser-local fund", async () => {
+    const response = await handleStaticDemoRequest("/api/funds/999", { method: "DELETE" });
+
+    expect(response.status).toBe(404);
+    expect(await readJson(response)).toEqual({
+      code: "fund_not_found",
+      message: "対象の予算が見つかりません。",
+    });
+  });
+
   test("includes a completed planned item in the seeded fund history", async () => {
     const response = await handleStaticDemoRequest("/api/funds/1", { method: "GET" });
     const fund = await readJson(response) as {
@@ -168,6 +213,7 @@ describe("static demo API", () => {
 
   test.each([
     ["PUT", "/api/funds/not-an-id", "invalid_fund_id", "予算IDを確認してください。"],
+    ["DELETE", "/api/funds/not-an-id", "invalid_fund_id", "予算IDを確認してください。"],
     ["DELETE", "/api/planned-items/not-an-id", "invalid_planned_item_id", "計画項目IDを確認してください。"],
     ["POST", "/api/planned-items/not-an-id/cancel", "invalid_planned_item_id", "計画項目IDを確認してください。"],
     ["POST", "/api/actual-entries/not-an-id/cancel", "invalid_actual_entry_id", "精算項目IDを確認してください。"],

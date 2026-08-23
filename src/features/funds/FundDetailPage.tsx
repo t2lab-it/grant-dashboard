@@ -112,6 +112,7 @@ export function FundDetailPage() {
   const {
     data,
     isError,
+    clearDeletedFund,
     refreshFundDetail,
     refreshFundDetailAndOverview,
   } = useFundDetailData(parsedFundId);
@@ -201,6 +202,9 @@ export function FundDetailPage() {
     return right.id - left.id;
   });
   const fundFiscalYear = typeof data.fund.fiscalYear === "number" ? data.fund.fiscalYear : null;
+  const overviewHref = fundFiscalYear === null
+    ? "/"
+    : `/${setFiscalYearInSearch("", fundFiscalYear)}`;
   const ledgerExportHref = fundFiscalYear === null
     ? `/api/exports/ledger.xlsx?fundId=${parsedFundId}`
     : `/api/exports/ledger.xlsx?year=${fundFiscalYear}&fundId=${parsedFundId}`;
@@ -475,6 +479,10 @@ export function FundDetailPage() {
           }}
           onClose={() => setIsEditingFund(false)}
           onSaved={refreshFundDetailAndOverview}
+          onDeleted={async () => {
+            await clearDeletedFund();
+            navigate(overviewHref, { replace: true });
+          }}
         />
       ) : null}
     </>

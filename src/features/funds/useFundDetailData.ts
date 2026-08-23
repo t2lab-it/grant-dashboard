@@ -23,8 +23,14 @@ export function useFundDetailData(fundId: number) {
     ]);
   }
 
+  async function clearDeletedFund() {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+    queryClient.removeQueries({ queryKey: queryKeys.fund.detail(fundId), exact: true });
+  }
+
   return {
     ...query,
+    clearDeletedFund,
     refreshFundDetail,
     refreshFundDetailAndOverview,
   };

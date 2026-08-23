@@ -30,6 +30,66 @@ describe("API fund routes", () => {
     });
   });
 
+  it("deletes a fund with its accounting rows and classification assignments", async () => {
+    app.db.exec(`
+      INSERT INTO funds (id, fund_code, name, fiscal_year, awarded_amount, notes, display_order)
+      VALUES (2, 'fund-2', '残す予算', 2026, 500000, '', 2);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order)
+      VALUES (2, 2, 'category-2', '旅費', 'travel', 1);
+      INSERT INTO budget_lines (id, fund_id, category_id, amount, notes)
+      VALUES (2, 2, 2, 500000, '');
+      INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount, notes)
+      VALUES (2, 2, 2, '2026-11-01', '2026-11', '残す計画', 12000, '');
+      INSERT INTO actual_entries (id, fund_id, category_id, planned_item_id, actual_date, description, amount, notes)
+      VALUES (2, 2, 2, 2, '2026-11-02', '残す精算', 12000, '');
+      INSERT INTO classification_tags (id, kind, name, color)
+      VALUES (10, 'auxiliary', '削除確認', '#64748b');
+      INSERT INTO classification_assignments (tag_id, target_type, target_id) VALUES
+        (10, 'fund', 1),
+        (10, 'planned_item', 1),
+        (10, 'actual_entry', 1),
+        (10, 'fund', 2),
+        (10, 'planned_item', 2),
+        (10, 'actual_entry', 2);
+    `);
+
+    const response = await app.inject({ method: "DELETE", url: "/api/funds/1" });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ success: true });
+    for (const table of ["funds", "categories", "budget_lines", "planned_items", "actual_entries"]) {
+      expect(
+        app.db.prepare(`SELECT COUNT(*) AS count FROM ${table} WHERE ${table === "funds" ? "id" : "fund_id"} = 1`).get(),
+      ).toEqual({ count: 0 });
+    }
+    expect(
+      app.db
+        .prepare(
+          `
+          SELECT target_type, target_id
+          FROM classification_assignments
+          WHERE tag_id = 10
+          ORDER BY target_type
+          `,
+        )
+        .all(),
+    ).toEqual([
+      { target_type: "actual_entry", target_id: 2 },
+      { target_type: "fund", target_id: 2 },
+      { target_type: "planned_item", target_id: 2 },
+    ]);
+  });
+
+  it("returns 404 when deleting a missing fund", async () => {
+    const response = await app.inject({ method: "DELETE", url: "/api/funds/999" });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toEqual({
+      code: "fund_not_found",
+      message: "対象の予算が見つかりません。",
+    });
+  });
+
   it("creates a fund with categories and budget lines in one request", async () => {
     const response = await app.inject({
       method: "POST",

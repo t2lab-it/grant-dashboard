@@ -11,11 +11,25 @@ function segmentWidths(year: FiscalYearComparisonViewYear) {
   return { actual, committed, balance: Math.max(100 - actual - committed, 0) };
 }
 
+function buildBudgetAxis(maxAssets: number) {
+  if (maxAssets <= 0) return { maximum: 0, ticks: [0] };
+
+  const roughStep = maxAssets / 4;
+  const magnitude = 10 ** Math.floor(Math.log10(roughStep));
+  const normalized = roughStep / magnitude;
+  const step = (normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10) * magnitude;
+  const ticks = Array.from({ length: Math.floor(maxAssets / step) + 1 }, (_, index) => index * step);
+
+  return { maximum: maxAssets, ticks: ticks.at(-1) === maxAssets ? ticks : [...ticks, maxAssets] };
+}
+
 export function FiscalYearBudgetBars({ amountDisplayMode, maxAssets, years }: {
   amountDisplayMode: AmountDisplayMode;
   maxAssets: number;
   years: FiscalYearComparisonViewYear[];
 }) {
+  const axis = buildBudgetAxis(maxAssets);
+
   return (
     <section className="fiscal-year-comparison-section" aria-labelledby="fiscal-year-budget-title">
       <div className="fiscal-year-comparison-section-heading">
@@ -26,20 +40,21 @@ export function FiscalYearBudgetBars({ amountDisplayMode, maxAssets, years }: {
           <span><i className="fiscal-year-swatch fiscal-year-swatch-balance" aria-hidden="true" />残高</span>
         </div>
       </div>
-      <div className="fiscal-year-budget-chart" role="group" aria-label={`年度別の予算総額。共通軸の最大値は${formatAmount(maxAssets, amountDisplayMode)}です。`}>
+      <div className="fiscal-year-budget-chart" role="group" aria-label={`年度別の予算総額。共通軸の最大値は${formatAmount(axis.maximum, amountDisplayMode)}です。`}>
         <div className="fiscal-year-budget-axis" aria-hidden="true">
-          <span>0円</span>
-          <span>{formatAmount(maxAssets / 2, amountDisplayMode)}</span>
-          <span>{formatAmount(maxAssets, amountDisplayMode)}</span>
+          {axis.ticks.map((tick) => <span key={tick}>{formatAmount(tick, amountDisplayMode)}</span>)}
         </div>
         {years.map((year) => {
           const widths = segmentWidths(year);
-          const outerWidth = maxAssets > 0 ? Math.max(0, Math.min((year.budget.assets / maxAssets) * 100, 100)) : 0;
+          const outerWidth = axis.maximum > 0 ? Math.max(0, Math.min((year.budget.assets / axis.maximum) * 100, 100)) : 0;
           const rate = year.budget.displayRate === null ? "算出不可" : `${Math.round(year.budget.displayRate)}%`;
           return (
             <Link key={year.fiscalYear} className="fiscal-year-budget-row" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
               <span className="fiscal-year-budget-year">{year.fiscalYear}年度</span>
               <span className="fiscal-year-budget-scale" aria-hidden="true">
+                <span className="fiscal-year-budget-tick-guides">
+                  {axis.ticks.map((tick, index) => <i key={tick} style={{ left: `${axis.ticks.length > 1 ? (index / (axis.ticks.length - 1)) * 100 : 0}%` }} />)}
+                </span>
                 <span className="fiscal-year-budget-bar" style={{ width: `${outerWidth}%` }}>
                   <span className="fiscal-year-budget-segment fiscal-year-budget-segment-actual" style={{ width: `${widths.actual}%` }} />
                   <span className="fiscal-year-budget-segment fiscal-year-budget-segment-planned" style={{ width: `${widths.committed}%` }} />

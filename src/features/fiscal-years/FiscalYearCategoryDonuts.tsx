@@ -9,8 +9,7 @@ function formatDonutCenterAmount(value: number) {
   return `${Math.round(value / 1000)}k円`;
 }
 
-function FiscalYearCategoryDonut({ amountDisplayMode, colors, year }: {
-  amountDisplayMode: AmountDisplayMode;
+function FiscalYearCategoryDonut({ colors, year }: {
   colors: CrossAggregateChartColors;
   year: FiscalYearComparisonViewYear;
 }) {
@@ -54,7 +53,7 @@ export function FiscalYearCategoryDonuts({ amountDisplayMode, colors, years }: {
         {years.map((year) => (
           <Link key={year.fiscalYear} className="fiscal-year-category-card" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
             <strong>{year.fiscalYear}年度</strong>
-            <span className="fiscal-year-category-donut"><FiscalYearCategoryDonut amountDisplayMode={amountDisplayMode} colors={colors} year={year} /></span>
+            <span className="fiscal-year-category-donut"><FiscalYearCategoryDonut colors={colors} year={year} /></span>
             <ul className="sr-only">
               {year.categories.map((category) => <li key={category.code}>{year.fiscalYear}年度 {category.label} {formatAmount(category.displayAmount, amountDisplayMode)} {category.percentage === null ? "割合なし" : `${category.percentage.toFixed(1)}%`}</li>)}
             </ul>

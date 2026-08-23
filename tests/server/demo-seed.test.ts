@@ -61,7 +61,7 @@ describe("seedDemoDatabase", () => {
       expect(importRow.workbook_path).toBe(summary.workbookPath);
       expect(JSON.parse(importRow.mapping_summary)).toMatchObject({
         mode: "initial",
-        counts: { funds: 6, warnings: 5 },
+        counts: { funds: 8, warnings: 5 },
       });
       expect(JSON.parse(importRow.reconciliation_json)).toMatchObject({
         workbook_path: summary.workbookPath,
@@ -70,7 +70,7 @@ describe("seedDemoDatabase", () => {
         mismatches: [],
         overall: {
           expected: {
-            assets: 7600000,
+            assets: 8600000,
           },
         },
       });

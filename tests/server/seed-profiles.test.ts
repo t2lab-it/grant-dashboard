@@ -161,7 +161,8 @@ describe("seed profiles", () => {
       [2026, "current"],
       [2025, "past"],
     ]);
-    expect(comparison.fiscalYears.map((year) => year.totals.assets)).toEqual([2200000, 4200000, 1200000]);
+    expect(comparison.fiscalYears.map((year) => year.totals.assets)).toEqual([2800000, 4200000, 1600000]);
+    expect([2025, 2026, 2027].map((fiscalYear) => getOverviewSnapshot(db, { fiscalYear }).funds.length)).toEqual([2, 4, 2]);
 
     db.close();
   });
@@ -194,8 +195,8 @@ describe("seed profiles", () => {
     expect(future.plannedItemHistory).toEqual(expect.arrayContaining([
       expect.objectContaining({ description: "翌年度に中止した共同研究会", status: "cancelled" }),
     ]));
-    expect(comparison.fiscalYears[0].totals).toEqual({ assets: 2200000, committed: 1150000, actual: 150000 });
-    expect(comparison.fiscalYears.at(-1)?.totals).toEqual({ assets: 1200000, committed: 0, actual: 910000 });
+    expect(comparison.fiscalYears[0].totals).toEqual({ assets: 2800000, committed: 1150000, actual: 150000 });
+    expect(comparison.fiscalYears.at(-1)?.totals).toEqual({ assets: 1600000, committed: 0, actual: 910000 });
 
     db.close();
   });

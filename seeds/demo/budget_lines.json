@@ -9,5 +9,7 @@
   { "id": 8, "fund_id": 5, "category_id": 8, "amount": 300000, "notes": "前年度の研究補助者謝金枠" },
   { "id": 9, "fund_id": 6, "category_id": 9, "amount": 1200000, "notes": "翌年度の国際会議・共同研究訪問の旅費枠" },
   { "id": 10, "fund_id": 6, "category_id": 10, "amount": 800000, "notes": "翌年度の共同研究基盤整備に備える枠" },
-  { "id": 11, "fund_id": 6, "category_id": 12, "amount": 160000, "notes": "試作に必要な予備部材の小額枠" }
+  { "id": 11, "fund_id": 6, "category_id": 12, "amount": 160000, "notes": "試作に必要な予備部材の小額枠" },
+  { "id": 12, "fund_id": 7, "category_id": 13, "amount": 400000, "notes": "前年度の未執行旅費枠" },
+  { "id": 13, "fund_id": 8, "category_id": 14, "amount": 600000, "notes": "翌年度の新規立ち上げ人件費枠" }
 ]

@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { getFiscalYearFromSearch, setFiscalYearInSearch } from "../../app/fiscalYear";
 import { FormFeedback } from "../forms/FormFeedback";
 import { apiGet, apiMutateJson } from "../../lib/api";
+import { invalidateFinancialSummaryQueries } from "../../lib/invalidateFinancialSummaryQueries";
 import { queryKeys } from "../../lib/queryKeys";
 import type { ClassificationResponse } from "../classifications/classificationTypes";
 import { normalizeClassifications } from "../classifications/classificationTypes";
@@ -118,7 +119,7 @@ export function NewFundForm() {
         };
       }
 
-      await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+      await invalidateFinancialSummaryQueries(queryClient);
       await queryClient.invalidateQueries({ queryKey: queryKeys.overview.detail(Number(values.fiscalYear)) });
       await navigate(`/funds/${result.data.fundId}${setFiscalYearInSearch("", Number(values.fiscalYear))}`);
 

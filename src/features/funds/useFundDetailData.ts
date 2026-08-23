@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiGet } from "../../lib/api";
+import { invalidateFinancialSummaryQueries } from "../../lib/invalidateFinancialSummaryQueries";
 import { queryKeys } from "../../lib/queryKeys";
 import type { FundDetailResponse } from "./fundDetailTypes";
 
@@ -19,12 +20,12 @@ export function useFundDetailData(fundId: number) {
   async function refreshFundDetailAndOverview() {
     await Promise.all([
       refreshFundDetail(),
-      queryClient.invalidateQueries({ queryKey: queryKeys.overview.all }),
+      invalidateFinancialSummaryQueries(queryClient),
     ]);
   }
 
   async function clearDeletedFund() {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
+    await invalidateFinancialSummaryQueries(queryClient);
     queryClient.removeQueries({ queryKey: queryKeys.fund.detail(fundId), exact: true });
   }
 

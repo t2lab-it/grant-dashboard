@@ -30,14 +30,32 @@ const metricValueKeys: Record<OverviewSummaryMetricKey, MonthlySummaryValueKey> 
   balance: "calculatedBalance",
 };
 
-const tableColumns: Array<{ key: MonthlySummaryValueKey; label: string }> = [
+type MonthlySummaryColumn = { key: MonthlySummaryValueKey; label: string };
+
+const coreTableColumns: MonthlySummaryColumn[] = [
   { key: "actualAmount", label: "当月実績" },
-  { key: "plannedAmount", label: "当月予定" },
-  { key: "actualCumulativeAmount", label: "累計執行済" },
-  { key: "spendAndPlannedCumulativeAmount", label: "執行＋予定累計" },
-  { key: "plannedRemainingAmount", label: "予定残高" },
-  { key: "calculatedBalance", label: "計算上の残高" },
+  { key: "plannedAmount", label: "当月の未実行予定" },
+  { key: "actualCumulativeAmount", label: "その月までの累計執行済" },
+  { key: "calculatedBalance", label: "その月終了時点の計算残高" },
 ];
+
+function getTableColumns(metric: OverviewSummaryMetricKey) {
+  const extraColumn: MonthlySummaryColumn | null = metric === "assets"
+    ? { key: "spendAndPlannedCumulativeAmount", label: "その月までの執行＋予定累計" }
+    : metric === "committed"
+      ? { key: "plannedRemainingAmount", label: "その月以降の未実行予定残高" }
+      : null;
+
+  if (extraColumn === null) {
+    return coreTableColumns;
+  }
+
+  return [
+    ...coreTableColumns.slice(0, -1),
+    extraColumn,
+    coreTableColumns[coreTableColumns.length - 1],
+  ];
+}
 
 export function formatMonthlySummaryHeading(month: string) {
   const [year, monthNumber] = month.split("-");
@@ -73,6 +91,7 @@ export function MonthlySummaryDialog({
   const highlightedKey = metricValueKeys[metric];
   const fiscalMonths = listFiscalYearMonths(fiscalYear);
   const monthIndex = fiscalMonths.indexOf(month);
+  const tableColumns = getTableColumns(metric);
   const previousMonth = monthIndex > 0 ? fiscalMonths[monthIndex - 1] : null;
   const nextMonth = monthIndex >= 0 && monthIndex < fiscalMonths.length - 1 ? fiscalMonths[monthIndex + 1] : null;
   const { data, isError, isFetching, refetch } = useQuery({
@@ -144,17 +163,21 @@ export function MonthlySummaryDialog({
                 <span>現在、その月に割り当てられている未実行予定額</span>
                 <strong>{formatAmount(data.summary.plannedAmount, amountDisplayMode)}</strong>
               </article>
-              <article {...highlightedAttributes(highlightedKey === "plannedRemainingAmount")}>
-                <span>{`${monthNumber}月時点の予定残高`}</span>
-                <strong>{formatAmount(data.summary.plannedRemainingAmount, amountDisplayMode)}</strong>
-              </article>
+              {metric === "committed" ? (
+                <article {...highlightedAttributes(true)}>
+                  <span>{`${monthNumber}月以降の未実行予定残高`}</span>
+                  <strong>{formatAmount(data.summary.plannedRemainingAmount, amountDisplayMode)}</strong>
+                </article>
+              ) : null}
+              {metric === "assets" ? (
+                <article {...highlightedAttributes(true)}>
+                  <span>{`${monthNumber}月までの執行＋予定累計`}</span>
+                  <strong>{formatAmount(data.summary.spendAndPlannedCumulativeAmount, amountDisplayMode)}</strong>
+                </article>
+              ) : null}
               <article {...highlightedAttributes(highlightedKey === "calculatedBalance")}>
                 <span>{`${monthNumber}月終了時点の計算上の残高`}</span>
                 <strong>{formatAmount(data.summary.calculatedBalance, amountDisplayMode)}</strong>
-              </article>
-              <article {...highlightedAttributes(highlightedKey === "spendAndPlannedCumulativeAmount")}>
-                <span>{`${monthNumber}月までの執行＋予定累計`}</span>
-                <strong>{formatAmount(data.summary.spendAndPlannedCumulativeAmount, amountDisplayMode)}</strong>
               </article>
             </div>
           </section>
@@ -166,6 +189,7 @@ export function MonthlySummaryDialog({
             nameHeading="予算名"
             rows={sortByMetric(data.funds, metric)}
             rowKey={(row) => String(row.fundId)}
+            columns={tableColumns}
             rowLabel={(row) => row.fundName}
           />
 
@@ -176,6 +200,7 @@ export function MonthlySummaryDialog({
             nameHeading="大費目"
             rows={sortByMetric(data.crossAggregateCategories, metric)}
             rowKey={(row) => row.crossAggregateCategory}
+            columns={tableColumns}
             rowLabel={(row) => CROSS_AGGREGATE_CATEGORY_LABELS[row.crossAggregateCategory]}
           />
 
@@ -200,6 +225,7 @@ function MonthlySummaryTable<TRow extends MonthlySummaryFund | MonthlySummaryCro
   nameHeading,
   rowKey,
   rowLabel,
+  columns,
   rows,
 }: {
   amountDisplayMode: AmountDisplayMode;
@@ -208,17 +234,21 @@ function MonthlySummaryTable<TRow extends MonthlySummaryFund | MonthlySummaryCro
   nameHeading: string;
   rowKey: (row: TRow) => string;
   rowLabel: (row: TRow) => string;
+  columns: MonthlySummaryColumn[];
   rows: TRow[];
 }) {
   return (
     <section className="monthly-summary-table-section">
       <h3>{caption}</h3>
       <div className="monthly-summary-table-scroll">
-        <table aria-label={caption}>
+        <table
+          aria-label={caption}
+          className={columns.length > coreTableColumns.length ? "monthly-summary-table-with-context" : undefined}
+        >
           <thead>
             <tr>
               <th scope="col">{nameHeading}</th>
-              {tableColumns.map((column) => (
+              {columns.map((column) => (
                 <th key={column.key} scope="col" {...highlightedAttributes(highlightedKey === column.key)}>
                   {column.label}
                 </th>
@@ -229,7 +259,7 @@ function MonthlySummaryTable<TRow extends MonthlySummaryFund | MonthlySummaryCro
             {rows.length > 0 ? rows.map((row) => (
               <tr key={rowKey(row)}>
                 <th scope="row">{rowLabel(row)}</th>
-                {tableColumns.map((column) => (
+                {columns.map((column) => (
                   <td key={column.key} {...highlightedAttributes(highlightedKey === column.key)}>
                     {formatAmount(row[column.key], amountDisplayMode)}
                   </td>
@@ -237,7 +267,7 @@ function MonthlySummaryTable<TRow extends MonthlySummaryFund | MonthlySummaryCro
               </tr>
             )) : (
               <tr>
-                <td colSpan={tableColumns.length + 1}>対象データはありません。</td>
+                <td colSpan={columns.length + 1}>対象データはありません。</td>
               </tr>
             )}
           </tbody>

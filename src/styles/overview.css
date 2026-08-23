@@ -990,9 +990,13 @@
 
 .monthly-summary-table-scroll table {
   width: 100%;
-  min-width: 860px;
+  min-width: 700px;
   border-collapse: separate;
   border-spacing: 0;
+}
+
+.monthly-summary-table-scroll table.monthly-summary-table-with-context {
+  min-width: 820px;
 }
 
 .monthly-summary-table-scroll th,

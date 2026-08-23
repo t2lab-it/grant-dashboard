@@ -399,7 +399,7 @@ describe("Overview display", () => {
     });
   });
 
-  it("restores a monthly summary from the URL and highlights and sorts the selected metric", async () => {
+  it("shows the four core values and only the source-specific extra value while sorting by the selected metric", async () => {
     const overview = buildOverviewResponse({
       totals: { assets: 300000, committed: 80000, actual: 60000, freeBalance: 160000 },
       monthlyStatus: [
@@ -486,16 +486,26 @@ describe("Overview display", () => {
     expect(
       dialogScope.getByText("現在、その月に割り当てられている未実行予定額").closest("article"),
     ).toHaveTextContent("30,000円");
-    expect(dialogScope.getByText("6月時点の予定残高").closest("article")).toHaveTextContent("140,000円");
     expect(dialogScope.getByText("6月終了時点の計算上の残高")).toBeInTheDocument();
+    expect(dialogScope.queryByText("6月以降の未実行予定残高")).not.toBeInTheDocument();
+    expect(dialogScope.queryByText("6月までの執行＋予定累計")).not.toBeInTheDocument();
+    const summaryRegion = dialogScope.getByRole("region", { name: "月別概要" });
+    expect(within(summaryRegion).getAllByRole("article")).toHaveLength(4);
     expect(dialogScope.getByText(/現在登録されている予定・実績を月別に配分した計算値/)).toBeInTheDocument();
 
     const fundTable = dialogScope.getByRole("table", { name: "予算別一覧" });
+    expect(within(fundTable).getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual([
+      "予算名",
+      "当月実績",
+      "当月の未実行予定",
+      "その月までの累計執行済",
+      "その月終了時点の計算残高",
+    ]);
     const fundRows = within(fundTable).getAllByRole("row");
     expect(fundRows[1]).toHaveTextContent("予算B");
     expect(fundRows[1]).toHaveTextContent("0円");
     expect(fundRows[2]).toHaveTextContent("予算A");
-    expect(within(fundTable).getByRole("columnheader", { name: "累計執行済" })).toHaveAttribute(
+    expect(within(fundTable).getByRole("columnheader", { name: "その月までの累計執行済" })).toHaveAttribute(
       "data-highlighted",
       "true",
     );
@@ -514,7 +524,10 @@ describe("Overview display", () => {
       const rows = within(fundTable).getAllByRole("row");
       expect(rows[1]).toHaveTextContent("予算A");
       expect(rows[2]).toHaveTextContent("予算B");
-      expect(within(fundTable).getByRole("columnheader", { name: "予定残高" })).toHaveAttribute(
+      expect(dialogScope.getByText("6月以降の未実行予定残高").closest("article")).toHaveTextContent("140,000円");
+      expect(dialogScope.queryByText("6月までの執行＋予定累計")).not.toBeInTheDocument();
+      expect(within(summaryRegion).getAllByRole("article")).toHaveLength(5);
+      expect(within(fundTable).getByRole("columnheader", { name: "その月以降の未実行予定残高" })).toHaveAttribute(
         "data-highlighted",
         "true",
       );
@@ -525,7 +538,10 @@ describe("Overview display", () => {
       const rows = within(fundTable).getAllByRole("row");
       expect(rows[1]).toHaveTextContent("予算A");
       expect(rows[2]).toHaveTextContent("予算B");
-      expect(within(fundTable).getByRole("columnheader", { name: "執行＋予定累計" })).toHaveAttribute(
+      expect(dialogScope.getByText("6月までの執行＋予定累計").closest("article")).toHaveTextContent("170,000円");
+      expect(dialogScope.queryByText("6月以降の未実行予定残高")).not.toBeInTheDocument();
+      expect(within(summaryRegion).getAllByRole("article")).toHaveLength(5);
+      expect(within(fundTable).getByRole("columnheader", { name: "その月までの執行＋予定累計" })).toHaveAttribute(
         "data-highlighted",
         "true",
       );
@@ -536,7 +552,10 @@ describe("Overview display", () => {
       const rows = within(fundTable).getAllByRole("row");
       expect(rows[1]).toHaveTextContent("予算B");
       expect(rows[2]).toHaveTextContent("予算A");
-      expect(within(fundTable).getByRole("columnheader", { name: "計算上の残高" })).toHaveAttribute(
+      expect(dialogScope.queryByText("6月以降の未実行予定残高")).not.toBeInTheDocument();
+      expect(dialogScope.queryByText("6月までの執行＋予定累計")).not.toBeInTheDocument();
+      expect(within(summaryRegion).getAllByRole("article")).toHaveLength(4);
+      expect(within(fundTable).getByRole("columnheader", { name: "その月終了時点の計算残高" })).toHaveAttribute(
         "data-highlighted",
         "true",
       );
@@ -738,7 +757,7 @@ describe("Overview display", () => {
     expect(new URLSearchParams(view.router.state.location.search).get("summaryMetric")).toBe("assets");
     expect(
       within(within(dialog).getByRole("table", { name: "予算別一覧" })).getByRole("columnheader", {
-        name: "執行＋予定累計",
+        name: "その月までの執行＋予定累計",
       }),
     ).toHaveAttribute("data-highlighted", "true");
 

@@ -72,6 +72,8 @@ describe("PlannedItemForm", () => {
     monthlyStatus: [],
     actualEntries: [],
     plannedItems: [],
+    plannedItemHistory: [],
+    crossAggregateCategories: [],
   };
 
   function mockPlannedItemFetches({
@@ -364,6 +366,8 @@ describe("ActualEntryForm", () => {
         notes: "",
       },
     ],
+    plannedItemHistory: [],
+    crossAggregateCategories: [],
   };
   const unlinkedActualEntryFundOptionsResponse = {
     funds: [{ id: 4, name: "ACT-X" }],
@@ -386,6 +390,8 @@ describe("ActualEntryForm", () => {
     monthlyStatus: [],
     actualEntries: [],
     plannedItems: [],
+    plannedItemHistory: [],
+    crossAggregateCategories: [],
   };
 
   function mockActualEntryFetches({

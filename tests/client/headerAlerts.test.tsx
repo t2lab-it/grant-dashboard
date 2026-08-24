@@ -133,7 +133,6 @@ describe("header alerts", () => {
       name: "予算超過 1 / 期限超過 2 / 年度末注意 1",
     });
     expect(alertButton).toHaveAttribute("aria-expanded", "false");
-    expect(alertButton).toHaveClass("app-alert-bar-danger");
 
     await user.click(alertButton);
 

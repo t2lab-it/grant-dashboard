@@ -3,6 +3,7 @@ import { CROSS_AGGREGATE_CATEGORY_CODES, CROSS_AGGREGATE_CATEGORY_LABELS } from 
 import type { AmountDisplayMode } from "../../lib/format";
 import { formatAmount } from "../../lib/format";
 import type { CrossAggregateChartColors } from "../overview/overviewChart";
+import { buildDonutSegments } from "./donutSegments";
 import type { FiscalYearComparisonViewYear } from "./fiscalYearComparisonModel";
 
 function formatDonutCenterAmount(value: number) {
@@ -16,18 +17,15 @@ function FiscalYearCategoryDonut({ colors, year }: {
   const chartRadius = 45;
   const chartStroke = 16;
   const chartCircumference = 2 * Math.PI * chartRadius;
-  const positiveCategories = year.categories.filter((category) => (category.percentage ?? 0) > 0);
-  let accumulatedPercentage = 0;
+  const segments = buildDonutSegments(year.categories, (category) => category.percentage);
   const centerLabel = year.categoryTotal <= 0 ? "データなし" : formatDonutCenterAmount(year.categoryTotal);
 
   return (
     <svg viewBox="0 0 128 128" role="img" aria-label={`${year.fiscalYear}年度の横断集計カテゴリ構成比グラフ`} focusable="false">
       <circle className="fiscal-year-category-track" cx="64" cy="64" r={chartRadius} fill="none" strokeWidth={chartStroke} />
-      {positiveCategories.map((category) => {
-        const percentage = category.percentage ?? 0;
+      {segments.map(({ item: category, offsetPercentage, percentage }) => {
         const dashLength = (percentage / 100) * chartCircumference;
-        const dashOffset = chartCircumference * (1 - accumulatedPercentage / 100);
-        accumulatedPercentage += percentage;
+        const dashOffset = chartCircumference * (1 - offsetPercentage / 100);
 
         return <circle key={category.code} cx="64" cy="64" r={chartRadius} fill="none" stroke={colors[category.code]} strokeDasharray={`${dashLength} ${chartCircumference - dashLength}`} strokeDashoffset={dashOffset} strokeLinecap="butt" strokeWidth={chartStroke} transform="rotate(-90 64 64)" />;
       })}

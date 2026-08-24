@@ -1,6 +1,5 @@
-import { OverviewPage } from "../../src/features/overview/OverviewPage";
+import { OverviewPage, type OverviewResponse } from "../../src/features/overview/OverviewPage";
 import { routes } from "../../src/app/routes";
-import type { OverviewChartFund } from "../../src/features/overview/overviewChart";
 import { fetchMock, renderWithAppRouter, renderWithMemoryRouter, resetClientTestState } from "./testUtils";
 import { vi } from "vitest";
 
@@ -82,7 +81,7 @@ type OverviewYearEndRisk = {
   }>;
 };
 
-type OverviewResponseFund = { id: number; projectTags?: OverviewProjectTag[] } & OverviewChartFund;
+type OverviewResponseFund = OverviewResponse["funds"][number];
 
 type OverviewCrossAggregateCategory = {
   crossAggregateCategory: "equipment" | "travel" | "personnel" | "other" | "unset";
@@ -124,7 +123,7 @@ export function buildOverviewFund(
 
 export function buildOverviewResponse(
   overrides: OverviewResponseOverrides = {},
-) {
+): OverviewResponse {
   return {
     availableFiscalYears: overrides.availableFiscalYears ?? [2026],
     selectedFiscalYear: overrides.selectedFiscalYear ?? 2026,
@@ -135,9 +134,9 @@ export function buildOverviewResponse(
       freeBalance: 3159706,
       ...overrides.totals,
     },
-    monthlyStatus: overrides.monthlyStatus,
-    linkedActualAmount: overrides.linkedActualAmount,
-    pendingPlannedCount: overrides.pendingPlannedCount,
+    monthlyStatus: overrides.monthlyStatus ?? [],
+    linkedActualAmount: overrides.linkedActualAmount ?? 0,
+    pendingPlannedCount: overrides.pendingPlannedCount ?? 0,
     yearEndRisk: overrides.yearEndRisk ?? {
       plannedBalance: overrides.totals?.freeBalance ?? 3159706,
       riskFundCount: 0,

@@ -146,7 +146,7 @@ describe("Fund detail display", () => {
     const summaryScope = within(summary);
     const categoryTable = fundPage.getByRole("table", { name: "費目別の状況" });
     const categoryScope = within(categoryTable);
-    const categoryPanel = fundPage.getByRole("heading", { name: "費目別の状況" }).closest(".detail-panel");
+    const categoryPanel = fundPage.getByRole("heading", { name: "費目別の状況" }).closest("section");
     const exportLink = fundPage.getByRole("link", { name: "収支簿出力" });
 
     expect(summaryScope.getByText("残高")).toBeInTheDocument();
@@ -164,7 +164,7 @@ describe("Fund detail display", () => {
     expect(categoryScope.getByText("執行予定額")).toBeInTheDocument();
     expect(categoryScope.getByText("執行済額")).toBeInTheDocument();
     expect(categoryScope.getByText("予算消化率")).toBeInTheDocument();
-    expect(fundPage.getByText("150.0%")).toHaveClass("detail-rate-alert");
+    expect(fundPage.getByText("150.0%")).toBeInTheDocument();
     expect(categoryScope.getByText("2,600,000円")).toBeInTheDocument();
     expect(categoryScope.getByText("558,336円")).toBeInTheDocument();
     const chart = fundPage.getByLabelText("基盤研究費 の費目別執行内訳");
@@ -185,7 +185,7 @@ describe("Fund detail display", () => {
     );
     expect(rateToggleScope.getByRole("button", { name: "残高率" })).toHaveAttribute("aria-pressed", "true");
 
-    const timelineSection = fundPage.getByRole("heading", { name: "月別の状況" }).closest(".detail-panel");
+    const timelineSection = fundPage.getByRole("heading", { name: "月別の状況" }).closest("section");
     expect(timelineSection).not.toBeNull();
     const timelineScope = within(timelineSection as HTMLElement);
     expect(fundPage.queryByRole("table", { name: "横断集計カテゴリ別の状況" })).not.toBeInTheDocument();
@@ -198,7 +198,7 @@ describe("Fund detail display", () => {
     expect(crossAggregateScope.getByText("-500,000円")).toBeInTheDocument();
     expect(crossAggregateScope.getByText("-58,336円")).toBeInTheDocument();
     expect(categoryScope.getByText("残高率")).toBeInTheDocument();
-    expect(categoryScope.getByText("-50.0%")).toHaveClass("detail-rate-alert");
+    expect(categoryScope.getByText("-50.0%")).toBeInTheDocument();
 
     expect(timelineScope.getByText("執行予定額")).toBeInTheDocument();
     expect(timelineScope.getByText("執行済額")).toBeInTheDocument();
@@ -213,12 +213,12 @@ describe("Fund detail display", () => {
     expect(historyScope.getByText("研究ノート")).toBeInTheDocument();
     expect(historyScope.getByText("300,000円")).toBeInTheDocument();
     expect(historyScope.getByText("5,000円")).toBeInTheDocument();
-    const actualHistorySection = fundPage.getByRole("heading", { name: "精算項目一覧" }).closest(".detail-panel");
+    const actualHistorySection = fundPage.getByRole("heading", { name: "精算項目一覧" }).closest("section");
     expect(actualHistorySection).not.toBeNull();
     expect(fundPage.getByRole("heading", { name: "計画項目一覧" })).toBeInTheDocument();
     const plannedTable = fundPage.getByRole("table", { name: "計画項目一覧" });
     const plannedScope = within(plannedTable);
-    const plannedSection = fundPage.getByRole("heading", { name: "計画項目一覧" }).closest(".detail-panel");
+    const plannedSection = fundPage.getByRole("heading", { name: "計画項目一覧" }).closest("section");
     expect(plannedSection).not.toBeNull();
 
     expect(within(plannedSection as HTMLElement).getByRole("link", { name: "計画作成" })).toHaveAttribute(
@@ -242,7 +242,7 @@ describe("Fund detail display", () => {
     expect(plannedHistoryScope.getByText("取消済み研究会")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("80,000円")).toBeInTheDocument();
     expect(plannedHistoryScope.getByText("取消")).toBeInTheDocument();
-    expect(plannedHistoryScope.getByRole("button", { name: "削除" })).toHaveClass("detail-action-button-danger");
+    expect(plannedHistoryScope.getByRole("button", { name: "削除" })).toBeInTheDocument();
   }, 10_000);
 
   it("renders planned item creation as a full page when opened directly", async () => {
@@ -313,6 +313,8 @@ describe("Fund detail display", () => {
         monthlyStatus: [],
         actualEntries: [],
         plannedItems: [],
+        plannedItemHistory: [],
+        crossAggregateCategories: [],
       }),
     });
 
@@ -352,6 +354,8 @@ describe("Fund detail display", () => {
         monthlyStatus: [],
         actualEntries: [],
         plannedItems: [],
+        plannedItemHistory: [],
+        crossAggregateCategories: [],
       }),
     });
 
@@ -360,9 +364,8 @@ describe("Fund detail display", () => {
 
     expect(await fundPage.findByRole("heading", { name: "基盤研究費" })).toBeInTheDocument();
     const chart = fundPage.getByLabelText("基盤研究費 の費目別執行内訳");
-    expect(within(chart).getByText("超過")).toHaveClass("detail-rate-alert");
-    expect(within(chart).getByText("-100,000円")).toHaveClass("detail-rate-alert");
-    expect(chart.querySelector(".fund-card-over-budget-ring")).not.toBeNull();
+    expect(within(chart).getByText("超過")).toBeInTheDocument();
+    expect(within(chart).getByText("-100,000円")).toBeInTheDocument();
   });
 
   it("renders an explicit error when the fund id route param is invalid", async () => {

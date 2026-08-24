@@ -46,6 +46,8 @@ function buildFundDetail(fiscalYear: number) {
     monthlyStatus: [],
     actualEntries: [],
     plannedItems: [],
+    plannedItemHistory: [],
+    crossAggregateCategories: [],
   };
 }
 

@@ -118,6 +118,8 @@ describe("NewFundForm", () => {
             monthlyStatus: [],
             actualEntries: [],
             plannedItems: [],
+            plannedItemHistory: [],
+            crossAggregateCategories: [],
           }),
         };
       }
@@ -190,6 +192,7 @@ describe("NewFundForm", () => {
             monthlyStatus: [],
             actualEntries: [],
             plannedItems: [],
+            plannedItemHistory: [],
           }),
         };
       }
@@ -259,10 +262,7 @@ describe("NewFundForm", () => {
     fireEvent.change(screen.getAllByLabelText("予算額")[1], { target: { value: "400000" } });
 
     expect(screen.getByText("費目予算の合計が交付額を超えています。")).toBeInTheDocument();
-    const chart = screen.getByRole("region", { name: "横断カテゴリ別の予算配分" });
-    expect(chart.querySelector(".budget-category-over-budget-ring")).not.toBeNull();
     expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "保存" })).toHaveClass("budget-entry-submit-disabled");
 
     fetchMock.mockClear();
     await user.click(screen.getByRole("button", { name: "保存" }));

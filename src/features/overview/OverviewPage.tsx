@@ -66,22 +66,22 @@ function createTintedHeroStyle(color: string): HeroCardStyle {
   };
 }
 
-type OverviewResponse = FiscalYearOverviewFields & {
+export type OverviewResponse = FiscalYearOverviewFields & {
   totals: {
     assets: number;
     committed: number;
     actual: number;
     freeBalance: number;
   };
-  monthlyStatus?: Array<{
+  monthlyStatus: Array<{
     month: string;
     committed: number;
     actual: number;
     balance: number;
   }>;
-  linkedActualAmount?: number;
-  pendingPlannedCount?: number;
-  crossAggregateCategories?: Array<{
+  linkedActualAmount: number;
+  pendingPlannedCount: number;
+  crossAggregateCategories: Array<{
     crossAggregateCategory: CrossAggregateCategory;
     budgetAmount: number | null;
     plannedAmount: number;
@@ -95,7 +95,10 @@ type OverviewResponse = FiscalYearOverviewFields & {
     warning_count: number;
     reconciliation_ok: boolean;
   } | null;
-  funds: Array<{ id: number; projectTags?: ClassificationTag[] } & OverviewChartFund>;
+  tutorial: {
+    eligibleDemoData: boolean;
+  };
+  funds: Array<{ id: number; projectTags: ClassificationTag[] } & OverviewChartFund>;
 };
 
 type ProjectTagFilterKey = "all" | "unassigned" | `tag-${number}`;
@@ -114,33 +117,31 @@ function isOverviewSummaryMetric(value: string | null): value is OverviewSummary
 
 function projectTagFilterMatchesFund(
   filterKey: ProjectTagFilterKey,
-  fund: { projectTags?: ClassificationTag[] },
+  fund: { projectTags: ClassificationTag[] },
 ) {
   if (filterKey === "all") {
     return true;
   }
 
-  const projectTags = fund.projectTags ?? [];
   if (filterKey === "unassigned") {
-    return projectTags.length === 0;
+    return fund.projectTags.length === 0;
   }
 
   const tagId = Number(filterKey.replace("tag-", ""));
-  return projectTags.some((tag) => tag.id === tagId);
+  return fund.projectTags.some((tag) => tag.id === tagId);
 }
 
-function getProjectTagFilterOptions(funds: Array<{ projectTags?: ClassificationTag[] }>) {
+function getProjectTagFilterOptions(funds: Array<{ projectTags: ClassificationTag[] }>) {
   const tags = new Map<number, ClassificationTag>();
   let hasUnassigned = false;
 
   for (const fund of funds) {
-    const projectTags = fund.projectTags ?? [];
-    if (projectTags.length === 0) {
+    if (fund.projectTags.length === 0) {
       hasUnassigned = true;
       continue;
     }
 
-    for (const tag of projectTags) {
+    for (const tag of fund.projectTags) {
       tags.set(tag.id, tag);
     }
   }
@@ -201,7 +202,7 @@ export function OverviewPage() {
     : "all";
   const filteredFunds = data.funds.filter((fund) => projectTagFilterMatchesFund(activeProjectTagFilter, fund));
   const palette = getOverviewChartPalette(themePreset, customChartPresets);
-  const monthlyStatus = data.monthlyStatus ?? [];
+  const monthlyStatus = data.monthlyStatus;
   const assetsHeroStyle: HeroCardStyle = {
     "--hero-card-accent-start": "rgba(255, 255, 255, 0.96)",
     "--hero-card-accent-end": "rgba(148, 163, 184, 0.16)",
@@ -389,9 +390,9 @@ export function OverviewPage() {
         funds={data.funds}
         monthlyStatus={monthlyStatus}
         onSelectMonth={openMonthlySummary}
-        linkedActualAmount={data.linkedActualAmount ?? 0}
-        pendingPlannedCount={data.pendingPlannedCount ?? 0}
-        crossAggregateCategories={data.crossAggregateCategories ?? []}
+        linkedActualAmount={data.linkedActualAmount}
+        pendingPlannedCount={data.pendingPlannedCount}
+        crossAggregateCategories={data.crossAggregateCategories}
         palette={palette}
         balanceRateThresholds={balanceRateThresholds}
         amountDisplayMode={amountDisplayMode}
@@ -497,9 +498,9 @@ export function OverviewPage() {
               data-tour-id={fund.id === filteredFunds[0]?.id ? "overview-fund-card" : undefined}
             >
               <h2>{fund.name}</h2>
-              {(fund.projectTags ?? []).length > 0 ? (
+              {fund.projectTags.length > 0 ? (
                 <div className="overview-fund-project-tags" aria-label={`${fund.name} の研究プロジェクトタグ`}>
-                  {(fund.projectTags ?? []).map((tag) => (
+                  {fund.projectTags.map((tag) => (
                     <span key={tag.id} className="classification-result-label">
                       <span
                         className="classification-color-swatch"

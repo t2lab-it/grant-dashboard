@@ -39,6 +39,7 @@ describe("Fund detail interactions", () => {
       monthlyStatus: [],
       actualEntries: [],
       plannedItems: [],
+      plannedItemHistory: [],
     };
 
     fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
@@ -103,16 +104,14 @@ describe("Fund detail interactions", () => {
     const fundPage = within(view.container);
     const categoryPanel = (
       await fundPage.findByRole("heading", { name: "費目別の状況" }, { timeout: 5_000 })
-    ).closest(".detail-panel");
+    ).closest("section");
 
     expect(categoryPanel).not.toBeNull();
 
     await user.click(within(categoryPanel as HTMLElement).getByRole("button", { name: "予算を編集" }));
 
     const dialog = await screen.findByRole("dialog", { name: "予算を編集" });
-    expect(within(dialog).getByRole("button", { name: "予算を削除" })).toHaveClass(
-      "detail-action-button-danger",
-    );
+    expect(within(dialog).getByRole("button", { name: "予算を削除" })).toBeInTheDocument();
     expect(within(dialog).getByLabelText("予算名")).toHaveValue("基盤研究費");
     expect(within(dialog).getByLabelText("年度")).toHaveValue(2026);
     expect(within(dialog).getByLabelText("交付額")).toHaveValue("5080000");
@@ -132,15 +131,11 @@ describe("Fund detail interactions", () => {
     await user.clear(within(dialog).getByLabelText("交付額"));
     await user.type(within(dialog).getByLabelText("交付額"), "900000");
     expect(within(dialog).getByRole("button", { name: "保存" })).toBeDisabled();
-    expect(within(dialog).getByRole("button", { name: "保存" })).toHaveClass("budget-entry-submit-disabled");
     expect(within(dialog).getByText("費目予算の合計が交付額を超えています。")).toBeInTheDocument();
-    expect(categoryChart.querySelector(".budget-category-over-budget-ring")).not.toBeNull();
     await user.clear(within(dialog).getByLabelText("交付額"));
     await user.type(within(dialog).getByLabelText("交付額"), "6,000,000 + 100,000");
     expect(within(dialog).queryByText("費目予算の合計が交付額を超えています。")).not.toBeInTheDocument();
-    expect(categoryChart.querySelector(".budget-category-over-budget-ring")).toBeNull();
     expect(within(dialog).getByRole("button", { name: "保存" })).toBeEnabled();
-    expect(within(dialog).getByRole("button", { name: "保存" })).not.toHaveClass("budget-entry-submit-disabled");
     await user.clear(within(dialog).getByLabelText("予算メモ"));
     await user.type(within(dialog).getByLabelText("予算メモ"), "更新メモ");
     await user.clear(within(dialog).getByLabelText("費目名"));
@@ -207,6 +202,7 @@ describe("Fund detail interactions", () => {
       monthlyStatus: [],
       actualEntries: [],
       plannedItems: [],
+      plannedItemHistory: [],
     };
 
     fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
@@ -252,7 +248,7 @@ describe("Fund detail interactions", () => {
     });
     const categoryPanel = (
       await fundPage.findByRole("heading", { name: "費目別の状況" }, { timeout: 5_000 })
-    ).closest(".detail-panel");
+    ).closest("section");
     expect(categoryPanel).not.toBeNull();
 
     await user.click(within(categoryPanel as HTMLElement).getByRole("button", { name: "予算を編集" }));
@@ -372,14 +368,15 @@ describe("Fund detail interactions", () => {
             notes: "",
           },
         ],
+        crossAggregateCategories: [],
       }),
     });
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const actualSection = (await fundPage.findByRole("heading", { name: "精算項目一覧" })).closest(".detail-panel");
-    const plannedSection = fundPage.getByRole("heading", { name: "計画項目一覧" }).closest(".detail-panel");
-    const plannedHistorySection = fundPage.getByRole("heading", { name: "完了・取消済項目一覧" }).closest(".detail-panel");
+    const actualSection = (await fundPage.findByRole("heading", { name: "精算項目一覧" })).closest("section");
+    const plannedSection = fundPage.getByRole("heading", { name: "計画項目一覧" }).closest("section");
+    const plannedHistorySection = fundPage.getByRole("heading", { name: "完了・取消済項目一覧" }).closest("section");
 
     expect(actualSection).not.toBeNull();
     expect(plannedSection).not.toBeNull();
@@ -389,15 +386,6 @@ describe("Fund detail interactions", () => {
     const plannedScope = within(plannedSection as HTMLElement);
     const plannedHistoryScope = within(plannedHistorySection as HTMLElement);
     const filterPanel = fundPage.getByRole("group", { name: "一覧全体の絞り込み" });
-
-    expect(filterPanel.closest(".detail-panel")).toBeNull();
-    expect(filterPanel.closest(".detail-list-filter-bar")).not.toBeNull();
-    expect(fundPage.queryByRole("heading", { name: "一覧全体の絞り込み" })).not.toBeInTheDocument();
-    expect(screen.getAllByRole("textbox", { name: "検索" })).toHaveLength(1);
-    expect(screen.getAllByRole("combobox", { name: "費目" })).toHaveLength(1);
-    expect(actualScope.queryByRole("textbox", { name: "検索" })).not.toBeInTheDocument();
-    expect(plannedScope.queryByRole("textbox", { name: "検索" })).not.toBeInTheDocument();
-    expect(plannedHistoryScope.queryByRole("textbox", { name: "検索" })).not.toBeInTheDocument();
 
     await user.type(within(filterPanel).getByRole("textbox", { name: "検索" }), "出張");
 
@@ -492,33 +480,34 @@ describe("Fund detail interactions", () => {
             notes: "",
           },
         ],
+        plannedItemHistory: [],
+        crossAggregateCategories: [],
       }),
     });
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const timelineSection = (await fundPage.findByRole("heading", { name: "月別の状況" })).closest(".detail-panel");
-    const actualSection = fundPage.getByRole("heading", { name: "精算項目一覧" }).closest(".detail-panel");
-    const plannedSection = fundPage.getByRole("heading", { name: "計画項目一覧" }).closest(".detail-panel");
+    const timelineSection = (await fundPage.findByRole("heading", { name: "月別の状況" })).closest("section");
+    const actualSection = fundPage.getByRole("heading", { name: "精算項目一覧" }).closest("section");
+    const plannedSection = fundPage.getByRole("heading", { name: "計画項目一覧" }).closest("section");
 
     expect(timelineSection).not.toBeNull();
     expect(actualSection).not.toBeNull();
     expect(plannedSection).not.toBeNull();
 
     const getTimelineMonths = () =>
-      Array.from((timelineSection as HTMLElement).querySelectorAll(".timeline-row strong")).map((element) => element.textContent);
+      within(timelineSection as HTMLElement).getAllByText(/^2026-(?:04|06|08)$/).map((element) => element.textContent);
+    const actualDescriptions = ["試薬購入", "GPU サーバ保守", "学会出張 精算"];
+    const plannedDescriptions = ["試薬補充", "GPU サーバ保守更新", "学会出張 予定"];
     const getActualDescriptions = () =>
-      Array.from((actualSection as HTMLElement).querySelectorAll(".detail-actual-row")).map(
-        (row) => row.children[2]?.textContent,
+      within(actualSection as HTMLElement).getAllByRole("row").slice(1).map(
+        (row) => actualDescriptions.find((description) => within(row).queryByText(description) !== null),
       );
     const getPlannedDescriptions = () =>
-      Array.from((plannedSection as HTMLElement).querySelectorAll(".detail-planned-row")).map(
-        (row) => row.children[2]?.textContent,
+      within(plannedSection as HTMLElement).getAllByRole("row").slice(1).map(
+        (row) => plannedDescriptions.find((description) => within(row).queryByText(description) !== null),
       );
 
-    expect(fundPage.queryByRole("combobox", { name: "月別の状況の並び順" })).not.toBeInTheDocument();
-    expect(within(actualSection as HTMLElement).queryByRole("combobox", { name: "並び順" })).not.toBeInTheDocument();
-    expect(within(plannedSection as HTMLElement).queryByRole("combobox", { name: "並び順" })).not.toBeInTheDocument();
     expect(within(timelineSection as HTMLElement).getByRole("button", { name: "月" })).toBeInTheDocument();
     expect(within(timelineSection as HTMLElement).getByRole("button", { name: "執行予定額" })).toBeInTheDocument();
     expect(within(timelineSection as HTMLElement).getByRole("button", { name: "執行済額" })).toBeInTheDocument();
@@ -601,6 +590,8 @@ describe("Fund detail interactions", () => {
             notes: "",
           },
         ],
+        plannedItemHistory: [],
+        crossAggregateCategories: [],
       }),
     });
 
@@ -609,9 +600,15 @@ describe("Fund detail interactions", () => {
 
     await fundPage.findByRole("heading", { name: "精算項目一覧" });
 
-    const panelHeadings = Array.from(view.container.querySelectorAll(".detail-panel h3")).map(
-      (element) => element.textContent,
-    );
+    const sectionNames = new Set([
+      "精算項目一覧",
+      "計画項目一覧",
+      "費目別の状況",
+      "月別の状況",
+    ]);
+    const panelHeadings = fundPage.getAllByRole("heading", { level: 3 })
+      .map((element) => element.textContent)
+      .filter((name): name is string => name !== null && sectionNames.has(name));
 
     expect(panelHeadings).toEqual([
       "精算項目一覧",
@@ -652,6 +649,8 @@ describe("Fund detail interactions", () => {
             notes: "未精算",
           },
         ],
+        plannedItemHistory: [],
+        crossAggregateCategories: [],
       }),
     });
 

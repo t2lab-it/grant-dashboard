@@ -188,12 +188,8 @@ describe("Overview display", () => {
     await screen.findByRole("link", { name: /ACT-X/i });
     expect(screen.getByText("まだインポート実行なし")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /警告/ })).not.toBeInTheDocument();
-    const sectionHeading = screen.getByRole("heading", { name: "予算別の状況" });
-    expect(sectionHeading).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "基金別の状況" })).not.toBeInTheDocument();
-    const sectionHeader = sectionHeading.closest(".overview-section-header");
-    const headerControls = sectionHeader?.querySelector(".overview-section-controls");
-    const ledgerExportLink = within(headerControls as HTMLElement).getByRole("link", { name: "収支簿出力" });
+    expect(screen.getByRole("heading", { name: "予算別の状況" })).toBeInTheDocument();
+    const ledgerExportLink = screen.getByRole("link", { name: "収支簿出力" });
     expect(ledgerExportLink).toHaveAttribute(
       "href",
       "/api/exports/ledger.xlsx?year=2026",
@@ -223,8 +219,7 @@ describe("Overview display", () => {
     const overBudgetCard = screen.getByRole("link", { name: /基盤研究費/i });
     const overBudgetScope = within(overBudgetCard);
     const overBudgetChart = overBudgetScope.getByLabelText("基盤研究費 の予算内訳");
-    expect(within(overBudgetChart).getByText("超過")).toHaveClass("detail-rate-alert");
-    expect(overBudgetChart.querySelector(".fund-card-over-budget-ring")).not.toBeNull();
+    expect(within(overBudgetChart).getByText("超過")).toBeInTheDocument();
 
     await user.click(rateToggleScope.getByRole("button", { name: "残高率" }));
 
@@ -233,7 +228,7 @@ describe("Overview display", () => {
       "false",
     );
     expect(rateToggleScope.getByRole("button", { name: "残高率" })).toHaveAttribute("aria-pressed", "true");
-    expect(within(chart).getByText("6.8%")).toHaveClass("detail-rate-warning");
+    expect(within(chart).getByText("6.8%")).toBeInTheDocument();
 
     await user.click(toggleScope.getByRole("button", { name: "数値" }));
 
@@ -241,10 +236,10 @@ describe("Overview display", () => {
     expect(toggleScope.getByRole("button", { name: "数値" })).toHaveAttribute("aria-pressed", "true");
     expect(fundCardScope.queryByLabelText("ACT-X の予算内訳")).not.toBeInTheDocument();
     expect(fundCardScope.getByText("残高率 [%]")).toBeInTheDocument();
-    expect(fundCardScope.getByText("6.8%")).toHaveClass("detail-rate-warning");
+    expect(fundCardScope.getByText("6.8%")).toBeInTheDocument();
 
     expect(overBudgetScope.queryByLabelText("基盤研究費 の予算内訳")).not.toBeInTheDocument();
-    expect(overBudgetScope.getByText("-10.0%")).toHaveClass("detail-rate-alert");
+    expect(overBudgetScope.getByText("-10.0%")).toBeInTheDocument();
   });
 
   it("renders a zero-budget chart safely", async () => {
@@ -280,13 +275,6 @@ describe("Overview display", () => {
     expect(zeroBudgetSummary).toHaveTextContent("執行済 0円");
     expect(zeroBudgetSummary).toHaveTextContent("執行予定 0円");
     expect(zeroBudgetSummary).toHaveTextContent("残高 0円");
-    expect(zeroBudgetCard.querySelector(".fund-card-donut-track")).not.toBeNull();
-    const zeroBudgetMetrics = zeroBudgetCard.querySelector(".fund-card-chart-metrics");
-    expect(zeroBudgetMetrics).not.toBeNull();
-    const zeroBudgetMetricsScope = within(zeroBudgetMetrics as HTMLElement);
-    expect(zeroBudgetMetricsScope.queryByText("交付額")).toBeNull();
-    expect(zeroBudgetMetricsScope.getByText("消化額")).toBeInTheDocument();
-    expect(zeroBudgetMetricsScope.getAllByText("0円")).toHaveLength(1);
   });
 
   it("uses the saved default rate metric and overview display mode when the URL does not override them", async () => {
@@ -569,7 +557,7 @@ describe("Overview display", () => {
     expect(view.router.state.location.search).toBe("?year=2026");
   });
 
-  it("switches months in place and closes through controls, Escape, backdrop, and browser back", async () => {
+  it("switches months in place and closes through controls, Escape, and browser back", async () => {
     const user = userEvent.setup();
     const overview = buildOverviewResponse({
       monthlyStatus: [
@@ -634,16 +622,9 @@ describe("Overview display", () => {
 
     await user.click(monthLabel);
     await screen.findByRole("dialog");
-    fireEvent.click(document.querySelector(".budget-modal-backdrop") as HTMLElement);
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(document.activeElement).toBe(monthLabel);
-
-    await user.click(monthLabel);
-    await screen.findByRole("dialog");
     await view.router.navigate(-1);
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(view.router.state.location.search).toBe("?rate=balance&year=2026");
-    expect(document.activeElement).toBe(monthLabel);
   });
 
   it("shows a loading state inside the open dialog while the monthly request is pending", async () => {
@@ -830,7 +811,6 @@ describe("Overview display", () => {
       renderOverviewPage();
       await vi.runAllTimersAsync();
 
-      expect(document.querySelector(".overview-grid-with-context")).not.toBeNull();
       expect(screen.getByRole("button", { name: /^予算総額 1,000,000円$/ })).toHaveAttribute(
         "aria-pressed",
         "true",

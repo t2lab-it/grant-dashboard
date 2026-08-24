@@ -3,14 +3,14 @@ import type { CrossAggregateCategory } from "../../contracts/crossAggregateCateg
 export type FundDetailAmountDisplayMode = "grouped-yen" | "plain-yen" | "thousand-yen";
 
 export type FundDetailResponse = {
-  fund?: {
+  fund: {
     id: number;
     name: string;
     fiscalYear: number;
     awarded_amount: number;
     notes: string;
-    projectTags?: Array<{ id: number; kind: "project"; name: string; color: string }>;
-    auxiliaryLabels?: Array<{ id: number; kind: "auxiliary"; name: string; color: string }>;
+    projectTags: Array<{ id: number; kind: "project"; name: string; color: string }>;
+    auxiliaryLabels: Array<{ id: number; kind: "auxiliary"; name: string; color: string }>;
   };
   categories: Array<{
     id: number;
@@ -44,7 +44,7 @@ export type FundDetailResponse = {
     remainingAmount: number;
     status: "completed" | "cancelled";
     notes: string;
-    auxiliaryLabels?: Array<{ id: number; kind: "auxiliary"; name: string; color: string }>;
+    auxiliaryLabels: Array<{ id: number; kind: "auxiliary"; name: string; color: string }>;
   }>;
   plannedItems: Array<{
     id: number;
@@ -56,9 +56,9 @@ export type FundDetailResponse = {
     description: string;
     amount: number;
     notes: string;
-    auxiliaryLabels?: Array<{ id: number; kind: "auxiliary"; name: string; color: string }>;
+    auxiliaryLabels: Array<{ id: number; kind: "auxiliary"; name: string; color: string }>;
   }>;
-  plannedItemHistory?: Array<{
+  plannedItemHistory: Array<{
     id: number;
     plannedDate: string;
     scheduledMonth: string;
@@ -70,10 +70,10 @@ export type FundDetailResponse = {
     remainingAmount: number;
     status: "completed" | "cancelled";
     notes: string;
-    auxiliaryLabels?: Array<{ id: number; kind: "auxiliary"; name: string; color: string }>;
+    auxiliaryLabels: Array<{ id: number; kind: "auxiliary"; name: string; color: string }>;
   }>;
 };
 
 export type PlannedItem = FundDetailResponse["plannedItems"][number];
-export type PlannedItemHistory = NonNullable<FundDetailResponse["plannedItemHistory"]>[number];
+export type PlannedItemHistory = FundDetailResponse["plannedItemHistory"][number];
 export type ActualEntry = FundDetailResponse["actualEntries"][number];

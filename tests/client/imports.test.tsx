@@ -1,4 +1,4 @@
-import { cleanup, screen, within } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { routes } from "../../src/app/routes";
 import { fetchMock, renderWithAppRouter, resetClientTestState } from "./testUtils";

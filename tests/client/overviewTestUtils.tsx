@@ -53,13 +53,6 @@ type OverviewLatestImport = {
   reconciliation_ok: boolean;
 };
 
-type OverviewProjectTag = {
-  id: number;
-  kind: "project";
-  name: string;
-  color: string;
-};
-
 type OverviewMonthlyStatus = Array<{
   month: string;
   committed: number;

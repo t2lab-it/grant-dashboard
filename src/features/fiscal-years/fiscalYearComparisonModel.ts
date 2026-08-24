@@ -39,6 +39,26 @@ function buildBudgetModel(year: FiscalYearComparisonYear) {
   };
 }
 
+function buildFundColorIndexes(years: FiscalYearComparisonYear[]) {
+  const names = [...new Set(years.flatMap((year) => year.funds.map((fund) => fund.name)))]
+    .sort((left, right) => left.localeCompare(right, "ja"));
+  return new Map(names.map((name, colorIndex) => [name, colorIndex]));
+}
+
+function buildFundModel(year: FiscalYearComparisonYear, colorIndexes: Map<string, number>) {
+  return [...year.funds]
+    .sort((left, right) => (
+      right.awardedAmount - left.awardedAmount
+      || left.displayOrder - right.displayOrder
+      || left.id - right.id
+    ))
+    .map((fund) => ({
+      ...fund,
+      percentage: toRate(fund.awardedAmount, year.totals.assets),
+      colorIndex: colorIndexes.get(fund.name) ?? 0,
+    }));
+}
+
 function buildCategoryModel(year: FiscalYearComparisonYear) {
   const categories = year.crossAggregateCategories.map((row) => ({
     code: row.crossAggregateCategory,
@@ -116,12 +136,13 @@ function buildPaceModel(year: FiscalYearComparisonYear, currentMonthKey: string)
   return { hasBudget: assets > 0, actualPoints, projectedPoints };
 }
 
-function buildYearModel(year: FiscalYearComparisonYear, currentMonthKey: string) {
+function buildYearModel(year: FiscalYearComparisonYear, currentMonthKey: string, fundColorIndexes: Map<string, number>) {
   const category = buildCategoryModel(year);
   return {
     fiscalYear: year.fiscalYear,
     state: year.state,
     budget: buildBudgetModel(year),
+    funds: buildFundModel(year, fundColorIndexes),
     categoryTotal: category.categoryTotal,
     categories: category.categories,
     pace: buildPaceModel(year, currentMonthKey),
@@ -132,9 +153,9 @@ export function buildFiscalYearComparisonModel(
   response: FiscalYearComparisonResponse,
   currentMonthKey: string,
 ) {
-  const years = [...response.fiscalYears]
-    .sort((a, b) => b.fiscalYear - a.fiscalYear)
-    .map((year) => buildYearModel(year, currentMonthKey));
+  const sourceYears = [...response.fiscalYears].sort((a, b) => b.fiscalYear - a.fiscalYear);
+  const fundColorIndexes = buildFundColorIndexes(sourceYears);
+  const years = sourceYears.map((year) => buildYearModel(year, currentMonthKey, fundColorIndexes));
   const paceRates = years.flatMap((year) => [
     ...year.pace.actualPoints.map((point) => point.rate),
     ...year.pace.projectedPoints.map((point) => point.rate),

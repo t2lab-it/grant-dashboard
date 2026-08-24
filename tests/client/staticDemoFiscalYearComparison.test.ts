@@ -71,6 +71,12 @@ describe("static demo fiscal year comparison API", () => {
         fiscalYear: number;
         state: string;
         totals: { assets: number; committed: number; actual: number };
+        funds: Array<{
+          id: number;
+          name: string;
+          awardedAmount: number;
+          displayOrder: number;
+        }>;
         crossAggregateCategories: Array<{
           crossAggregateCategory: string;
           plannedAmount: number;
@@ -87,6 +93,10 @@ describe("static demo fiscal year comparison API", () => {
       fiscalYear: 2027,
       state: "future",
       totals: { assets: 4800000, committed: 1450000, actual: 200000 },
+      funds: expect.arrayContaining([
+        { id: 6, name: "デモ研究費A", awardedAmount: 2200000, displayOrder: 1 },
+        { id: 8, name: "デモ研究費H（翌年度）", awardedAmount: 600000, displayOrder: 2 },
+      ]),
     });
     expect(data.fiscalYears[0].crossAggregateCategories).toHaveLength(5);
     expect(data.fiscalYears[0].crossAggregateCategories).toContainEqual({
@@ -95,5 +105,10 @@ describe("static demo fiscal year comparison API", () => {
       actualAmount: 50000,
     });
     expect(data.fiscalYears[0].monthlyStatus).toHaveLength(12);
+    expect(data.fiscalYears.flatMap((year) => (
+      year.funds
+        .filter((fund) => fund.name === "デモ研究費A")
+        .map(() => year.fiscalYear)
+    ))).toEqual([2027, 2026, 2025]);
   });
 });

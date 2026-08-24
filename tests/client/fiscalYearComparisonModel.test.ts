@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type {
+  FiscalYearComparisonFund,
   FiscalYearComparisonResponse,
   FiscalYearComparisonYear,
   FiscalYearState,
@@ -15,6 +16,7 @@ function comparisonYear({
   actual = 0,
   equipment = { plannedAmount: 100, actualAmount: 200 },
   travel = { plannedAmount: 30, actualAmount: 40 },
+  funds = [],
   monthly = {},
 }: {
   fiscalYear: number;
@@ -24,12 +26,14 @@ function comparisonYear({
   actual?: number;
   equipment?: { plannedAmount: number; actualAmount: number };
   travel?: { plannedAmount: number; actualAmount: number };
+  funds?: FiscalYearComparisonFund[];
   monthly?: Record<string, { committed?: number; actual?: number }>;
 }): FiscalYearComparisonYear {
   return {
     fiscalYear,
     state,
     totals: { assets, committed, actual },
+    funds,
     crossAggregateCategories: [
       { crossAggregateCategory: "equipment", ...equipment },
       { crossAggregateCategory: "travel", ...travel },
@@ -86,6 +90,51 @@ describe("fiscal year comparison display model", () => {
       displayAmount: 70,
       percentage: 18.91891891891892,
     });
+  });
+
+  test("builds awarded budget composition and reuses exact-name color indexes across years", () => {
+    const model = buildFiscalYearComparisonModel(
+      response([
+        comparisonYear({
+          fiscalYear: 2027,
+          state: "future",
+          assets: 1000,
+          funds: [
+            { id: 4, name: "基盤研究費", awardedAmount: 200, displayOrder: 1 },
+            { id: 5, name: "新規研究費", awardedAmount: 800, displayOrder: 2 },
+          ],
+        }),
+        comparisonYear({
+          fiscalYear: 2026,
+          state: "current",
+          assets: 1000,
+          funds: [
+            { id: 1, name: "基盤研究費", awardedAmount: 600, displayOrder: 1 },
+            { id: 2, name: "共同研究費", awardedAmount: 400, displayOrder: 2 },
+          ],
+        }),
+      ]),
+      "2026-08",
+    );
+
+    expect(model.years[0].funds.map((fund) => ({
+      name: fund.name,
+      percentage: fund.percentage,
+    }))).toEqual([
+      { name: "新規研究費", percentage: 80 },
+      { name: "基盤研究費", percentage: 20 },
+    ]);
+    expect(model.years[1].funds.map((fund) => ({
+      name: fund.name,
+      percentage: fund.percentage,
+    }))).toEqual([
+      { name: "基盤研究費", percentage: 60 },
+      { name: "共同研究費", percentage: 40 },
+    ]);
+
+    const futureShared = model.years[0].funds.find((fund) => fund.name === "基盤研究費");
+    const currentShared = model.years[1].funds.find((fund) => fund.name === "基盤研究費");
+    expect(futureShared?.colorIndex).toBe(currentShared?.colorIndex);
   });
 
   test("keeps signed overrun values while making chart geometry safe", () => {

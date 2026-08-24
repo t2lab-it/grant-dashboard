@@ -185,7 +185,7 @@ describe("static demo API", () => {
       { crossAggregateCategory: "equipment", budgetAmount: 2160000, plannedAmount: 180000, actualAmount: 0 },
       { crossAggregateCategory: "other", budgetAmount: 800000, plannedAmount: 400000, actualAmount: 0 },
     ]);
-    expect((data.funds as Array<{ name: string }>).map((fund) => fund.name)).toEqual(["デモ研究費F（翌年度）", "デモ研究費H（翌年度）", "翌年度基金"]);
+    expect((data.funds as Array<{ name: string }>).map((fund) => fund.name)).toEqual(["デモ研究費A", "デモ研究費H（翌年度）", "翌年度基金"]);
 
     const detail = await readJson(await handleStaticDemoRequest(`/api/funds/${fundId}`, { method: "GET" }));
     expect(detail.categories).toEqual([

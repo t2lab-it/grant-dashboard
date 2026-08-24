@@ -26,6 +26,15 @@ function comparisonYear(
       committed: state === "past" ? 100000 : 300000,
       actual: state === "past" ? 800000 : 500000,
     },
+    funds: fiscalYear === 2027
+      ? [
+          { id: 3, name: "基盤研究費", awardedAmount: 1200000, displayOrder: 1 },
+          { id: 4, name: "翌年度研究費", awardedAmount: 800000, displayOrder: 2 },
+        ]
+      : [
+          { id: 1, name: "基盤研究費", awardedAmount: 600000, displayOrder: 1 },
+          { id: 2, name: "共同研究費", awardedAmount: 400000, displayOrder: 2 },
+        ],
     crossAggregateCategories: [
       { crossAggregateCategory: "equipment", plannedAmount: 100000, actualAmount: 200000 },
       { crossAggregateCategory: "travel", plannedAmount: 50000, actualAmount: 100000 },

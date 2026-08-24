@@ -14,10 +14,18 @@ export type FiscalYearComparisonMonth = {
   actual: number;
 };
 
+export type FiscalYearComparisonFund = {
+  id: number;
+  name: string;
+  awardedAmount: number;
+  displayOrder: number;
+};
+
 export type FiscalYearComparisonYear = {
   fiscalYear: number;
   state: FiscalYearState;
   totals: { assets: number; committed: number; actual: number };
+  funds: FiscalYearComparisonFund[];
   crossAggregateCategories: FiscalYearComparisonCategory[];
   monthlyStatus: FiscalYearComparisonMonth[];
 };

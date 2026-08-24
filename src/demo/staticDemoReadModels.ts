@@ -41,6 +41,12 @@ export function getStaticFiscalYearComparisonSnapshot(): FiscalYearComparisonRes
             ? "future" as const
             : "current" as const,
         totals,
+        funds: sortFunds(funds).map((fund) => ({
+          id: fund.id,
+          name: fund.name,
+          awardedAmount: fund.awarded_amount,
+          displayOrder: fund.display_order,
+        })),
         crossAggregateCategories: CROSS_AGGREGATE_CATEGORY_CODES.map((crossAggregateCategory) => {
           const category = categories.get(crossAggregateCategory);
           return {

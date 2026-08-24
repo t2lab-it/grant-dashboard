@@ -17,6 +17,14 @@ type FiscalYearAggregateRow = {
   actual: number;
 };
 
+type FiscalYearFundRow = {
+  id: number;
+  fiscalYear: number;
+  name: string;
+  awardedAmount: number;
+  displayOrder: number;
+};
+
 type FiscalYearCategoryRow = {
   fiscalYear: number;
   crossAggregateCategory: CrossAggregateCategory;
@@ -58,6 +66,19 @@ export function listFiscalYearComparisonAggregateRows(db: Database.Database): Fi
     GROUP BY f.fiscal_year
     ORDER BY f.fiscal_year DESC
   `).all() as FiscalYearAggregateRow[];
+}
+
+export function listFiscalYearComparisonFundRows(db: Database.Database): FiscalYearFundRow[] {
+  return db.prepare(`
+    SELECT
+      id,
+      fiscal_year AS fiscalYear,
+      name,
+      awarded_amount AS awardedAmount,
+      display_order AS displayOrder
+    FROM funds
+    ORDER BY fiscal_year DESC, display_order, id
+  `).all() as FiscalYearFundRow[];
 }
 
 export function listFiscalYearComparisonCategoryRows(db: Database.Database): FiscalYearCategoryRow[] {
@@ -140,11 +161,18 @@ export function getFiscalYearComparisonSnapshot(
 ): FiscalYearComparisonResponse {
   const currentFiscalYear = inferJapaneseFiscalYear(options.today ?? new Date());
   const aggregateRows = listFiscalYearComparisonAggregateRows(db);
+  const fundRows = listFiscalYearComparisonFundRows(db);
   const categoryRows = listFiscalYearComparisonCategoryRows(db);
   const monthlyRows = listFiscalYearComparisonMonthlyRows(db);
+  const fundRowsByYear = new Map<number, FiscalYearFundRow[]>();
   const categoryRowsByYear = new Map<number, Map<CrossAggregateCategory, FiscalYearCategoryRow>>();
   const monthlyRowsByYear = new Map<number, Map<string, FiscalYearMonthlyRow>>();
 
+  for (const row of fundRows) {
+    const rows = fundRowsByYear.get(row.fiscalYear) ?? [];
+    rows.push(row);
+    fundRowsByYear.set(row.fiscalYear, rows);
+  }
   for (const row of categoryRows) {
     const rows = categoryRowsByYear.get(row.fiscalYear) ?? new Map();
     rows.set(row.crossAggregateCategory, row);
@@ -162,6 +190,12 @@ export function getFiscalYearComparisonSnapshot(
       fiscalYear: row.fiscalYear,
       state: getFiscalYearState(row.fiscalYear, currentFiscalYear),
       totals: { assets: row.assets, committed: row.committed, actual: row.actual },
+      funds: (fundRowsByYear.get(row.fiscalYear) ?? []).map((fund) => ({
+        id: fund.id,
+        name: fund.name,
+        awardedAmount: fund.awardedAmount,
+        displayOrder: fund.displayOrder,
+      })),
       crossAggregateCategories: CROSS_AGGREGATE_CATEGORY_CODES.map((crossAggregateCategory) => {
         const category = categoryRowsByYear.get(row.fiscalYear)?.get(crossAggregateCategory);
         return {

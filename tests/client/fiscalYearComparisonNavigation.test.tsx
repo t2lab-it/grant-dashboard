@@ -17,6 +17,9 @@ function comparisonResponse() {
         fiscalYear: 2026,
         state: "current",
         totals: { assets: 1000000, committed: 200000, actual: 300000 },
+        funds: [
+          { id: 1, name: "基盤研究費", awardedAmount: 1000000, displayOrder: 1 },
+        ],
         crossAggregateCategories: [
           { crossAggregateCategory: "equipment", plannedAmount: 200000, actualAmount: 300000 },
           { crossAggregateCategory: "travel", plannedAmount: 0, actualAmount: 0 },

@@ -3,8 +3,8 @@
   { "id": 2, "fund_code": "demo-b", "name": "デモ研究費B", "fiscal_year": 2026, "awarded_amount": 800000, "notes": "外注と解析補助が先行している比較用予算", "display_order": 2 },
   { "id": 3, "fund_code": "demo-c", "name": "デモ研究費C", "fiscal_year": 2026, "awarded_amount": 500000, "notes": "RA支出中心で変動の小さい比較用予算", "display_order": 3 },
   { "id": 4, "fund_code": "demo-d", "name": "デモ研究費D", "fiscal_year": 2026, "awarded_amount": 500000, "notes": "年度末に残高が少ない比較用予算", "display_order": 4 },
-  { "id": 5, "fund_code": "demo-e-legacy", "name": "デモ研究費E（前年度）", "fiscal_year": 2025, "awarded_amount": 1200000, "notes": "前年度の執行結果を年度横断比較で確認するための予算", "display_order": 1 },
-  { "id": 6, "fund_code": "demo-f-next", "name": "デモ研究費F（翌年度）", "fiscal_year": 2027, "awarded_amount": 2200000, "notes": "翌年度の計画と先行手配を年度横断比較で確認するための予算", "display_order": 1 },
+  { "id": 5, "fund_code": "demo-e-legacy", "name": "デモ継続研究費", "fiscal_year": 2025, "awarded_amount": 1200000, "notes": "前年度の執行結果を年度横断比較で確認するための予算", "display_order": 1 },
+  { "id": 6, "fund_code": "demo-f-next", "name": "デモ継続研究費", "fiscal_year": 2027, "awarded_amount": 2200000, "notes": "翌年度の計画と先行手配を年度横断比較で確認するための予算", "display_order": 1 },
   { "id": 7, "fund_code": "demo-g-legacy", "name": "デモ研究費G（前年度）", "fiscal_year": 2025, "awarded_amount": 400000, "notes": "前年度に未執行で繰越判断を確認するための予算", "display_order": 2 },
   { "id": 8, "fund_code": "demo-h-next", "name": "デモ研究費H（翌年度）", "fiscal_year": 2027, "awarded_amount": 600000, "notes": "翌年度の新規立ち上げ費を確認するための予算", "display_order": 2 }
 ]

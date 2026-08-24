@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { AmountDisplayMode } from "../../lib/format";
 import { formatAmount } from "../../lib/format";
+import { buildDonutSegments } from "./donutSegments";
 import type { FiscalYearComparisonViewYear } from "./fiscalYearComparisonModel";
 
 const FUND_COLORS = [
@@ -34,21 +35,17 @@ function FiscalYearFundDonut({ year }: { year: FiscalYearComparisonViewYear }) {
   const chartRadius = 45;
   const chartStroke = 16;
   const chartCircumference = 2 * Math.PI * chartRadius;
-  const positiveFunds = year.funds.filter((fund) => (fund.percentage ?? 0) > 0);
-  let accumulatedPercentage = 0;
+  const segments = buildDonutSegments(year.funds, (fund) => fund.percentage);
   const centerLabel = year.budget.assets <= 0 ? "データなし" : formatDonutCenterAmount(year.budget.assets);
 
   return (
     <svg viewBox="0 0 128 128" role="img" aria-label={`${year.fiscalYear}年度の予算構成比グラフ`} focusable="false">
       <circle className="fiscal-year-category-track" cx="64" cy="64" r={chartRadius} fill="none" strokeWidth={chartStroke} />
-      {positiveFunds.map((fund) => {
-        const percentage = fund.percentage ?? 0;
-        const drawablePercentage = Math.max(0, Math.min(percentage, 100 - accumulatedPercentage));
-        const dashLength = (drawablePercentage / 100) * chartCircumference;
-        const dashOffset = chartCircumference * (1 - accumulatedPercentage / 100);
-        accumulatedPercentage += drawablePercentage;
+      {segments.map(({ item: fund, offsetPercentage, percentage }) => {
+        const dashLength = (percentage / 100) * chartCircumference;
+        const dashOffset = chartCircumference * (1 - offsetPercentage / 100);
 
-        return <circle key={fund.id} data-fund-name={fund.name} cx="64" cy="64" r={chartRadius} fill="none" stroke={colorForFund(fund.colorIndex)} strokeDasharray={`${dashLength} ${chartCircumference - dashLength}`} strokeDashoffset={dashOffset} strokeLinecap="butt" strokeWidth={chartStroke} transform="rotate(-90 64 64)" />;
+        return <circle key={fund.id} cx="64" cy="64" r={chartRadius} fill="none" stroke={colorForFund(fund.colorIndex)} strokeDasharray={`${dashLength} ${chartCircumference - dashLength}`} strokeDashoffset={dashOffset} strokeLinecap="butt" strokeWidth={chartStroke} transform="rotate(-90 64 64)" />;
       })}
       <text className="fiscal-year-category-total" x="64" y="64" textAnchor="middle" dominantBaseline="middle">{centerLabel}</text>
     </svg>

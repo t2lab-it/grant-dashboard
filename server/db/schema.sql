@@ -20,6 +20,9 @@ CREATE TABLE IF NOT EXISTS categories (
   display_order INTEGER NOT NULL DEFAULT 0
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS categories_fund_category_code_unique
+  ON categories (fund_id, category_code);
+
 CREATE TABLE IF NOT EXISTS budget_lines (
   id INTEGER PRIMARY KEY,
   fund_id INTEGER NOT NULL REFERENCES funds(id) ON DELETE CASCADE,

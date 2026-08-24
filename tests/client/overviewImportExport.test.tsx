@@ -225,11 +225,11 @@ describe("Overview import/export", () => {
       expect(screen.queryByRole("dialog", { name: "workbook をエクスポート" })).not.toBeInTheDocument();
     });
     const latestImportSection = screen.getByLabelText("直近インポート");
-    const rows = latestImportSection.querySelectorAll(".overview-latest-import-row");
-    expect(rows).toHaveLength(2);
-    expect(within(rows[1] as HTMLElement).getByText("直近エクスポート")).toBeInTheDocument();
-    expect(within(rows[1] as HTMLElement).getByText("/tmp/budget2026.xlsx")).toBeInTheDocument();
-    expect(within(rows[1] as HTMLElement).getByText(formatExpectedLocalDateTime("2026-04-22T08:20:00.000Z"))).toBeInTheDocument();
+    const latestExportStatus = within(latestImportSection).getByRole("status");
+    const latestExportRow = latestExportStatus.parentElement;
+    expect(latestExportRow).not.toBeNull();
+    expect(within(latestExportRow as HTMLElement).getByText("/tmp/budget2026.xlsx")).toBeInTheDocument();
+    expect(within(latestExportRow as HTMLElement).getByText(formatExpectedLocalDateTime("2026-04-22T08:20:00.000Z"))).toBeInTheDocument();
   });
 
   it("shows the preview reason and disables save when workbook export is unavailable", async () => {

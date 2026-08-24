@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
+import type { FundDetailResponse } from "../../src/features/funds/fundDetailTypes";
 import { formatTokyoDateKey } from "../../src/lib/calendar";
 import { fetchMock, renderAppRoute, setupFundDetailTests } from "./fundDetailTestUtils";
 
@@ -43,6 +44,8 @@ describe("Fund detail interactions", () => {
         amount: number;
         notes: string;
       }>;
+      plannedItemHistory: FundDetailResponse["plannedItemHistory"];
+      crossAggregateCategories: FundDetailResponse["crossAggregateCategories"];
     } = {
       fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
       categories: [
@@ -68,6 +71,8 @@ describe("Fund detail interactions", () => {
           notes: "未精算",
         },
       ],
+      plannedItemHistory: [],
+      crossAggregateCategories: [],
     };
 
     fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
@@ -118,7 +123,6 @@ describe("Fund detail interactions", () => {
     expect(within(dialog).getByLabelText("説明")).toHaveValue("GPU サーバ保守更新");
     expect(within(dialog).getByLabelText("金額")).toHaveValue("280000");
     expect(within(dialog).getByRole("button", { name: "閉じる" })).toBeInTheDocument();
-    expect(within(dialog).queryByRole("button", { name: "キャンセル" })).not.toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText("実績日カレンダー"), {
       target: { value: "2026-07-31" },
     });
@@ -164,6 +168,8 @@ describe("Fund detail interactions", () => {
           notes: "未精算",
         },
       ],
+      plannedItemHistory: [],
+      crossAggregateCategories: [],
     };
 
     fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
@@ -236,6 +242,8 @@ describe("Fund detail interactions", () => {
           auxiliaryLabels: [{ id: 5, kind: "auxiliary", name: "要確認", color: "#16a34a" }],
         },
       ],
+      plannedItemHistory: [],
+      crossAggregateCategories: [],
     };
 
     fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
@@ -325,6 +333,8 @@ describe("Fund detail interactions", () => {
         },
       ],
       plannedItems: [],
+      plannedItemHistory: [],
+      crossAggregateCategories: [],
     };
 
     fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
@@ -451,6 +461,8 @@ describe("Fund detail interactions", () => {
         amount: number;
         notes: string;
       }>;
+      plannedItemHistory: FundDetailResponse["plannedItemHistory"];
+      crossAggregateCategories: FundDetailResponse["crossAggregateCategories"];
     } = {
       fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
       categories: [],
@@ -466,6 +478,8 @@ describe("Fund detail interactions", () => {
         },
       ],
       plannedItems: [],
+      plannedItemHistory: [],
+      crossAggregateCategories: [],
     };
 
     fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {

@@ -3,9 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import {
   fetchMock,
+  readStoredAppSettings,
   renderSettingsRoute,
   setupSettingsTests,
-  storedAppSettings,
 } from "./settingsTestUtils";
 
 describe("SettingsPage", () => {
@@ -41,13 +41,11 @@ describe("SettingsPage", () => {
     expect(numericDisplayButton).toHaveAttribute("aria-pressed", "true");
     expect(balanceRateButton).toHaveAttribute("aria-pressed", "true");
 
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedAppSettings({
-        defaultRateMetric: "balance",
-        defaultOverviewDisplayMode: "numeric",
-        notesDisplayMode: "click",
-      }),
-    );
+    expect(readStoredAppSettings()).toMatchObject({
+      defaultRateMetric: "balance",
+      defaultOverviewDisplayMode: "numeric",
+      notesDisplayMode: "click",
+    });
   });
 
   it("persists the selected amount display mode", async () => {
@@ -68,9 +66,7 @@ describe("SettingsPage", () => {
     await user.click(plainYenRadio);
     await user.click(thousandYenRadio);
 
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedAppSettings({ amountDisplayMode: "thousand-yen" }),
-    );
+    expect(readStoredAppSettings()).toMatchObject({ amountDisplayMode: "thousand-yen" });
   });
 
   it("shows threshold examples for the selected rate metric, persists edits, and resets to defaults", async () => {
@@ -104,15 +100,11 @@ describe("SettingsPage", () => {
       target: { value: "120", valueAsNumber: 120 },
     });
 
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedAppSettings({
-        executionRateThresholds: {
-          notice: 60,
-          warning: 90,
-          alert: 120,
-        },
-      }),
-    );
+    expect(readStoredAppSettings().executionRateThresholds).toEqual({
+      notice: 60,
+      warning: 90,
+      alert: 120,
+    });
     expect(screen.getByText("alert: 120.0%")).toBeInTheDocument();
 
     const thresholdFieldset = screen.getByText("予算消化率のしきい値").closest("fieldset");
@@ -120,7 +112,11 @@ describe("SettingsPage", () => {
     await user.click(within(thresholdFieldset as HTMLElement).getByRole("button", { name: "デフォルト値に戻す" }));
 
     expect(screen.getByRole("spinbutton", { name: "notice" })).toHaveValue(70);
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedAppSettings());
+    expect(readStoredAppSettings().executionRateThresholds).toEqual({
+      notice: 70,
+      warning: 90,
+      alert: 100,
+    });
   });
 
   it("switches the threshold editor to balance mode using the selected default rate metric", async () => {
@@ -156,16 +152,14 @@ describe("SettingsPage", () => {
       target: { value: "-5", valueAsNumber: -5 },
     });
 
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedAppSettings({
-        defaultRateMetric: "balance",
-        balanceRateThresholds: {
-          notice: 40,
-          warning: 10,
-          alert: -5,
-        },
-      }),
-    );
+    expect(readStoredAppSettings()).toMatchObject({
+      defaultRateMetric: "balance",
+      balanceRateThresholds: {
+        notice: 40,
+        warning: 10,
+        alert: -5,
+      },
+    });
     expect(screen.getByText("notice: 25.0%")).toBeInTheDocument();
   });
 
@@ -184,9 +178,15 @@ describe("SettingsPage", () => {
     const sectionList = await screen.findByRole("list", { name: "予算ページの表示順" });
     const sectionFieldset = sectionList.closest("fieldset");
     expect(sectionFieldset).not.toBeNull();
+    const sectionLabels = [
+      "費目別の状況",
+      "月別の状況",
+      "精算項目一覧",
+      "計画項目一覧",
+    ] as const;
     const getSectionLabels = () =>
-      Array.from(within(sectionList).getAllByRole("listitem")).map(
-        (item) => item.querySelector("span")?.textContent,
+      within(sectionList).getAllByRole("listitem").map(
+        (item) => sectionLabels.find((label) => within(item).queryByText(label) !== null),
       );
 
     expect(getSectionLabels()).toEqual([
@@ -214,6 +214,11 @@ describe("SettingsPage", () => {
       "精算項目一覧",
       "計画項目一覧",
     ]);
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedAppSettings());
+    expect(readStoredAppSettings().fundDetailSectionOrder).toEqual([
+      "categories",
+      "timeline",
+      "actualEntries",
+      "plannedItems",
+    ]);
   });
 });

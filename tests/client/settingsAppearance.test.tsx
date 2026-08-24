@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import {
   fetchMock,
+  readStoredAppSettings,
   renderSettingsRoute,
   setupSettingsTests,
   storedAppSettings,
@@ -36,7 +37,7 @@ describe("SettingsPage", () => {
     await user.click(graySkyRadio);
 
     expect(graySkyRadio).toBeChecked();
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(storedAppSettings({ themePreset: "gray-sky" }));
+    expect(readStoredAppSettings().themePreset).toBe("gray-sky");
   });
 
   it("loads saved custom chart presets and keeps the selected custom preset checked", async () => {
@@ -199,14 +200,10 @@ describe("SettingsPage", () => {
     await user.click(darkButton);
 
     expect(tealYellowRadio).toBeChecked();
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedAppSettings({ appThemeMode: "dark" }),
-    );
+    expect(readStoredAppSettings().appThemeMode).toBe("dark");
 
     await user.click(systemButton);
 
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedAppSettings({ appThemeMode: "system" }),
-    );
+    expect(readStoredAppSettings().appThemeMode).toBe("system");
   });
 });

@@ -58,8 +58,8 @@ export function FiscalYearExecutionPaceChart({ maxPaceRate, years }: {
             const actualPath = pathFor(year.pace.actualPoints, yMax);
             const projectedPath = pathFor(year.pace.projectedPoints, yMax);
             return <g key={year.fiscalYear}>
-              {actualPath ? <path d={actualPath} fill="none" stroke={color} strokeWidth={year.state === "current" ? 5 : 3.5} data-series={year.state === "current" ? "current-actual" : "past-actual"} /> : null}
-              {projectedPath ? <path d={projectedPath} fill="none" stroke={color} strokeWidth={year.state === "current" ? 5 : 3.5} strokeDasharray="8 6" data-series={year.state === "current" ? "current-projection" : "future-projection"} /> : null}
+              {actualPath ? <path d={actualPath} fill="none" stroke={color} strokeWidth={year.state === "current" ? 5 : 3.5} /> : null}
+              {projectedPath ? <path d={projectedPath} fill="none" stroke={color} strokeWidth={year.state === "current" ? 5 : 3.5} strokeDasharray="8 6" /> : null}
             </g>;
           })}
         </svg>

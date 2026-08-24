@@ -17,6 +17,8 @@ describe("Fund detail interactions", () => {
         monthlyStatus: [],
         actualEntries: [],
         plannedItems: [],
+        plannedItemHistory: [],
+        crossAggregateCategories: [],
       }),
     });
 
@@ -24,7 +26,7 @@ describe("Fund detail interactions", () => {
     const fundPage = within(view.container);
 
     expect(await fundPage.findByRole("heading", { name: "精算項目一覧" })).toBeInTheDocument();
-    const actualHistorySection = fundPage.getByRole("heading", { name: "精算項目一覧" }).closest(".detail-panel");
+    const actualHistorySection = fundPage.getByRole("heading", { name: "精算項目一覧" }).closest("section");
     expect(actualHistorySection).not.toBeNull();
 
     await user.click(within(actualHistorySection as HTMLElement).getByRole("link", { name: "実績作成" }));
@@ -76,6 +78,8 @@ describe("Fund detail interactions", () => {
                 notes: "",
               },
             ],
+            plannedItemHistory: [],
+            crossAggregateCategories: [],
           }),
         };
       }
@@ -111,6 +115,8 @@ describe("Fund detail interactions", () => {
               },
             ],
             plannedItems: [],
+            plannedItemHistory: [],
+            crossAggregateCategories: [],
           }),
         };
       }

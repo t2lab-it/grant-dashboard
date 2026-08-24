@@ -166,13 +166,13 @@ export function FundDetailPage() {
     return <PageStatusMessage kind="error">予算詳細を読み込めませんでした。</PageStatusMessage>;
   }
 
-  if (!data?.fund) {
+  if (!data) {
     return <PageStatusMessage kind="loading">読み込み中...</PageStatusMessage>;
   }
 
   const plannedAmount = data.categories.reduce((sum, row) => sum + row.plannedAmount, 0);
   const actualAmount = data.categories.reduce((sum, row) => sum + row.actualAmount, 0);
-  const crossAggregateCategories = data.crossAggregateCategories ?? [];
+  const crossAggregateCategories = data.crossAggregateCategories;
   const freeBalance = data.fund.awarded_amount - plannedAmount - actualAmount;
   const normalizedListSearchText = listSearchText.trim().toLocaleLowerCase();
   const listCategoryOptions = Array.from(new Set(data.categories.map((category) => category.categoryName)));
@@ -187,7 +187,7 @@ export function FundDetailPage() {
   const filteredPlannedItems = data.plannedItems.filter(
     (item) => matchesListCategory(item.categoryName) && matchesListSearch(item.categoryName, item.description),
   );
-  const filteredPlannedItemHistory = (data.plannedItemHistory ?? []).filter(
+  const filteredPlannedItemHistory = data.plannedItemHistory.filter(
     (item) => matchesListCategory(item.categoryName) && matchesListSearch(item.categoryName, item.description),
   );
   const sortedMonthlyStatus = sortMonthlyStatus(data.monthlyStatus, monthlySort);
@@ -297,7 +297,7 @@ export function FundDetailPage() {
           onRestoreCancelledItem={restoreCancelledPlannedItem}
           restoreError={plannedHistoryRestoreError}
           restoringItemId={restoringPlannedHistoryItemId}
-          totalItemCount={data.plannedItemHistory?.length ?? 0}
+          totalItemCount={data.plannedItemHistory.length}
         />
       </>
     ),

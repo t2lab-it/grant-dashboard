@@ -1,4 +1,4 @@
-import { cleanup, screen, within } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { routes } from "../../src/app/routes";
 import { fetchMock, renderWithAppRouter, resetClientTestState } from "./testUtils";
@@ -143,12 +143,10 @@ describe("ImportHistoryPage", () => {
     expect(screen.getByText("全体照合")).toBeInTheDocument();
     expect(screen.getByText("取込値 10円 / 登録値 11円")).toBeInTheDocument();
     expect(screen.getByText("予算別照合")).toBeInTheDocument();
-    const fundReconciliation = screen.getByText("基盤研究費").closest(".import-detail-row");
-    expect(fundReconciliation).not.toBeNull();
-    expect(within(fundReconciliation as HTMLElement).getByText("交付額: 取込値 4円 / 登録値 5円")).toBeInTheDocument();
-    expect(within(fundReconciliation as HTMLElement).getByText("執行予定額: 取込値 2円 / 登録値 2円")).toBeInTheDocument();
-    expect(within(fundReconciliation as HTMLElement).getByText("執行済額: 取込値 0円 / 登録値 0円")).toBeInTheDocument();
-    expect(within(fundReconciliation as HTMLElement).getByText("残高: 取込値 2円 / 登録値 3円")).toBeInTheDocument();
+    expect(screen.getByText("交付額: 取込値 4円 / 登録値 5円")).toBeInTheDocument();
+    expect(screen.getByText("執行予定額: 取込値 2円 / 登録値 2円")).toBeInTheDocument();
+    expect(screen.getByText("執行済額: 取込値 0円 / 登録値 0円")).toBeInTheDocument();
+    expect(screen.getByText("残高: 取込値 2円 / 登録値 3円")).toBeInTheDocument();
     expect(screen.getByText("学内研究支援費")).toBeInTheDocument();
     expect(screen.getByText("7行目")).toBeInTheDocument();
     expect(

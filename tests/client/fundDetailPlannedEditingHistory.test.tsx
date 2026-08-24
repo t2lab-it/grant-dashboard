@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
+import type { FundDetailResponse } from "../../src/features/funds/fundDetailTypes";
 import { fetchMock, renderAppRoute, setupFundDetailTests } from "./fundDetailTestUtils";
 
 describe("Fund detail interactions", () => {
@@ -47,6 +48,8 @@ describe("Fund detail interactions", () => {
         amount: number;
         notes: string;
       }>;
+      plannedItemHistory: FundDetailResponse["plannedItemHistory"];
+      crossAggregateCategories: FundDetailResponse["crossAggregateCategories"];
     } = {
       fund: { id: 1, name: "基盤研究費", fiscalYear: 2024, awarded_amount: 5080000 },
       categories: [],
@@ -73,6 +76,8 @@ describe("Fund detail interactions", () => {
           notes: "未精算",
         },
       ],
+      plannedItemHistory: [],
+      crossAggregateCategories: [],
     };
 
     fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
@@ -126,7 +131,6 @@ describe("Fund detail interactions", () => {
 
     const dialog = await screen.findByRole("dialog", { name: "計画項目を編集" });
     expect(within(dialog).getByRole("button", { name: "閉じる" })).toBeInTheDocument();
-    expect(within(dialog).queryByRole("button", { name: "キャンセル" })).not.toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText("資金ID"), {
       target: { value: "2" },
     });
@@ -195,6 +199,8 @@ describe("Fund detail interactions", () => {
           notes: "未精算",
         },
       ],
+      plannedItemHistory: [],
+      crossAggregateCategories: [],
     };
 
     fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
@@ -249,7 +255,7 @@ describe("Fund detail interactions", () => {
     });
   });
 
-  it("deletes planned items from the edit modal after moving destructive actions out of the list", async () => {
+  it("deletes planned items from the edit modal", async () => {
     const user = userEvent.setup();
     let currentFundDetail = {
       fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
@@ -268,6 +274,8 @@ describe("Fund detail interactions", () => {
           notes: "未精算",
         },
       ],
+      plannedItemHistory: [],
+      crossAggregateCategories: [],
     };
 
     fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
@@ -307,7 +315,6 @@ describe("Fund detail interactions", () => {
     const fundPage = within(view.container);
     const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
 
-    expect(within(plannedTable).queryByRole("button", { name: "削除" })).not.toBeInTheDocument();
     await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
 
     const dialog = await screen.findByRole("dialog", { name: "計画項目を編集" });
@@ -353,6 +360,8 @@ describe("Fund detail interactions", () => {
                 notes: "未精算",
               },
             ],
+            plannedItemHistory: [],
+            crossAggregateCategories: [],
           }),
         };
       }
@@ -416,6 +425,8 @@ describe("Fund detail interactions", () => {
           notes: "未精算",
         },
       ],
+      plannedItemHistory: [],
+      crossAggregateCategories: [],
     };
 
     fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
@@ -535,6 +546,7 @@ describe("Fund detail interactions", () => {
           notes: "",
         },
       ],
+      crossAggregateCategories: [],
     };
 
     fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {

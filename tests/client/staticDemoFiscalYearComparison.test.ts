@@ -94,7 +94,7 @@ describe("static demo fiscal year comparison API", () => {
       state: "future",
       totals: { assets: 4800000, committed: 1450000, actual: 200000 },
       funds: expect.arrayContaining([
-        { id: 6, name: "デモ継続研究費", awardedAmount: 2200000, displayOrder: 1 },
+        { id: 6, name: "デモ研究費A", awardedAmount: 2200000, displayOrder: 1 },
         { id: 8, name: "デモ研究費H（翌年度）", awardedAmount: 600000, displayOrder: 2 },
       ]),
     });
@@ -107,8 +107,8 @@ describe("static demo fiscal year comparison API", () => {
     expect(data.fiscalYears[0].monthlyStatus).toHaveLength(12);
     expect(data.fiscalYears.flatMap((year) => (
       year.funds
-        .filter((fund) => fund.name === "デモ継続研究費")
+        .filter((fund) => fund.name === "デモ研究費A")
         .map(() => year.fiscalYear)
-    ))).toEqual([2027, 2025]);
+    ))).toEqual([2027, 2026, 2025]);
   });
 });

@@ -43,9 +43,10 @@ function FiscalYearFundDonut({ year }: { year: FiscalYearComparisonViewYear }) {
       <circle className="fiscal-year-category-track" cx="64" cy="64" r={chartRadius} fill="none" strokeWidth={chartStroke} />
       {positiveFunds.map((fund) => {
         const percentage = fund.percentage ?? 0;
-        const dashLength = (percentage / 100) * chartCircumference;
+        const drawablePercentage = Math.max(0, Math.min(percentage, 100 - accumulatedPercentage));
+        const dashLength = (drawablePercentage / 100) * chartCircumference;
         const dashOffset = chartCircumference * (1 - accumulatedPercentage / 100);
-        accumulatedPercentage += percentage;
+        accumulatedPercentage += drawablePercentage;
 
         return <circle key={fund.id} data-fund-name={fund.name} cx="64" cy="64" r={chartRadius} fill="none" stroke={colorForFund(fund.colorIndex)} strokeDasharray={`${dashLength} ${chartCircumference - dashLength}`} strokeDashoffset={dashOffset} strokeLinecap="butt" strokeWidth={chartStroke} transform="rotate(-90 64 64)" />;
       })}

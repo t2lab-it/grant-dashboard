@@ -176,6 +176,30 @@ describe("FiscalYearComparisonPage", () => {
     expect(currentShared).toHaveAttribute("stroke", futureShared?.getAttribute("stroke"));
   });
 
+  test("keeps imported negative awards from producing invalid donut geometry", async () => {
+    const current = comparisonYear(2026, "current");
+    current.totals.assets = 100;
+    current.funds = [
+      { id: 1, name: "正の研究費", awardedAmount: 150, displayOrder: 1 },
+      { id: 2, name: "負の研究費", awardedAmount: -50, displayOrder: 2 },
+    ];
+    okResponse({ currentFiscalYear: 2026, fiscalYears: [current] });
+    renderPage();
+
+    const chart = await screen.findByRole("img", { name: "2026年度の予算構成比グラフ" });
+    const positiveSlice = chart.querySelector("circle[data-fund-name='正の研究費']");
+    const negativeSlice = chart.querySelector("circle[data-fund-name='負の研究費']");
+    expect(positiveSlice).not.toBeNull();
+    expect(negativeSlice).toBeNull();
+
+    const dashArray = positiveSlice?.getAttribute("stroke-dasharray")
+      ?.split(" ")
+      .map(Number);
+    expect(dashArray).toHaveLength(2);
+    expect(dashArray?.[0]).toBeGreaterThanOrEqual(0);
+    expect(dashArray?.[1]).toBeGreaterThanOrEqual(0);
+  });
+
   test("uses the largest budget total as the shared-axis endpoint", async () => {
     const current = comparisonYear(2026, "current");
     const future = comparisonYear(2027, "future");

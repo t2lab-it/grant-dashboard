@@ -3,9 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import {
   fetchMock,
+  readStoredAppSettings,
   renderSettingsRoute,
   setupSettingsTests,
-  storedAppSettings,
 } from "./settingsTestUtils";
 
 describe("SettingsPage", () => {
@@ -68,21 +68,17 @@ describe("SettingsPage", () => {
 
     await user.selectOptions(defaultCategorySelect, "14");
 
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedAppSettings({
-        defaultFundId: 2,
-        defaultCategoryId: 14,
-      }),
-    );
+    expect(readStoredAppSettings()).toMatchObject({
+      defaultFundId: 2,
+      defaultCategoryId: 14,
+    });
 
     await user.selectOptions(defaultFundSelect, "3");
 
     expect(screen.getByLabelText("新規作成時の既定費目")).toHaveValue("");
-    expect(window.localStorage.getItem("budget-dashboard:settings")).toBe(
-      storedAppSettings({
-        defaultFundId: 3,
-        defaultCategoryId: null,
-      }),
-    );
+    expect(readStoredAppSettings()).toMatchObject({
+      defaultFundId: 3,
+      defaultCategoryId: null,
+    });
   });
 });

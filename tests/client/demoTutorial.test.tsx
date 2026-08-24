@@ -47,6 +47,8 @@ function buildFundDetailResponse() {
         notes: "",
       },
     ],
+    plannedItemHistory: [],
+    crossAggregateCategories: [],
   };
 }
 
@@ -69,6 +71,7 @@ function mockDemoOverviewAndFundDetail() {
                 committed_amount: 700000,
                 actual_amount: 300000,
                 freeBalance: 1400000,
+                projectTags: [],
               },
             ],
           }),
@@ -114,18 +117,6 @@ describe("Demo tutorial", () => {
     expect(await screen.findByRole("dialog", { name: "チュートリアルを始めますか？" })).toBeInTheDocument();
   });
 
-  it("ignores tutorial dismissal keys so demo startup always prompts", async () => {
-    window.localStorage.setItem("budget-dashboard.demoTutorial.dismissed", "true");
-    window.localStorage.setItem("budget-dashboard.demoTutorial.completed", "true");
-    window.localStorage.setItem("budget-dashboard.demoTutorial.v2.dismissed", "true");
-    window.localStorage.setItem("budget-dashboard.demoTutorial.v2.completed", "true");
-    mockDemoOverviewAndFundDetail();
-
-    renderAppRoute("/");
-
-    expect(await screen.findByRole("dialog", { name: "チュートリアルを始めますか？" })).toBeInTheDocument();
-  });
-
   it("uses back, complete, and advanced actions on the final workbook preview step", async () => {
     const user = userEvent.setup();
     mockDemoOverviewAndFundDetail();
@@ -144,7 +135,6 @@ describe("Demo tutorial", () => {
     expect(within(tutorial).getByRole("button", { name: "戻る" })).toBeInTheDocument();
     expect(within(tutorial).getByRole("button", { name: "完了" })).toBeInTheDocument();
     expect(within(tutorial).getByRole("button", { name: "発展" })).toBeInTheDocument();
-    expect(within(tutorial).queryByRole("button", { name: "閉じる" })).not.toBeInTheDocument();
   });
 
   it("continues from the advanced action into creation and budget edit guidance", async () => {

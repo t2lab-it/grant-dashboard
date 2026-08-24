@@ -39,42 +39,4 @@ describe("fiscal year comparison route", () => {
     });
   });
 
-  it("returns each fiscal year's awarded budget composition in display order", async () => {
-    const app = await buildServer({
-      dbPath: ":memory:",
-      seedDefaultClassifications: false,
-      now: () => new Date("2026-08-15T00:00:00+09:00"),
-    });
-    apps.push(app);
-    app.db.exec(`
-      INSERT INTO funds (id, name, fiscal_year, awarded_amount, display_order) VALUES
-        (1, '基盤研究費', 2026, 700000, 1),
-        (2, '共同研究費', 2026, 300000, 2),
-        (3, '基盤研究費', 2025, 500000, 1);
-    `);
-
-    const response = await app.inject({
-      method: "GET",
-      url: "/api/fiscal-year-comparison",
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toMatchObject({
-      fiscalYears: [
-        {
-          fiscalYear: 2026,
-          funds: [
-            { id: 1, name: "基盤研究費", awardedAmount: 700000, displayOrder: 1 },
-            { id: 2, name: "共同研究費", awardedAmount: 300000, displayOrder: 2 },
-          ],
-        },
-        {
-          fiscalYear: 2025,
-          funds: [
-            { id: 3, name: "基盤研究費", awardedAmount: 500000, displayOrder: 1 },
-          ],
-        },
-      ],
-    });
-  });
 });

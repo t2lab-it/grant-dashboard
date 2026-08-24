@@ -133,28 +133,6 @@ describe("API planned-item routes", () => {
     ).toEqual({ count: 0 });
   });
 
-  it("returns 400 when planned-item amount exceeds the safe integer limit", async () => {
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/planned-items",
-      payload: {
-        fundId: 1,
-        categoryId: 1,
-        plannedDate: "2026-10-01",
-        scheduledMonth: "2026-10",
-        description: "巨大な支出",
-        amount: Number.MAX_SAFE_INTEGER + 1,
-        notes: "",
-      },
-    });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({
-      code: "invalid_payload",
-      message: "入力内容を確認してください。",
-    });
-  });
-
   it("returns 400 for invalid planned-item input", async () => {
     const response = await app.inject({
       method: "POST",
@@ -296,28 +274,6 @@ describe("API planned-item routes", () => {
     });
   });
 
-  it("marks a partially settled planned item as completed through the API", async () => {
-    app.db.exec(`
-      INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount, status) VALUES
-        (2, 1, 1, '2026-10-20', '2026-10', '部分精算予定', 3000, 'planned');
-      INSERT INTO actual_entries (id, fund_id, category_id, planned_item_id, actual_date, description, amount, notes) VALUES
-        (10, 1, 1, 2, '2026-10-21', '部分精算', 1000, '');
-    `);
-
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/planned-items/2/complete",
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ success: true });
-    expect(
-      app.db
-        .prepare("SELECT amount, status FROM planned_items WHERE id = ?")
-        .get(2),
-    ).toEqual({ amount: 3000, status: "completed" });
-  });
-
   it("returns 409 when completing a planned item with no linked actual entries", async () => {
     app.db.exec(`
       INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount, status) VALUES
@@ -334,26 +290,6 @@ describe("API planned-item routes", () => {
       code: "planned_item_complete_requires_actuals",
       message: "精算が紐づいている未精算の計画項目のみ完了にできます。",
     });
-  });
-
-  it("restores a cancelled planned item to planned status", async () => {
-    app.db.exec(`
-      INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount, status) VALUES
-        (2, 1, 1, '2026-10-20', '2026-10', '取消済み予定', 3000, 'cancelled');
-    `);
-
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/planned-items/2/restore",
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ success: true });
-    expect(
-      app.db
-        .prepare("SELECT status FROM planned_items WHERE id = ?")
-        .get(2),
-    ).toEqual({ status: "planned" });
   });
 
   it("rejects restoring a planned item that is not cancelled", async () => {

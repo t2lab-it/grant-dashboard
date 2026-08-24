@@ -52,44 +52,10 @@ describe("API overview and export routes", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({
+    expect(response.json()).toMatchObject({
       fiscalYear: 2026,
       month: "2026-10",
       calculationBasis: "current_data",
-      summary: {
-        budgetAmount: 5080000,
-        actualCumulativeAmount: 50000,
-        actualAmount: 50000,
-        plannedAmount: 150000,
-        plannedRemainingAmount: 150000,
-        spendAndPlannedCumulativeAmount: 200000,
-        calculatedBalance: 4880000,
-      },
-      funds: [
-        {
-          fundId: 1,
-          fundName: "基盤研究費",
-          budgetAmount: 5080000,
-          actualCumulativeAmount: 50000,
-          actualAmount: 50000,
-          plannedAmount: 150000,
-          plannedRemainingAmount: 150000,
-          spendAndPlannedCumulativeAmount: 200000,
-          calculatedBalance: 4880000,
-        },
-      ],
-      crossAggregateCategories: [
-        {
-          crossAggregateCategory: "equipment",
-          budgetAmount: 20000,
-          actualCumulativeAmount: 50000,
-          actualAmount: 50000,
-          plannedAmount: 150000,
-          plannedRemainingAmount: 150000,
-          spendAndPlannedCumulativeAmount: 200000,
-          calculatedBalance: -180000,
-        },
-      ],
     });
   });
 

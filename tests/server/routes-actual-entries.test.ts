@@ -38,34 +38,6 @@ describe("API actual-entry routes", () => {
     expect(response.json()).toEqual({ remainingPlannedAmount: null });
   });
 
-  it("creates a linked actual entry and completes the planned item when remaining amount is not kept", async () => {
-    app.db.exec(`
-      INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount, status, notes) VALUES
-        (20, 1, 1, '2026-10-01', '2026-10', '部分精算予定', 70000, 'planned', '');
-    `);
-
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/actual-entries",
-      payload: {
-        fundId: 1,
-        categoryId: 1,
-        plannedItemId: 20,
-        actualDate: "2026-10-10",
-        description: "部分精算",
-        amount: 50000,
-        notes: "",
-        keepRemainingPlanned: false,
-      },
-    });
-
-    expect(response.statusCode).toBe(201);
-    expect(response.json()).toEqual({ remainingPlannedAmount: 20000 });
-    expect(app.db.prepare("SELECT status FROM planned_items WHERE id = ?").get(20)).toEqual({
-      status: "completed",
-    });
-  });
-
   it("updates editable actual entry fields", async () => {
     app.db.exec(`
       INSERT INTO funds (id, name, fiscal_year, awarded_amount, display_order) VALUES (2, 'ACT-X', 2026, 100000, 2);

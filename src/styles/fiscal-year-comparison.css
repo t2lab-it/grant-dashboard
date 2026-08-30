@@ -278,6 +278,14 @@
   display: block;
 }
 
+.fiscal-year-budget-month-heatmap {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
 .fiscal-year-budget-value {
   min-width: 0;
   display: grid;

@@ -66,6 +66,24 @@ function breakdownForYear(
   }));
 }
 
+function buildMonthHeatmap(segments: BudgetBreakdownItem[]) {
+  const activeSegments = segments.filter((segment) => segment.amount > 0);
+  const totalAmount = activeSegments.reduce((sum, segment) => sum + segment.amount, 0);
+  if (totalAmount <= 0) return null;
+
+  let cumulativeAmount = 0;
+  const midpointStops = activeSegments.map((segment) => {
+    const midpoint = ((cumulativeAmount + segment.amount / 2) / totalAmount) * 100;
+    cumulativeAmount += segment.amount;
+    return `${segment.color} ${midpoint.toFixed(2)}%`;
+  });
+
+  return {
+    totalAmount,
+    backgroundImage: `linear-gradient(to right, ${activeSegments[0].color} 0%, ${midpointStops.join(", ")}, ${activeSegments.at(-1)!.color} 100%)`,
+  };
+}
+
 function legendForMode(
   mode: BreakdownMode,
   years: FiscalYearComparisonViewYear[],
@@ -142,6 +160,22 @@ export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAss
         </div>
         {years.map((year) => {
           const segments = breakdownForYear(breakdownMode, year, categoryColors);
+          const activeSegments = segments.filter((segment) => segment.amount > 0);
+          const monthHeatmap = breakdownMode === "months" ? buildMonthHeatmap(activeSegments) : null;
+          const segmentDenominator = monthHeatmap?.totalAmount ?? year.budget.assets;
+          const segmentElements = activeSegments.map((segment) => (
+            <span
+              key={segment.key}
+              role="img"
+              className="fiscal-year-budget-segment"
+              aria-label={`${year.fiscalYear}年度 ${segment.label} ${formatAmount(segment.amount, amountDisplayMode)}`}
+              title={`${segment.label}: ${formatAmount(segment.amount, amountDisplayMode)}`}
+              style={{
+                width: `${segmentDenominator > 0 ? (segment.amount / segmentDenominator) * 100 : 0}%`,
+                backgroundColor: monthHeatmap ? undefined : segment.color,
+              }}
+            />
+          ));
           const outerWidth = axis.maximum > 0 ? Math.max(0, Math.min((year.budget.assets / axis.maximum) * 100, 100)) : 0;
           return (
             <Link key={year.fiscalYear} className="fiscal-year-budget-row" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
@@ -151,19 +185,17 @@ export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAss
                   {axis.ticks.map((tick, index) => <i key={tick} style={{ left: `${axis.ticks.length > 1 ? (index / (axis.ticks.length - 1)) * 100 : 0}%` }} />)}
                 </span>
                 <span className="fiscal-year-budget-bar" style={{ width: `${outerWidth}%` }}>
-                  {segments.filter((segment) => segment.amount > 0).map((segment) => (
+                  {monthHeatmap ? (
                     <span
-                      key={segment.key}
-                      role="img"
-                      className="fiscal-year-budget-segment"
-                      aria-label={`${year.fiscalYear}年度 ${segment.label} ${formatAmount(segment.amount, amountDisplayMode)}`}
-                      title={`${segment.label}: ${formatAmount(segment.amount, amountDisplayMode)}`}
+                      className="fiscal-year-budget-month-heatmap"
                       style={{
-                        width: `${year.budget.assets > 0 ? (segment.amount / year.budget.assets) * 100 : 0}%`,
-                        backgroundColor: segment.color,
+                        width: `${year.budget.assets > 0 ? (monthHeatmap.totalAmount / year.budget.assets) * 100 : 0}%`,
+                        backgroundImage: monthHeatmap.backgroundImage,
                       }}
-                    />
-                  ))}
+                    >
+                      {segmentElements}
+                    </span>
+                  ) : segmentElements}
                 </span>
               </span>
               <span className="fiscal-year-budget-value">

@@ -229,7 +229,7 @@ describe("FiscalYearComparisonPage", () => {
     expectMatchingChartColor(categoryBarSegment, categoryDonutSegment!);
   });
 
-  test("uses an ordered twelve-color viridis scale for monthly execution amounts", async () => {
+  test("renders monthly execution as an amount-weighted viridis heatmap", async () => {
     const user = userEvent.setup();
     const future = comparisonYear(2027, "future");
     future.monthlyStatus = future.monthlyStatus.map((row, index) => ({
@@ -253,10 +253,24 @@ describe("FiscalYearComparisonPage", () => {
       "#1e9b8a", "#2ab07f", "#51c56a", "#86d549", "#c2df23", "#fde725",
     ];
 
-    monthLabels.forEach((label, index) => {
-      expect(scope.getByRole("img", {
+    const monthSegments = monthLabels.map((label, index) => (
+      scope.getByRole("img", {
         name: `2027年度 ${label} ${((index + 1) * 1000).toLocaleString("ja-JP")}円`,
-      })).toHaveStyle({ backgroundColor: viridisColors[index] });
+      })
+    ));
+    const heatmap = monthSegments[0].parentElement;
+    expect(heatmap).not.toBeNull();
+    monthSegments.forEach((segment) => expect(segment.parentElement).toBe(heatmap));
+
+    expect(heatmap).toHaveStyle({ width: "3.9%" });
+    const heatmapStyle = heatmap!.getAttribute("style");
+    expect(heatmapStyle).toContain("linear-gradient(to right");
+    viridisColors.forEach((color) => expect(heatmapStyle).toContain(color));
+    expect(heatmapStyle).toContain("#482173 2.56%");
+    expect(heatmapStyle).toContain("#fde725 100%");
+    expect(parseFloat(monthSegments[0].style.width)).toBeCloseTo(1.282, 3);
+    monthSegments.forEach((segment) => {
+      expect(segment.style.backgroundColor).toBe("");
     });
   });
 

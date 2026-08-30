@@ -93,6 +93,41 @@
   font-size: clamp(1.15rem, 2vw, 1.4rem);
 }
 
+.fiscal-year-budget-breakdown-toggle {
+  display: inline-flex;
+  border: 1px solid var(--surface-border-strong);
+  border-radius: 10px;
+  padding: 3px;
+  background: var(--surface-muted);
+}
+
+.fiscal-year-budget-breakdown-button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 7px;
+  padding: 6px 11px;
+  color: var(--app-text-muted);
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.fiscal-year-budget-breakdown-button[aria-pressed="true"] {
+  color: var(--app-text);
+  background: var(--surface-bg);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--app-text) 14%, transparent);
+}
+
+.fiscal-year-budget-breakdown-button:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 3px solid color-mix(in srgb, var(--interactive-strong) 55%, transparent);
+  outline-offset: 2px;
+}
+
 .fiscal-year-comparison-legend {
   display: flex;
   align-items: center;
@@ -129,9 +164,14 @@
 .fiscal-year-swatch-other { background: var(--fiscal-year-category-other); }
 .fiscal-year-swatch-unset { background: var(--fiscal-year-category-unset); }
 
+.fiscal-year-budget-legend {
+  min-height: 20px;
+  margin-top: 12px;
+}
+
 .fiscal-year-budget-chart {
   min-width: 0;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .fiscal-year-budget-axis {
@@ -203,9 +243,11 @@
   display: flex;
   overflow: hidden;
   border-radius: 6px;
+  background: var(--chart-track);
 }
 
 .fiscal-year-budget-segment {
+  flex: 0 0 auto;
   height: 100%;
   display: block;
 }
@@ -413,6 +455,14 @@
     padding: 16px;
   }
 
+  .fiscal-year-budget-breakdown-toggle {
+    width: 100%;
+  }
+
+  .fiscal-year-budget-breakdown-button {
+    flex: 1 1 0;
+  }
+
   .fiscal-year-budget-axis {
     margin-right: 112px;
     margin-left: 88px;
@@ -438,6 +488,10 @@
 }
 
 @media (max-width: 480px) {
+  .fiscal-year-budget-breakdown-button {
+    padding-inline: 7px;
+  }
+
   .fiscal-year-comparison-section {
     margin-top: 30px;
   }
@@ -445,6 +499,10 @@
   .fiscal-year-budget-axis {
     margin-right: 100px;
     margin-left: 76px;
+  }
+
+  .fiscal-year-budget-axis span:not(:first-child):not(:last-child) {
+    display: none;
   }
 
   .fiscal-year-budget-row {

@@ -1,5 +1,6 @@
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type {
@@ -73,6 +74,12 @@ function renderPage() {
   );
 }
 
+function expectMatchingChartColor(barSegment: HTMLElement, donutSegment: SVGCircleElement) {
+  const donutColor = donutSegment.getAttribute("stroke");
+  expect(donutColor).toMatch(/^#[0-9a-f]{6}$/i);
+  expect(barSegment).toHaveStyle({ backgroundColor: donutColor });
+}
+
 describe("FiscalYearComparisonPage", () => {
   beforeEach(() => {
     fetchMock.mockReset();
@@ -140,7 +147,7 @@ describe("FiscalYearComparisonPage", () => {
     expect(links[4]).toHaveAttribute("href", "/?year=2027");
     expect(links[5]).toHaveAttribute("href", "/?year=2026");
 
-    const budgetChart = screen.getByRole("group", { name: /年度別の予算総額/ });
+    const budgetChart = screen.getByRole("group", { name: /年度別の予算総額。共通軸/ });
     expect(within(budgetChart).getByText("2027年度")).toBeInTheDocument();
     expect(within(links[0]).getByText("2,000,000円")).toBeInTheDocument();
     expect(screen.getByText(/2027年度 物品系 300,000円/)).toBeInTheDocument();
@@ -171,11 +178,87 @@ describe("FiscalYearComparisonPage", () => {
     okResponse({ currentFiscalYear: 2026, fiscalYears: [current, future] });
     renderPage();
 
-    const budgetChart = await screen.findByRole("group", { name: /年度別の予算総額/ });
+    const budgetChart = await screen.findByRole("group", { name: /年度別の予算総額。共通軸/ });
     expect(within(budgetChart).getByText("0円")).toBeInTheDocument();
     expect(within(budgetChart).getByText("500,000円")).toBeInTheDocument();
     expect(within(budgetChart).getByText("1,000,000円")).toBeInTheDocument();
     expect(budgetChart).toHaveAccessibleName("年度別の予算総額。共通軸の最大値は1,234,567円です。");
+  });
+
+  test("switches the budget-total breakdown between funds and cross-aggregate categories", async () => {
+    const user = userEvent.setup();
+    okResponse({
+      currentFiscalYear: 2026,
+      fiscalYears: [comparisonYear(2026, "current"), comparisonYear(2027, "future")],
+    });
+    renderPage();
+
+    const heading = await screen.findByRole("heading", { name: "年度別の予算総額" });
+    const section = heading.closest("section");
+    expect(section).not.toBeNull();
+    const scope = within(section!);
+    const toggle = scope.getByRole("group", { name: "年度別の予算総額の色分け" });
+    const fundButton = within(toggle).getByRole("button", { name: "予算構成" });
+    const categoryButton = within(toggle).getByRole("button", { name: "横断集計カテゴリ" });
+    const monthButton = within(toggle).getByRole("button", { name: "月別執行額" });
+
+    expect(fundButton).toHaveAttribute("aria-pressed", "true");
+    expect(categoryButton).toHaveAttribute("aria-pressed", "false");
+    expect(monthButton).toHaveAttribute("aria-pressed", "false");
+    expect(scope.queryByText("執行済")).not.toBeInTheDocument();
+    expect(scope.queryByText("執行予定")).not.toBeInTheDocument();
+    expect(scope.queryByText("残高")).not.toBeInTheDocument();
+    expect(scope.queryByText("見込み 80%")).not.toBeInTheDocument();
+    expect(scope.queryByText("予定 40%")).not.toBeInTheDocument();
+
+    const fundBarSegment = scope.getByRole("img", { name: "2026年度 基盤研究費 600,000円" });
+    const fundDonut = screen.getByRole("img", { name: "2026年度の予算構成比グラフ" });
+    const fundDonutSegment = fundDonut.querySelector<SVGCircleElement>("circle[stroke]");
+    expect(fundDonutSegment).not.toBeNull();
+    expectMatchingChartColor(fundBarSegment, fundDonutSegment!);
+
+    await user.click(categoryButton);
+
+    expect(fundButton).toHaveAttribute("aria-pressed", "false");
+    expect(categoryButton).toHaveAttribute("aria-pressed", "true");
+    expect(scope.getByText("物品系")).toBeInTheDocument();
+    const categoryBarSegment = scope.getByRole("img", { name: "2026年度 物品系 300,000円" });
+    const categoryDonut = screen.getByRole("img", { name: "2026年度の横断集計カテゴリ構成比グラフ" });
+    const categoryDonutSegment = categoryDonut.querySelector<SVGCircleElement>("circle[stroke]");
+    expect(categoryDonutSegment).not.toBeNull();
+    expectMatchingChartColor(categoryBarSegment, categoryDonutSegment!);
+  });
+
+  test("uses an ordered twelve-color viridis scale for monthly execution amounts", async () => {
+    const user = userEvent.setup();
+    const future = comparisonYear(2027, "future");
+    future.monthlyStatus = future.monthlyStatus.map((row, index) => ({
+      ...row,
+      actual: (index + 1) * 1000,
+      committed: 0,
+    }));
+    okResponse({ currentFiscalYear: 2026, fiscalYears: [future] });
+    renderPage();
+
+    const heading = await screen.findByRole("heading", { name: "年度別の予算総額" });
+    const section = heading.closest("section");
+    expect(section).not.toBeNull();
+    const scope = within(section!);
+    await user.click(scope.getByRole("button", { name: "月別執行額" }));
+
+    expect(scope.getByRole("button", { name: "月別執行額" })).toHaveAttribute("aria-pressed", "true");
+    const monthLabels = ["4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月", "1月", "2月", "3月"];
+    const viridisColors = [
+      "#440154", "#482173", "#433e85", "#38588c", "#2d708e", "#25858e",
+      "#1e9b8a", "#2ab07f", "#51c56a", "#86d549", "#c2df23", "#fde725",
+    ];
+
+    monthLabels.forEach((label, index) => {
+      expect(scope.getByText(label)).toBeInTheDocument();
+      expect(scope.getByRole("img", {
+        name: `2027年度 ${label} ${((index + 1) * 1000).toLocaleString("ja-JP")}円`,
+      })).toHaveStyle({ backgroundColor: viridisColors[index] });
+    });
   });
 
   test("describes April-to-March actual and forecast pace", async () => {

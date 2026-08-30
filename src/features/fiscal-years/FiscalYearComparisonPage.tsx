@@ -27,7 +27,7 @@ export function FiscalYearComparisonPage() {
   return (
     <div className="fiscal-year-comparison-page">
       <header className="fiscal-year-comparison-page-heading"><h1>年度横断サマリー</h1></header>
-      <FiscalYearBudgetBars amountDisplayMode={amountDisplayMode} maxAssets={model.maxAssets} years={model.years} />
+      <FiscalYearBudgetBars amountDisplayMode={amountDisplayMode} categoryColors={categoryColors} maxAssets={model.maxAssets} years={model.years} />
       <FiscalYearFundDonuts amountDisplayMode={amountDisplayMode} years={model.years} />
       <FiscalYearCategoryDonuts amountDisplayMode={amountDisplayMode} colors={categoryColors} years={model.years} />
       <FiscalYearExecutionPaceChart maxPaceRate={model.maxPaceRate} years={model.years} />

@@ -85,6 +85,42 @@ function pacePoint(
   return { month, monthIndex, amount, rate: toRate(amount, assets) };
 }
 
+function buildMonthlyExecutionModel(year: FiscalYearComparisonYear, currentMonthKey: string) {
+  if (year.state === "past") {
+    return year.monthlyStatus.map((row, monthIndex) => ({
+      month: row.month,
+      monthIndex,
+      amount: row.actual,
+    }));
+  }
+
+  if (year.state === "future") {
+    return year.monthlyStatus.map((row, monthIndex) => ({
+      month: row.month,
+      monthIndex,
+      amount: row.actual + row.committed,
+    }));
+  }
+
+  const currentMonthIndex = Math.max(
+    year.monthlyStatus.findIndex((row) => row.month === currentMonthKey),
+    0,
+  );
+  const currentAndOverdueCommitted = year.monthlyStatus
+    .slice(0, currentMonthIndex + 1)
+    .reduce((sum, row) => sum + row.committed, 0);
+
+  return year.monthlyStatus.map((row, monthIndex) => ({
+    month: row.month,
+    monthIndex,
+    amount: monthIndex < currentMonthIndex
+      ? row.actual
+      : monthIndex === currentMonthIndex
+        ? row.actual + currentAndOverdueCommitted
+        : row.committed,
+  }));
+}
+
 function buildPaceModel(year: FiscalYearComparisonYear, currentMonthKey: string) {
   const assets = year.totals.assets;
   let cumulativeActual = 0;
@@ -145,6 +181,7 @@ function buildYearModel(year: FiscalYearComparisonYear, currentMonthKey: string,
     funds: buildFundModel(year, fundColorIndexes),
     categoryTotal: category.categoryTotal,
     categories: category.categories,
+    monthlyExecution: buildMonthlyExecutionModel(year, currentMonthKey),
     pace: buildPaceModel(year, currentMonthKey),
   };
 }

@@ -242,6 +242,47 @@ describe("fiscal year comparison display model", () => {
     expect(past.actualPoints.at(-1)).toMatchObject({ amount: 300, rate: 30 });
   });
 
+  test("builds monthly execution amounts with the same state rules as the pace series", () => {
+    const model = buildFiscalYearComparisonModel(
+      response([
+        comparisonYear({
+          fiscalYear: 2027,
+          state: "future",
+          monthly: {
+            "2027-04": { actual: 50 },
+            "2027-05": { committed: 100 },
+          },
+        }),
+        comparisonYear({
+          fiscalYear: 2026,
+          state: "current",
+          monthly: {
+            "2026-04": { actual: 100 },
+            "2026-05": { actual: 100 },
+            "2026-06": { committed: 50 },
+            "2026-08": { committed: 30 },
+            "2026-10": { committed: 100 },
+          },
+        }),
+        comparisonYear({
+          fiscalYear: 2025,
+          state: "past",
+          monthly: {
+            "2025-04": { actual: 100 },
+            "2025-05": { committed: 400, actual: 200 },
+          },
+        }),
+      ]),
+      "2026-08",
+    );
+
+    expect(model.years[0].monthlyExecution.slice(0, 2).map((month) => month.amount)).toEqual([50, 100]);
+    expect(model.years[1].monthlyExecution.map((month) => month.amount)).toEqual([
+      100, 100, 0, 0, 80, 0, 100, 0, 0, 0, 0, 0,
+    ]);
+    expect(model.years[2].monthlyExecution.slice(0, 2).map((month) => month.amount)).toEqual([100, 200]);
+  });
+
   test("returns null pace rates for zero budgets and preserves rates above 100 percent", () => {
     const model = buildFiscalYearComparisonModel(
       response([

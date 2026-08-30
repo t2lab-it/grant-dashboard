@@ -2,30 +2,8 @@ import { Link } from "react-router-dom";
 import type { AmountDisplayMode } from "../../lib/format";
 import { formatAmount } from "../../lib/format";
 import { buildDonutSegments } from "./donutSegments";
+import { colorForFiscalYearFund } from "./fiscalYearChartColors";
 import type { FiscalYearComparisonViewYear } from "./fiscalYearComparisonModel";
-
-const FUND_COLORS = [
-  "#4e79a7",
-  "#f28e2b",
-  "#e15759",
-  "#76b7b2",
-  "#59a14f",
-  "#edc948",
-  "#b07aa1",
-  "#ff9da7",
-  "#9c755f",
-  "#bab0ab",
-  "#1f77b4",
-  "#ff7f0e",
-  "#2ca02c",
-  "#d62728",
-  "#9467bd",
-  "#17becf",
-] as const;
-
-function colorForFund(colorIndex: number) {
-  return FUND_COLORS[colorIndex % FUND_COLORS.length];
-}
 
 function formatDonutCenterAmount(value: number) {
   return `${Math.round(value / 1000)}k円`;
@@ -45,7 +23,7 @@ function FiscalYearFundDonut({ year }: { year: FiscalYearComparisonViewYear }) {
         const dashLength = (percentage / 100) * chartCircumference;
         const dashOffset = chartCircumference * (1 - offsetPercentage / 100);
 
-        return <circle key={fund.id} cx="64" cy="64" r={chartRadius} fill="none" stroke={colorForFund(fund.colorIndex)} strokeDasharray={`${dashLength} ${chartCircumference - dashLength}`} strokeDashoffset={dashOffset} strokeLinecap="butt" strokeWidth={chartStroke} transform="rotate(-90 64 64)" />;
+        return <circle key={fund.id} cx="64" cy="64" r={chartRadius} fill="none" stroke={colorForFiscalYearFund(fund.colorIndex)} strokeDasharray={`${dashLength} ${chartCircumference - dashLength}`} strokeDashoffset={dashOffset} strokeLinecap="butt" strokeWidth={chartStroke} transform="rotate(-90 64 64)" />;
       })}
       <text className="fiscal-year-category-total" x="64" y="64" textAnchor="middle" dominantBaseline="middle">{centerLabel}</text>
     </svg>
@@ -70,7 +48,7 @@ export function FiscalYearFundDonuts({ amountDisplayMode, years }: {
               <ul className="fiscal-year-fund-list">
                 {year.funds.map((fund) => (
                   <li key={fund.id}>
-                    <i style={{ backgroundColor: colorForFund(fund.colorIndex) }} aria-hidden="true" />
+                    <i style={{ backgroundColor: colorForFiscalYearFund(fund.colorIndex) }} aria-hidden="true" />
                     <span className="fiscal-year-fund-name" title={fund.name}>{fund.name}</span>
                     <span className="fiscal-year-fund-percentage">{fund.percentage === null ? "割合なし" : `${fund.percentage.toFixed(1)}%`}</span>
                     <span className="fiscal-year-fund-amount">{formatAmount(fund.awardedAmount, amountDisplayMode)}</span>

@@ -28,7 +28,7 @@ test("overview to fund detail to form flow works", async ({ page }) => {
   await plannedItemForm.getByLabel("費目").selectOption({ label: "物品費" });
   await expect(plannedDateInput).toHaveValue(today);
   await plannedDateInput.fill("2026/10/01");
-  await plannedItemForm.getByLabel("執行予定月").fill("2026-10");
+  await plannedItemForm.getByRole("textbox", { name: "執行予定月", exact: true }).fill("2026/10");
   await plannedItemForm.getByLabel("説明").fill("追加出張");
   await plannedItemForm.getByLabel("金額").fill("50000");
   const submitResponsePromise = page.waitForResponse("**/api/planned-items");

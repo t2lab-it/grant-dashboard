@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ActualEntryForm } from "../../src/features/actual-entries/ActualEntryForm";
 import { PlannedItemForm } from "../../src/features/planned-items/PlannedItemForm";
@@ -134,7 +134,7 @@ describe("PlannedItemForm", () => {
 
   function fillPlannedItemDetails() {
     fireEvent.change(screen.getByLabelText("立案日"), { target: { value: "2026/10/01" } });
-    fireEvent.change(screen.getByLabelText("執行予定月"), { target: { value: "2026-10" } });
+    fireEvent.change(screen.getByLabelText("執行予定月"), { target: { value: "2026/10" } });
     fireEvent.change(screen.getByLabelText("説明"), { target: { value: "追加出張" } });
     fireEvent.change(screen.getByLabelText("金額"), { target: { value: "25,000 * 2" } });
     fireEvent.change(screen.getByLabelText("メモ"), { target: { value: "学会対応" } });
@@ -143,7 +143,7 @@ describe("PlannedItemForm", () => {
   it("renders named fund/category selects, keeps slash-formatted draft dates, and exposes a calendar picker", async () => {
     const now = new Date();
     const today = formatTokyoDateKey(now).replaceAll("-", "/");
-    const currentMonth = formatTokyoMonthKey(now);
+    const currentMonth = formatTokyoMonthKey(now).replace("-", "/");
 
     mockPlannedItemFetches();
 
@@ -159,6 +159,74 @@ describe("PlannedItemForm", () => {
     });
     expect(screen.getByLabelText("立案日")).toHaveValue("2026/05/01");
     expect(screen.getByLabelText("金額")).toHaveAttribute("data-direct-number-input", "true");
+  });
+
+  it("renders the scheduled month as text beside a calendar button", async () => {
+    mockPlannedItemFetches();
+
+    renderPlannedItemForm();
+
+    expect(await screen.findByRole("option", { name: "基盤研究費" })).toBeInTheDocument();
+    const scheduledMonthInput = screen.getByLabelText("執行予定月");
+
+    expect(scheduledMonthInput).toHaveAttribute("type", "text");
+    expect(
+      screen.getByRole("button", { name: "執行予定月カレンダーを開く" }),
+    ).toBeInTheDocument();
+  });
+
+  it("moves the month calendar by year and selects a YYYY/MM month", async () => {
+    mockPlannedItemFetches();
+
+    renderPlannedItemForm();
+
+    expect(await screen.findByRole("option", { name: "基盤研究費" })).toBeInTheDocument();
+    const scheduledMonthInput = screen.getByLabelText("執行予定月");
+    fireEvent.change(scheduledMonthInput, { target: { value: "2026/08" } });
+    fireEvent.click(screen.getByRole("button", { name: "執行予定月カレンダーを開く" }));
+
+    const calendar = screen.getByRole("dialog", { name: "執行予定月カレンダー" });
+    expect(within(calendar).getByRole("button", { name: "2026/08" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    fireEvent.click(within(calendar).getByRole("button", { name: "次年へ" }));
+    expect(within(calendar).getByRole("button", { name: "2027/08" })).toBeInTheDocument();
+    expect(within(calendar).queryByRole("button", { name: "2026/08" })).not.toBeInTheDocument();
+
+    fireEvent.click(within(calendar).getByRole("button", { name: "前年へ" }));
+    fireEvent.click(within(calendar).getByRole("button", { name: "2026/09" }));
+
+    expect(scheduledMonthInput).toHaveValue("2026/09");
+    expect(
+      screen.queryByRole("dialog", { name: "執行予定月カレンダー" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("closes the month calendar with Escape and an outside click", async () => {
+    mockPlannedItemFetches();
+
+    renderPlannedItemForm();
+
+    expect(await screen.findByRole("option", { name: "基盤研究費" })).toBeInTheDocument();
+    const openCalendarButton = screen.getByRole("button", {
+      name: "執行予定月カレンダーを開く",
+    });
+
+    fireEvent.click(openCalendarButton);
+    expect(screen.getByRole("dialog", { name: "執行予定月カレンダー" })).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(
+      screen.queryByRole("dialog", { name: "執行予定月カレンダー" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(openCalendarButton);
+    expect(screen.getByRole("dialog", { name: "執行予定月カレンダー" })).toBeInTheDocument();
+    fireEvent.mouseDown(document.body);
+    expect(
+      screen.queryByRole("dialog", { name: "執行予定月カレンダー" }),
+    ).not.toBeInTheDocument();
   });
 
   it("submits a planned item payload to the API and shows returned warnings", async () => {

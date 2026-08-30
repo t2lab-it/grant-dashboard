@@ -18,6 +18,7 @@ import { apiGet, apiPostJson } from "../../lib/api";
 import { formatTokyoDateKey } from "../../lib/calendar";
 import { FormFeedback } from "../forms/FormFeedback";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
+import { MonthField } from "../forms/MonthField";
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
 import { useEntryForm } from "../forms/useEntryForm";
@@ -393,16 +394,15 @@ export function PlannedItemForm() {
         />
         {mode === "single" ? (
           <>
-            <label className="budget-entry-field">
-              <span>執行予定月</span>
-              <input
-                aria-label="執行予定月"
-                name="scheduledMonth"
-                onChange={(event) => setValue("scheduledMonth", event.target.value)}
-                placeholder="2026-10"
-                value={values.scheduledMonth}
-              />
-            </label>
+            <MonthField
+              buttonAriaLabel="執行予定月カレンダーを開く"
+              calendarAriaLabel="執行予定月カレンダー"
+              label="執行予定月"
+              name="scheduledMonth"
+              onChange={(value) => setValue("scheduledMonth", value)}
+              textAriaLabel="執行予定月"
+              value={values.scheduledMonth}
+            />
             <label className="budget-entry-field">
               <span>説明</span>
               <input

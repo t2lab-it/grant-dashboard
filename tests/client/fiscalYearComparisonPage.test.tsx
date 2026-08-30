@@ -254,11 +254,34 @@ describe("FiscalYearComparisonPage", () => {
     ];
 
     monthLabels.forEach((label, index) => {
-      expect(scope.getByText(label)).toBeInTheDocument();
       expect(scope.getByRole("img", {
         name: `2027年度 ${label} ${((index + 1) * 1000).toLocaleString("ja-JP")}円`,
       })).toHaveStyle({ backgroundColor: viridisColors[index] });
     });
+  });
+
+  test("summarizes the monthly palette with a colorbar labeled only at the fiscal-year endpoints", async () => {
+    const user = userEvent.setup();
+    okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2027, "future")] });
+    renderPage();
+
+    const heading = await screen.findByRole("heading", { name: "年度別の予算総額" });
+    const section = heading.closest("section");
+    expect(section).not.toBeNull();
+    const scope = within(section!);
+    await user.click(scope.getByRole("button", { name: "月別執行額" }));
+
+    const legend = scope.getByRole("group", { name: "月別執行額の凡例" });
+    expect(within(legend).getByText("4月")).toBeInTheDocument();
+    expect(within(legend).getByText("3月")).toBeInTheDocument();
+    ["5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月", "1月", "2月"].forEach((label) => {
+      expect(within(legend).queryByText(label)).not.toBeInTheDocument();
+    });
+    const colorbar = within(legend).getByRole("img", { name: "4月から3月の月別執行額カラーバー" });
+    expect(colorbar).toBeInTheDocument();
+    expect(colorbar.getAttribute("style")).toContain("linear-gradient(to right");
+    expect(colorbar.getAttribute("style")).toContain("#440154");
+    expect(colorbar.getAttribute("style")).toContain("#fde725");
   });
 
   test("describes April-to-March actual and forecast pace", async () => {

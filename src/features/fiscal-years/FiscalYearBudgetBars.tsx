@@ -21,6 +21,7 @@ const BREAKDOWN_OPTIONS: { mode: BreakdownMode; label: string }[] = [
   { mode: "categories", label: "横断集計カテゴリ" },
   { mode: "months", label: "月別執行額" },
 ];
+const MONTH_COLORBAR_BACKGROUND = `linear-gradient(to right, ${FISCAL_YEAR_MONTH_COLORS.join(", ")})`;
 
 function buildBudgetAxis(maxAssets: number) {
   if (maxAssets <= 0) return { maximum: 0, ticks: [0] };
@@ -103,7 +104,7 @@ export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAss
 }) {
   const [breakdownMode, setBreakdownMode] = useState<BreakdownMode>("funds");
   const axis = buildBudgetAxis(maxAssets);
-  const legend = legendForMode(breakdownMode, years, categoryColors);
+  const legend = breakdownMode === "months" ? [] : legendForMode(breakdownMode, years, categoryColors);
 
   return (
     <section className="fiscal-year-comparison-section" aria-labelledby="fiscal-year-budget-title">
@@ -123,6 +124,13 @@ export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAss
           ))}
         </div>
       </div>
+      {breakdownMode === "months" && (
+        <div className="fiscal-year-budget-legend fiscal-year-budget-month-legend" role="group" aria-label="月別執行額の凡例">
+          <span>4月</span>
+          <span className="fiscal-year-budget-month-colorbar" role="img" aria-label="4月から3月の月別執行額カラーバー" style={{ backgroundImage: MONTH_COLORBAR_BACKGROUND }} />
+          <span>3月</span>
+        </div>
+      )}
       <div className="fiscal-year-comparison-legend fiscal-year-budget-legend" aria-label={`${BREAKDOWN_OPTIONS.find((option) => option.mode === breakdownMode)?.label}の凡例`}>
         {legend.map((item) => (
           <span key={item.label}><i className="fiscal-year-swatch" style={{ backgroundColor: item.color }} aria-hidden="true" />{item.label}</span>

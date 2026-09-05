@@ -3,7 +3,7 @@ import {
   handleStaticDemoRequest,
   resetStaticDemoStore,
 } from "../../src/demo/staticDemoApi";
-import { readClonedStaticDemoState } from "../../src/demo/staticDemoState";
+import { readStaticDemoState } from "../../src/demo/staticDemoState";
 
 async function readJson(response: Response) {
   return (await response.json()) as Record<string, unknown>;
@@ -204,7 +204,7 @@ describe("static demo API", () => {
   });
 
   test("deletes only the selected fund and all of its browser-local related data", async () => {
-    const before = readClonedStaticDemoState();
+    const before = readStaticDemoState();
     const deletedPlannedItemIds = new Set(
       before.planned_items.filter((item) => item.fund_id === 1).map((item) => item.id),
     );
@@ -224,7 +224,7 @@ describe("static demo API", () => {
 
     expect(response.ok).toBe(true);
     expect(await readJson(response)).toEqual({ success: true });
-    const after = readClonedStaticDemoState();
+    const after = readStaticDemoState();
     expect(after.funds).toEqual(before.funds.filter((fund) => fund.id !== 1));
     expect(after.categories).toEqual(before.categories.filter((category) => category.fund_id !== 1));
     expect(after.budget_lines).toEqual(before.budget_lines.filter((line) => line.fund_id !== 1));
@@ -461,7 +461,7 @@ describe("static demo API", () => {
     });
     expect(createLabelledResponse.ok).toBe(true);
 
-    const labelledState = readClonedStaticDemoState();
+    const labelledState = readStaticDemoState();
     const labelledEntry = labelledState.actual_entries.find((entry) => entry.description === "取消予定の実績");
     expect(labelledEntry).toBeDefined();
 
@@ -470,7 +470,7 @@ describe("static demo API", () => {
     });
     expect(cancelResponse.ok).toBe(true);
     expect(
-      readClonedStaticDemoState().classification_assignments.filter(
+      readStaticDemoState().classification_assignments.filter(
         (assignment) => (
           assignment.target_type === "actual_entry" &&
           assignment.target_id === labelledEntry?.id

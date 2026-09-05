@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import Database from "better-sqlite3";
@@ -76,10 +76,18 @@ describe("seedDatabase", () => {
     db.close();
   });
 
-  it("uses a separate default database path for the test seed CLI", () => {
+  it("uses the application schema when seeding the test database from another directory", () => {
     const rootDir = mkdtempSync(join(tmpdir(), "budget-seed-cli-"));
     tempDirs.push(rootDir);
     writeProfile(rootDir);
+
+    const unrelatedSchemaDir = join(rootDir, "server", "db");
+    mkdirSync(unrelatedSchemaDir, { recursive: true });
+    writeFileSync(
+      join(unrelatedSchemaDir, "schema.sql"),
+      readFileSync(join(process.cwd(), "server", "db", "schema.sql"), "utf8")
+        + "\nCREATE TABLE unrelated_schema_marker (id INTEGER);",
+    );
 
     const tsxBin = join(process.cwd(), "node_modules", ".bin", "tsx");
     const env = { ...process.env };
@@ -93,6 +101,7 @@ describe("seedDatabase", () => {
     expect(existsSync(join(rootDir, "app.db"))).toBe(false);
 
     const db = new Database(join(rootDir, "app.test.db"), { readonly: true });
+    expect(db.prepare("SELECT name FROM sqlite_master WHERE name = 'unrelated_schema_marker'").get()).toBeUndefined();
     expect(db.prepare("SELECT COUNT(*) AS count FROM funds").get()).toEqual({ count: 1 });
     expect(db.prepare("SELECT COUNT(*) AS count FROM categories").get()).toEqual({ count: 1 });
     db.close();

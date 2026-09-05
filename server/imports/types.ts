@@ -1,12 +1,13 @@
 import type Database from "better-sqlite3";
 import type {
   ImportCounts,
-  ImportWarningCode,
+  ImportWarning,
   ReconciliationMetricSet,
   WorkbookImportResult,
 } from "../../src/contracts/imports";
 import type { CrossAggregateCategory } from "../../src/contracts/crossAggregateCategory";
 export type {
+  ImportWarning,
   ImportWarningCode,
   PersistImportMode,
   ReconciliationComparison,
@@ -73,13 +74,6 @@ export type ImportedActualEntryDraft = {
   amount: number;
   notes: string;
   auxiliary_label_names?: string[];
-};
-
-export type ImportWarning = {
-  code: ImportWarningCode;
-  sheet_name: string;
-  row_number: number;
-  message: string;
 };
 
 export type DryRunImportResult = {

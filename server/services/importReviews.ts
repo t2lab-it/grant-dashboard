@@ -1,10 +1,11 @@
 import type Database from "better-sqlite3";
-import type { ImportDetailResponse, ImportHistoryItem } from "../../src/contracts/imports";
-import {
-  parseStoredImportJson,
-  parseStoredImportWarnings,
-  resolveStoredImportReviewPayloads,
-} from "../imports/review/storedImportReview";
+import type {
+  ImportDetailResponse,
+  ImportHistoryItem,
+  ImportWarning,
+  ReconciliationReport,
+  StoredImportMappingSummary,
+} from "../../src/contracts/imports";
 
 type ImportHistoryRow = {
   id: number;
@@ -28,21 +29,14 @@ export function listImportReviews(db: Database.Database): ImportHistoryItem[] {
     `,
   ).all() as ImportHistoryRow[];
 
-  return rows.map((row) => {
-    const payloads = resolveStoredImportReviewPayloads(
-      parseStoredImportJson<unknown>(row.mapping_summary, "mapping_summary"),
-      parseStoredImportJson<unknown>(row.reconciliation_json, "reconciliation_json"),
-    );
-
-    return {
-      id: row.id,
-      source_filename: row.source_filename,
-      imported_at: row.imported_at,
-      warning_count: row.warning_count,
-      mapping_summary: payloads.mapping_summary,
-      reconciliation_ok: payloads.reconciliation.ok,
-    };
-  });
+  return rows.map((row) => ({
+    id: row.id,
+    source_filename: row.source_filename,
+    imported_at: row.imported_at,
+    warning_count: row.warning_count,
+    mapping_summary: parseStoredImportJson<StoredImportMappingSummary>(row.mapping_summary, "mapping_summary"),
+    reconciliation_ok: parseStoredImportJson<ReconciliationReport>(row.reconciliation_json, "reconciliation_json").ok,
+  }));
 }
 
 export function getImportReview(db: Database.Database, importId: number): ImportDetailResponse | null {
@@ -72,10 +66,16 @@ export function getImportReview(db: Database.Database, importId: number): Import
     source_filename: row.source_filename,
     imported_at: row.imported_at,
     warning_count: row.warning_count,
-    ...resolveStoredImportReviewPayloads(
-      parseStoredImportJson<unknown>(row.mapping_summary, "mapping_summary"),
-      parseStoredImportJson<unknown>(row.reconciliation_json, "reconciliation_json"),
-    ),
-    warnings: parseStoredImportWarnings(row.warnings_json),
+    mapping_summary: parseStoredImportJson<StoredImportMappingSummary>(row.mapping_summary, "mapping_summary"),
+    reconciliation: parseStoredImportJson<ReconciliationReport>(row.reconciliation_json, "reconciliation_json"),
+    warnings: parseStoredImportJson<ImportWarning[]>(row.warnings_json, "warnings_json"),
   };
+}
+
+function parseStoredImportJson<T>(raw: string, label: string): T {
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    throw new Error(`Invalid ${label} JSON in imports table`);
+  }
 }

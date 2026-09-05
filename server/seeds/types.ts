@@ -1,15 +1,5 @@
 import type { CrossAggregateCategory } from "../../src/contracts/crossAggregateCategory";
 
-export const SEED_TABLES = [
-  "funds",
-  "categories",
-  "budget_lines",
-  "planned_items",
-  "actual_entries",
-] as const;
-
-export type SeedTable = (typeof SEED_TABLES)[number];
-
 export type FundSeed = {
   id: number;
   fund_code: string;

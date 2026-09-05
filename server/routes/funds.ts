@@ -3,7 +3,7 @@ import { handleFundRouteError } from "./formErrors";
 import { parsePositiveIntParam, sendNotFound } from "./routeHelpers";
 import { getFundSnapshot } from "../services/dashboard";
 import { createFundWithBudget, deleteFund, updateFundWithBudget } from "../services/fundCreation";
-import { fundCreationSchema, fundUpdateSchema } from "../validation";
+import { fundCreationSchema, fundUpdateSchema } from "../../src/contracts/requestSchemas";
 
 export function registerFundRoutes(app: FastifyInstance) {
   app.post("/api/funds", (request, reply) => {

@@ -6,11 +6,11 @@ import {
   completePlannedItem,
   createPlannedItemsBulk,
   deletePlannedItem,
-  restoreCancelledPlannedItem,
+  restorePlannedItem,
   updatePlannedItem,
   upsertPlannedItem,
 } from "../services/ledger";
-import { plannedItemEditSchema, plannedItemSchema, plannedItemsBulkSchema } from "../validation";
+import { plannedItemEditSchema, plannedItemSchema, plannedItemsBulkSchema } from "../../src/contracts/requestSchemas";
 
 export function registerPlannedItemRoutes(app: FastifyInstance) {
   app.post("/api/planned-items", (request, reply) => {
@@ -123,7 +123,7 @@ export function registerPlannedItemRoutes(app: FastifyInstance) {
     }
 
     try {
-      const result = restoreCancelledPlannedItem(app.db, plannedItemId);
+      const result = restorePlannedItem(app.db, plannedItemId);
       reply.code(200).send(result);
     } catch (error) {
       if (handlePlannedItemRouteError(reply, error)) {

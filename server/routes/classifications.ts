@@ -7,7 +7,7 @@ import {
   listClassifications,
   updateClassification,
 } from "../services/classifications";
-import { classificationSchema, classificationUpdateSchema } from "../validation";
+import { classificationSchema, classificationUpdateSchema } from "../../src/contracts/requestSchemas";
 import { parsePositiveIntParam, sendApiError, sendNotFound } from "./routeHelpers";
 
 function sendValidationError(reply: FastifyReply) {

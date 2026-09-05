@@ -410,8 +410,6 @@ export function restorePlannedItem(db: Database.Database, plannedItemId: number)
   return { success: true };
 }
 
-export const restoreCancelledPlannedItem = restorePlannedItem;
-
 export function updateActualEntry(
   db: Database.Database,
   actualEntryId: number,

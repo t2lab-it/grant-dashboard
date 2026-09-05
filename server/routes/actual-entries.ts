@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { handleActualEntryRouteError } from "./formErrors";
 import { parsePositiveIntParam } from "./routeHelpers";
 import { applyActualEntry, cancelActualEntry, updateActualEntry } from "../services/ledger";
-import { actualEntryEditSchema, actualEntrySchema } from "../validation";
+import { actualEntryEditSchema, actualEntrySchema } from "../../src/contracts/requestSchemas";
 
 export function registerActualEntryRoutes(app: FastifyInstance) {
   app.post("/api/actual-entries", (request, reply) => {

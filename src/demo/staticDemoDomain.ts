@@ -2,60 +2,7 @@ import type { StaticDemoBudgetLine, StaticDemoCategory, StaticDemoFund, StaticDe
 import { isCrossAggregateCategory, type CrossAggregateCategory } from "../contracts/crossAggregateCategory";
 import { buildOverviewMonthlyStatus, type MonthlyMovement } from "../contracts/monthlySummary";
 import { formatTokyoMonthKey, inferJapaneseFiscalYear } from "../lib/calendar";
-export type FundInput = {
-  name: string;
-  fiscalYear: number;
-  awardedAmount: number;
-  notes: string;
-  projectTagIds?: number[];
-  auxiliaryLabelIds?: number[];
-  categories: Array<{
-    id?: number;
-    name: string;
-    amount: number;
-    crossAggregateCategory: CrossAggregateCategory;
-  }>;
-};
 
-export type PlannedItemInput = {
-  fundId: number;
-  categoryId: number;
-  plannedDate: string;
-  scheduledMonth: string;
-  description: string;
-  amount: number;
-  notes: string;
-  auxiliaryLabelIds?: number[];
-};
-
-export type BulkPlannedItemsInput = {
-  fundId: number;
-  categoryId: number;
-  plannedDate: string;
-  notes: string;
-  auxiliaryLabelIds?: number[];
-  items: Array<{
-    scheduledMonth: string;
-    description: string;
-    amount: number;
-  }>;
-};
-
-export type PlannedItemEditInput = Omit<PlannedItemInput, "plannedDate">;
-
-export type ActualEntryInput = {
-  fundId: number;
-  categoryId: number;
-  plannedItemId?: number;
-  actualDate: string;
-  description: string;
-  amount: number;
-  notes: string;
-  auxiliaryLabelIds?: number[];
-  keepRemainingPlanned?: boolean;
-};
-
-export type ActualEntryEditInput = Omit<ActualEntryInput, "plannedItemId" | "keepRemainingPlanned">;
 type StaticSearchTab = "all" | "overdue" | "unsettled" | "unlinked";
 type StaticSearchEntryType = "planned" | "actual";
 
@@ -231,7 +178,7 @@ export function getStaticOverviewCrossAggregateCategories(state: StaticDemoState
   >();
 
   for (const category of sortCategories(state.categories.filter((row) => scopedFundIds.has(row.fund_id)))) {
-    const crossAggregateCategory = getCategoryCrossAggregateCategory(category);
+    const crossAggregateCategory = category.cross_aggregate_category;
     const current = rowsByCategory.get(crossAggregateCategory) ?? {
       crossAggregateCategory,
       budgetAmount: null,
@@ -270,10 +217,6 @@ export function sumBudgetLines(lines: StaticDemoBudgetLine[]) {
   }
 
   return lines.reduce((sum, row) => sum + (row.amount ?? 0), 0);
-}
-
-export function getCategoryCrossAggregateCategory(category: StaticDemoCategory) {
-  return category.cross_aggregate_category;
 }
 
 export function requireCrossAggregateCategory(value: unknown): CrossAggregateCategory {
@@ -443,7 +386,7 @@ export function getStaticMonthlyMovements(
     }
 
     const category = state.categories.find((row) => row.id === categoryId);
-    return category !== undefined && getCategoryCrossAggregateCategory(category) === crossAggregateCategory;
+    return category !== undefined && category.cross_aggregate_category === crossAggregateCategory;
   };
 
   for (const item of state.planned_items) {

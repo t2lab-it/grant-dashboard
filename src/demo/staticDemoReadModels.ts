@@ -8,7 +8,7 @@ import { toHeaderYearEndRisks } from "../contracts/headerAlerts";
 import { buildYearEndRiskSummary, defaultYearEndRiskThresholds } from "../contracts/yearEndRisk";
 import { formatTokyoMonthKey, inferJapaneseFiscalYear } from "../lib/calendar";
 import { readStaticDemoState } from "./staticDemoState";
-import { assignedStaticTags, auxiliaryLabelsForSearchResult, compareSearchResults, getCategoryCrossAggregateCategory, getFundActualAmount, getFundCommittedAmount, getOverviewMonthlyStatus, getPlannedStatusLabel, getRemainingPlannedAmount, getStaticFundOverduePlannedAmountMap, getStaticMonthlyMovements, getStaticOverviewCrossAggregateCategories, listAvailableFiscalYears, listStaticClassifications, matchesSearchFilters, matchesSearchTab, requireCategoryForFund, requireFund, resolveFiscalYear, sortCategories, sortFunds, sumBudgetLines, toFreeBalance, type StaticSearchOptions, type StaticSearchResult } from "./staticDemoDomain";
+import { assignedStaticTags, auxiliaryLabelsForSearchResult, compareSearchResults, getFundActualAmount, getFundCommittedAmount, getOverviewMonthlyStatus, getPlannedStatusLabel, getRemainingPlannedAmount, getStaticFundOverduePlannedAmountMap, getStaticMonthlyMovements, getStaticOverviewCrossAggregateCategories, listAvailableFiscalYears, listStaticClassifications, matchesSearchFilters, matchesSearchTab, requireCategoryForFund, requireFund, resolveFiscalYear, sortCategories, sortFunds, sumBudgetLines, toFreeBalance, type StaticSearchOptions, type StaticSearchResult } from "./staticDemoDomain";
 const DEMO_IMPORTED_AT = "2026-04-23T00:00:00.000Z"; const DEMO_WORKBOOK_FILENAME = "demo-budget.xlsx"; const SEARCH_RESULT_LIMIT = 200; const HEADER_ALERT_ITEM_LIMIT = 3;
 export function getStaticFiscalYearComparisonSnapshot(): FiscalYearComparisonResponse {
   const state = readStaticDemoState();
@@ -386,7 +386,7 @@ function getStaticBudgetOverrunCategory(state: StaticDemoState, fiscalYear: numb
   );
 }
 
-function getStaticYearEndRiskCategory(state: StaticDemoState, fiscalYear: number) {
+function getStaticYearEndRiskCategory(fiscalYear: number) {
   const overview = getStaticOverviewSnapshot(fiscalYear);
 
   return createStaticAlertCategory(
@@ -450,7 +450,7 @@ export function getStaticHeaderAlertsSnapshot(requestedFiscalYear?: number) {
     primary: compactStaticAlertCategories([
       getStaticBudgetOverrunCategory(state, selectedFiscalYear),
       getStaticSearchAlertCategory(overdue, "overdue", "期限超過", "warning", selectedFiscalYear),
-      getStaticYearEndRiskCategory(state, selectedFiscalYear),
+      getStaticYearEndRiskCategory(selectedFiscalYear),
     ]),
     supporting: [],
   };
@@ -574,7 +574,7 @@ export function getStaticFundSnapshot(fundId: number) {
       id: category.id,
       categoryCode: category.category_code,
       categoryName: category.name,
-      crossAggregateCategory: getCategoryCrossAggregateCategory(category),
+      crossAggregateCategory: category.cross_aggregate_category,
       budgetAmount,
       plannedAmount,
       actualAmount,

@@ -1,7 +1,4 @@
-import {
-  CROSS_AGGREGATE_CATEGORY_LABELS,
-  type CrossAggregateCategory,
-} from "../../contracts/crossAggregateCategory";
+import { CROSS_AGGREGATE_CATEGORY_LABELS } from "../../contracts/crossAggregateCategory";
 import type {
   FiscalYearComparisonResponse,
   FiscalYearComparisonYear,
@@ -205,10 +202,3 @@ export function buildFiscalYearComparisonModel(
     maxPaceRate: Math.max(100, ...paceRates),
   };
 }
-
-export type FiscalYearCategoryView = {
-  code: CrossAggregateCategory;
-  label: string;
-  displayAmount: number;
-  percentage: number | null;
-};

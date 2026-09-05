@@ -159,7 +159,7 @@ export function getCurrentMonthKey() {
   return formatTokyoMonthKey(new Date());
 }
 
-export function getTodayProgressLabel(metric: OverviewSummaryMetricKey, points: OverviewTrendPoint[], targetValue: number) {
+export function getTodayProgressLabel(points: OverviewTrendPoint[], targetValue: number) {
   const currentMonthKey = getCurrentMonthKey();
   const currentPoint = points.find((point) => point.month === currentMonthKey);
 
@@ -182,7 +182,7 @@ export function getTodayProgressLabel(metric: OverviewSummaryMetricKey, points: 
   return formatPercentage(Math.max(0, Math.min(progress, 100)), 100);
 }
 
-export function getTodayGoalProgress(metric: OverviewSummaryMetricKey, points: OverviewTrendPoint[], targetValue: number) {
+export function getTodayGoalProgress(points: OverviewTrendPoint[], targetValue: number) {
   const currentMonthKey = getCurrentMonthKey();
   const currentPoint = points.find((point) => point.month === currentMonthKey);
 
@@ -221,14 +221,13 @@ export function formatPointDelta(delta: number) {
 }
 
 export function getTodayIdealDeltaLabel(
-  metric: OverviewSummaryMetricKey,
   points: OverviewTrendPoint[],
   targetValue: number,
   todayMarkerX: number,
   chartWidth: number,
   paddingLeft: number,
 ) {
-  const currentProgress = getTodayGoalProgress(metric, points, targetValue);
+  const currentProgress = getTodayGoalProgress(points, targetValue);
 
   if (currentProgress === null) {
     return null;

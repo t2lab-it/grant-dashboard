@@ -30,9 +30,9 @@ export function OverviewTrendChart({
   const describeValue = (value: number) => formatAmount(value, amountDisplayMode);
   const targetLabel = getTrendTargetLabel(metric, targetValue, amountDisplayMode);
   const todayMarker = getTodayMarker(points, chartWidth, padding.left);
-  const todayProgressLabel = getTodayProgressLabel(metric, points, targetValue);
+  const todayProgressLabel = getTodayProgressLabel(points, targetValue);
   const todayIdealDeltaLabel = todayMarker
-    ? getTodayIdealDeltaLabel(metric, points, targetValue, todayMarker.x, chartWidth, padding.left)
+    ? getTodayIdealDeltaLabel(points, targetValue, todayMarker.x, chartWidth, padding.left)
     : null;
   const chartPoints = points.map((point, index) => {
     const x =

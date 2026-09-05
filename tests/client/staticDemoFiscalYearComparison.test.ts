@@ -3,7 +3,7 @@ import {
   handleStaticDemoRequest,
   resetStaticDemoStore,
 } from "../../src/demo/staticDemoApi";
-import { readClonedStaticDemoState } from "../../src/demo/staticDemoState";
+import { readStaticDemoState } from "../../src/demo/staticDemoState";
 
 describe("static demo fiscal year comparison API", () => {
   beforeEach(() => {
@@ -32,7 +32,7 @@ describe("static demo fiscal year comparison API", () => {
       }),
     });
     const { fundId } = (await createFundResponse.json()) as { fundId: number };
-    const state = readClonedStaticDemoState();
+    const state = readStaticDemoState();
     const categoryId = state.categories.find((category) => category.fund_id === fundId)?.id;
     expect(categoryId).toBeDefined();
 

@@ -46,7 +46,6 @@ type AppSettingsContextValue = {
   settings: AppSettings;
   setAppThemeMode: (mode: AppThemeMode) => void;
   setThemePreset: (themePreset: OverviewChartPresetRef) => void;
-  setCustomChartPresets: (customChartPresets: CustomOverviewChartPreset[]) => void;
   saveCustomChartPreset: (preset: CustomOverviewChartPreset) => void;
   deleteCustomChartPreset: (id: string) => void;
   setDefaultRateMetric: (metric: RateMetricKey) => void;
@@ -81,7 +80,6 @@ const AppSettingsContext = createContext<AppSettingsContextValue>({
   settings: defaultSettings,
   setAppThemeMode: () => undefined,
   setThemePreset: () => undefined,
-  setCustomChartPresets: () => undefined,
   saveCustomChartPreset: () => undefined,
   deleteCustomChartPreset: () => undefined,
   setDefaultRateMetric: () => undefined,
@@ -127,11 +125,6 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       setAppThemeMode: (appThemeMode) =>
         setSettings((current) => ({ ...current, appThemeMode })),
       setThemePreset: (themePreset) => setSettings((current) => ({ ...current, themePreset })),
-      setCustomChartPresets: (customChartPresets) =>
-        setSettings((current) => ({
-          ...current,
-          customChartPresets,
-        })),
       saveCustomChartPreset: (preset) =>
         setSettings((current) => {
           const customChartPresets = [

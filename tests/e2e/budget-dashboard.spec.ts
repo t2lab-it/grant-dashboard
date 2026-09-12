@@ -79,3 +79,21 @@ test("demo tutorial starts on overview and moves to fund detail", async ({ page 
   await expect(tutorial.getByText("予定と実績の一覧")).toBeVisible();
   await expect(page.getByRole("heading", { name: "計画項目一覧" })).toBeVisible();
 });
+
+test("aligns fiscal-year fund donuts and legends with different fund counts", async ({ page }) => {
+  await page.goto("/fiscal-years?year=2026");
+
+  await expect(page.getByRole("heading", { name: "各年度の予算構成比" })).toBeVisible();
+  const cards = page.locator(".fiscal-year-fund-card");
+  await expect(cards).toHaveCount(3);
+
+  const donutTops = await cards.locator(".fiscal-year-fund-donut").evaluateAll((elements) =>
+    elements.map((element) => Math.round(element.getBoundingClientRect().top)),
+  );
+  const legendTops = await cards.locator(".fiscal-year-fund-list, .fiscal-year-fund-empty").evaluateAll((elements) =>
+    elements.map((element) => Math.round(element.getBoundingClientRect().top)),
+  );
+
+  expect(new Set(donutTops).size).toBe(1);
+  expect(new Set(legendTops).size).toBe(1);
+});

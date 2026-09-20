@@ -114,7 +114,9 @@ function legendForMode(
   }));
 }
 
-export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAssets, years, activeFund, onFundHover }: {
+export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAssets, years, activeFund, onFundHover, activeYear, onYearHover }: {
+  activeYear: number | null;
+  onYearHover: (year: number | null) => void;
   activeFund: string | null;
   onFundHover: (name: string | null) => void;
   amountDisplayMode: AmountDisplayMode;
@@ -190,7 +192,7 @@ export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAss
           ));
           const outerWidth = axis.maximum > 0 ? Math.max(0, Math.min((year.budget.assets / axis.maximum) * 100, 100)) : 0;
           return (
-            <Link key={year.fiscalYear} className="fiscal-year-budget-row" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
+            <Link key={year.fiscalYear} data-year-muted={activeYear !== null && activeYear !== year.fiscalYear} onMouseEnter={() => onYearHover(year.fiscalYear)} onMouseLeave={() => onYearHover(null)} className="fiscal-year-budget-row" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
               <span className="fiscal-year-budget-year">{year.fiscalYear}年度</span>
               <span className="fiscal-year-budget-scale">
                 <span className="fiscal-year-budget-tick-guides" aria-hidden="true">

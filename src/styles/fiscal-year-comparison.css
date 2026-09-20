@@ -578,3 +578,7 @@
   background-color: var(--surface-muted);
   opacity: 0.85;
 }
+
+.fiscal-year-comparison-section [data-year-muted="true"] {
+  opacity: 0.2;
+}

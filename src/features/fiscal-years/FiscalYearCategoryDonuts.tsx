@@ -37,7 +37,9 @@ function FiscalYearCategoryDonut({ colors, year, activeCategory, onCategoryHover
   );
 }
 
-export function FiscalYearCategoryDonuts({ amountDisplayMode, colors, years }: {
+export function FiscalYearCategoryDonuts({ amountDisplayMode, colors, years, activeYear, onYearHover }: {
+  activeYear: number | null;
+  onYearHover: (year: number | null) => void;
   amountDisplayMode: AmountDisplayMode;
   colors: CrossAggregateChartColors;
   years: FiscalYearComparisonViewYear[];
@@ -53,7 +55,7 @@ export function FiscalYearCategoryDonuts({ amountDisplayMode, colors, years }: {
       </div>
       <div className="fiscal-year-category-grid" role="group" aria-label="年度別の横断集計カテゴリ構成比">
         {years.map((year) => (
-          <Link key={year.fiscalYear} className="fiscal-year-category-card" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
+          <Link key={year.fiscalYear} data-year-muted={activeYear !== null && activeYear !== year.fiscalYear} onMouseEnter={() => onYearHover(year.fiscalYear)} onMouseLeave={() => onYearHover(null)} className="fiscal-year-category-card" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
             <strong>{year.fiscalYear}年度</strong>
             <span className="fiscal-year-category-donut"><FiscalYearCategoryDonut onCategoryHover={setActiveCategory} activeCategory={activeCategory} colors={colors} year={year} /></span>
             <ul className="sr-only">

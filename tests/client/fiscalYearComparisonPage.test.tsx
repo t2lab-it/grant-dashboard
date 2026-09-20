@@ -421,6 +421,29 @@ describe("FiscalYearComparisonPage", () => {
     expect(budget.querySelector('[data-legend-active="true"]')).toBeNull();
   });
 
+  test("shares year highlighting across the whole page and clears it when leaving", async () => {
+    const user = userEvent.setup();
+    okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current"), comparisonYear(2027, "future")] });
+    renderPage();
+    await screen.findByRole("heading", { name: "年度横断サマリー" });
+    const sections = ["年度別の予算総額", "各年度の予算構成比", "横断集計カテゴリの構成比"].map((name) => screen.getByRole("heading", { name }).closest("section")!);
+    const pace = screen.getByRole("heading", { name: "月別の執行ペース" }).closest("section")!;
+    const yearLegend = within(pace).getByText("2026年度");
+    const targets = sections.map((section) => within(section).getByRole("link", { name: "2026年度の年度ページを開く" }));
+    for (const target of [...targets, yearLegend]) {
+      await user.hover(target);
+      for (const section of sections) {
+        expect(within(section).getByRole("link", { name: "2026年度の年度ページを開く" })).toHaveAttribute("data-year-muted", "false");
+        expect(within(section).getByRole("link", { name: "2027年度の年度ページを開く" })).toHaveAttribute("data-year-muted", "true");
+      }
+      expect(yearLegend).toHaveAttribute("data-legend-active", "true");
+      expect([...pace.querySelectorAll("g[opacity]")].map((g) => g.getAttribute("opacity")).sort()).toEqual(["0.2", "1"]);
+      await user.unhover(target);
+      expect(document.querySelector('[data-year-muted="true"]')).toBeNull();
+      expect(yearLegend).toHaveAttribute("data-legend-active", "false");
+    }
+  });
+
   test("describes April-to-March actual and forecast pace", async () => {
     okResponse({
       currentFiscalYear: 2026,

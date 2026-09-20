@@ -30,7 +30,9 @@ function FiscalYearFundDonut({ year, activeFund, onFundHover }: { year: FiscalYe
   );
 }
 
-export function FiscalYearFundDonuts({ amountDisplayMode, years, activeFund, onFundHover }: {
+export function FiscalYearFundDonuts({ amountDisplayMode, years, activeFund, onFundHover, activeYear, onYearHover }: {
+  activeYear: number | null;
+  onYearHover: (year: number | null) => void;
   activeFund: string | null;
   onFundHover: (name: string | null) => void;
   amountDisplayMode: AmountDisplayMode;
@@ -43,7 +45,7 @@ export function FiscalYearFundDonuts({ amountDisplayMode, years, activeFund, onF
       </div>
       <div className="fiscal-year-fund-grid" role="group" aria-label="年度別の予算構成比">
         {years.map((year) => (
-          <Link key={year.fiscalYear} className="fiscal-year-fund-card" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
+          <Link key={year.fiscalYear} data-year-muted={activeYear !== null && activeYear !== year.fiscalYear} onMouseEnter={() => onYearHover(year.fiscalYear)} onMouseLeave={() => onYearHover(null)} className="fiscal-year-fund-card" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
             <strong>{year.fiscalYear}年度</strong>
             <span className="fiscal-year-fund-donut"><FiscalYearFundDonut onFundHover={onFundHover} activeFund={activeFund} year={year} /></span>
             {year.funds.length > 0 ? (

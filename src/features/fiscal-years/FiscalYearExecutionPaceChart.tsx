@@ -27,11 +27,12 @@ function pathFor(points: FiscalYearPacePoint[], yMax: number) {
   }).join(" ");
 }
 
-export function FiscalYearExecutionPaceChart({ maxPaceRate, years }: {
+export function FiscalYearExecutionPaceChart({ maxPaceRate, years, activeYear, onYearHover }: {
+  activeYear: number | null;
+  onYearHover: (year: number | null) => void;
   maxPaceRate: number;
   years: FiscalYearComparisonViewYear[];
 }) {
-  const [activeYear, setActiveYear] = useState<number | null>(null);
   const [activeKind, setActiveKind] = useState<"actual" | "projected" | null>(null);
   const yMax = Math.max(100, Math.ceil(maxPaceRate / 25) * 25);
   const descriptions = years.map((year) => {
@@ -61,12 +62,12 @@ export function FiscalYearExecutionPaceChart({ maxPaceRate, years }: {
             const actualPath = pathFor(year.pace.actualPoints, yMax);
             const projectedPath = pathFor(year.pace.projectedPoints, yMax);
             return <g key={year.fiscalYear} opacity={activeYear !== null && activeYear !== year.fiscalYear ? 0.2 : 1}>
-              {actualPath ? <path onMouseEnter={() => { setActiveYear(year.fiscalYear); setActiveKind("actual"); }} onMouseLeave={() => { setActiveYear(null); setActiveKind(null); }} opacity={activeKind === "projected" ? 0.2 : 1} d={actualPath} fill="none" stroke={color} strokeWidth={activeYear === year.fiscalYear ? 7 : year.state === "current" ? 5 : 3.5} /> : null}
-              {projectedPath ? <path onMouseEnter={() => { setActiveYear(year.fiscalYear); setActiveKind("projected"); }} onMouseLeave={() => { setActiveYear(null); setActiveKind(null); }} opacity={activeKind === "actual" ? 0.2 : 1} d={projectedPath} fill="none" stroke={color} strokeWidth={activeYear === year.fiscalYear ? 7 : year.state === "current" ? 5 : 3.5} strokeDasharray="8 6" /> : null}
+              {actualPath ? <path onMouseEnter={() => { onYearHover(year.fiscalYear); setActiveKind("actual"); }} onMouseLeave={() => { onYearHover(null); setActiveKind(null); }} opacity={activeKind === "projected" ? 0.2 : 1} d={actualPath} fill="none" stroke={color} strokeWidth={activeYear === year.fiscalYear ? 7 : year.state === "current" ? 5 : 3.5} /> : null}
+              {projectedPath ? <path onMouseEnter={() => { onYearHover(year.fiscalYear); setActiveKind("projected"); }} onMouseLeave={() => { onYearHover(null); setActiveKind(null); }} opacity={activeKind === "actual" ? 0.2 : 1} d={projectedPath} fill="none" stroke={color} strokeWidth={activeYear === year.fiscalYear ? 7 : year.state === "current" ? 5 : 3.5} strokeDasharray="8 6" /> : null}
             </g>;
           })}
         </svg>
-        <figcaption><ul className="fiscal-year-pace-year-legend">{years.map((year, index) => <li key={year.fiscalYear} data-legend-active={activeYear === year.fiscalYear} data-legend-muted={activeYear !== null && activeYear !== year.fiscalYear} onMouseEnter={() => setActiveYear(year.fiscalYear)} onMouseLeave={() => setActiveYear(null)}><i style={{ backgroundColor: colorForFiscalYear(index, years.length) }} aria-hidden="true" />{year.fiscalYear}年度{year.pace.hasBudget ? "" : " 予算総額なし"}</li>)}</ul></figcaption>
+        <figcaption><ul className="fiscal-year-pace-year-legend">{years.map((year, index) => <li key={year.fiscalYear} data-legend-active={activeYear === year.fiscalYear} data-legend-muted={activeYear !== null && activeYear !== year.fiscalYear} onMouseEnter={() => onYearHover(year.fiscalYear)} onMouseLeave={() => onYearHover(null)}><i style={{ backgroundColor: colorForFiscalYear(index, years.length) }} aria-hidden="true" />{year.fiscalYear}年度{year.pace.hasBudget ? "" : " 予算総額なし"}</li>)}</ul></figcaption>
       </figure>
     </section>
   );

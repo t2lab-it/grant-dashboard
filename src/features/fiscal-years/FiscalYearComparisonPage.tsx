@@ -14,6 +14,7 @@ import { FiscalYearFundDonuts } from "./FiscalYearFundDonuts";
 import { buildFiscalYearComparisonModel } from "./fiscalYearComparisonModel";
 
 export function FiscalYearComparisonPage() {
+  const [activeYear, setActiveYear] = useState<number | null>(null);
   const [activeFund, setActiveFund] = useState<string | null>(null);
   const { settings: { amountDisplayMode, customChartPresets, themePreset } } = useAppSettings();
   const { data, isError, isLoading } = useQuery({
@@ -29,10 +30,10 @@ export function FiscalYearComparisonPage() {
   return (
     <div className="fiscal-year-comparison-page">
       <header className="fiscal-year-comparison-page-heading"><h1>年度横断サマリー</h1></header>
-      <FiscalYearBudgetBars activeFund={activeFund} onFundHover={setActiveFund} amountDisplayMode={amountDisplayMode} categoryColors={categoryColors} maxAssets={model.maxAssets} years={model.years} />
-      <FiscalYearFundDonuts activeFund={activeFund} onFundHover={setActiveFund} amountDisplayMode={amountDisplayMode} years={model.years} />
-      <FiscalYearCategoryDonuts amountDisplayMode={amountDisplayMode} colors={categoryColors} years={model.years} />
-      <FiscalYearExecutionPaceChart maxPaceRate={model.maxPaceRate} years={model.years} />
+      <FiscalYearBudgetBars activeYear={activeYear} onYearHover={setActiveYear} activeFund={activeFund} onFundHover={setActiveFund} amountDisplayMode={amountDisplayMode} categoryColors={categoryColors} maxAssets={model.maxAssets} years={model.years} />
+      <FiscalYearFundDonuts activeYear={activeYear} onYearHover={setActiveYear} activeFund={activeFund} onFundHover={setActiveFund} amountDisplayMode={amountDisplayMode} years={model.years} />
+      <FiscalYearCategoryDonuts activeYear={activeYear} onYearHover={setActiveYear} amountDisplayMode={amountDisplayMode} colors={categoryColors} years={model.years} />
+      <FiscalYearExecutionPaceChart activeYear={activeYear} onYearHover={setActiveYear} maxPaceRate={model.maxPaceRate} years={model.years} />
     </div>
   );
 }

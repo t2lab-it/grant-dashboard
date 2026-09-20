@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { FiscalYearComparisonViewYear, FiscalYearPacePoint } from "./fiscalYearComparisonModel";
 
 const WIDTH = 720;
@@ -26,10 +27,13 @@ function pathFor(points: FiscalYearPacePoint[], yMax: number) {
   }).join(" ");
 }
 
-export function FiscalYearExecutionPaceChart({ maxPaceRate, years }: {
+export function FiscalYearExecutionPaceChart({ maxPaceRate, years, activeYear, onYearHover }: {
+  activeYear: number | null;
+  onYearHover: (year: number | null) => void;
   maxPaceRate: number;
   years: FiscalYearComparisonViewYear[];
 }) {
+  const [activeKind, setActiveKind] = useState<"actual" | "projected" | null>(null);
   const yMax = Math.max(100, Math.ceil(maxPaceRate / 25) * 25);
   const descriptions = years.map((year) => {
     const last = [...year.pace.actualPoints, ...year.pace.projectedPoints].at(-1);
@@ -40,8 +44,8 @@ export function FiscalYearExecutionPaceChart({ maxPaceRate, years }: {
       <div className="fiscal-year-comparison-section-heading">
         <div><h2 id="fiscal-year-pace-title">月別の執行ペース</h2></div>
         <div className="fiscal-year-comparison-legend" aria-label="月別執行ペースの凡例">
-          <span><i className="fiscal-year-line-sample" aria-hidden="true" />実績（実線）</span>
-          <span><i className="fiscal-year-line-sample fiscal-year-line-sample-dashed" aria-hidden="true" />見込み・予定（破線）</span>
+          <span data-legend-active={activeKind === "actual"} data-legend-muted={activeKind !== null && activeKind !== "actual"} onMouseEnter={() => setActiveKind("actual")} onMouseLeave={() => setActiveKind(null)}><i className="fiscal-year-line-sample" aria-hidden="true" />実績（実線）</span>
+          <span data-legend-active={activeKind === "projected"} data-legend-muted={activeKind !== null && activeKind !== "projected"} onMouseEnter={() => setActiveKind("projected")} onMouseLeave={() => setActiveKind(null)}><i className="fiscal-year-line-sample fiscal-year-line-sample-dashed" aria-hidden="true" />見込み・予定（破線）</span>
         </div>
       </div>
       <figure className="fiscal-year-pace-figure">
@@ -57,13 +61,13 @@ export function FiscalYearExecutionPaceChart({ maxPaceRate, years }: {
             const color = colorForFiscalYear(index, years.length);
             const actualPath = pathFor(year.pace.actualPoints, yMax);
             const projectedPath = pathFor(year.pace.projectedPoints, yMax);
-            return <g key={year.fiscalYear}>
-              {actualPath ? <path d={actualPath} fill="none" stroke={color} strokeWidth={year.state === "current" ? 5 : 3.5} /> : null}
-              {projectedPath ? <path d={projectedPath} fill="none" stroke={color} strokeWidth={year.state === "current" ? 5 : 3.5} strokeDasharray="8 6" /> : null}
+            return <g key={year.fiscalYear} opacity={activeYear !== null && activeYear !== year.fiscalYear ? 0.2 : 1}>
+              {actualPath ? <path onMouseEnter={() => { onYearHover(year.fiscalYear); setActiveKind("actual"); }} onMouseLeave={() => { onYearHover(null); setActiveKind(null); }} opacity={activeKind === "projected" ? 0.2 : 1} d={actualPath} fill="none" stroke={color} strokeWidth={activeYear === year.fiscalYear ? 7 : year.state === "current" ? 5 : 3.5} /> : null}
+              {projectedPath ? <path onMouseEnter={() => { onYearHover(year.fiscalYear); setActiveKind("projected"); }} onMouseLeave={() => { onYearHover(null); setActiveKind(null); }} opacity={activeKind === "actual" ? 0.2 : 1} d={projectedPath} fill="none" stroke={color} strokeWidth={activeYear === year.fiscalYear ? 7 : year.state === "current" ? 5 : 3.5} strokeDasharray="8 6" /> : null}
             </g>;
           })}
         </svg>
-        <figcaption><ul className="fiscal-year-pace-year-legend">{years.map((year, index) => <li key={year.fiscalYear}><i style={{ backgroundColor: colorForFiscalYear(index, years.length) }} aria-hidden="true" />{year.fiscalYear}年度{year.pace.hasBudget ? "" : " 予算総額なし"}</li>)}</ul></figcaption>
+        <figcaption><ul className="fiscal-year-pace-year-legend">{years.map((year, index) => <li key={year.fiscalYear} data-legend-active={activeYear === year.fiscalYear} data-legend-muted={activeYear !== null && activeYear !== year.fiscalYear} onMouseEnter={() => onYearHover(year.fiscalYear)} onMouseLeave={() => onYearHover(null)}><i style={{ backgroundColor: colorForFiscalYear(index, years.length) }} aria-hidden="true" />{year.fiscalYear}年度{year.pace.hasBudget ? "" : " 予算総額なし"}</li>)}</ul></figcaption>
       </figure>
     </section>
   );

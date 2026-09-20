@@ -190,7 +190,8 @@
 .fiscal-year-budget-month-colorbar {
   min-width: 0;
   height: 12px;
-  display: block;
+  display: flex;
+  overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--app-text) 18%, transparent);
   border-radius: 999px;
 }
@@ -561,4 +562,23 @@
   .fiscal-year-pace-figure {
     padding: 8px;
   }
+}
+
+.fiscal-year-budget-month-colorbar > span {
+  flex: 1;
+  height: 100%;
+}
+
+/* Match the dimming of the corresponding chart regions. */
+.fiscal-year-comparison-section [data-legend-muted="true"] {
+  opacity: 0.2;
+}
+
+.fiscal-year-budget-month-colorbar > [data-legend-muted="true"] {
+  background-color: var(--surface-muted);
+  opacity: 0.85;
+}
+
+.fiscal-year-comparison-section [data-year-muted="true"] {
+  opacity: 0.2;
 }

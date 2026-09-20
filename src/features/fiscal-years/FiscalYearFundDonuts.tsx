@@ -9,7 +9,7 @@ function formatDonutCenterAmount(value: number) {
   return `${Math.round(value / 1000)}k円`;
 }
 
-function FiscalYearFundDonut({ year }: { year: FiscalYearComparisonViewYear }) {
+function FiscalYearFundDonut({ year, activeFund, onFundHover }: { year: FiscalYearComparisonViewYear; activeFund: string | null; onFundHover: (name: string | null) => void }) {
   const chartRadius = 45;
   const chartStroke = 16;
   const chartCircumference = 2 * Math.PI * chartRadius;
@@ -23,14 +23,18 @@ function FiscalYearFundDonut({ year }: { year: FiscalYearComparisonViewYear }) {
         const dashLength = (percentage / 100) * chartCircumference;
         const dashOffset = chartCircumference * (1 - offsetPercentage / 100);
 
-        return <circle key={fund.id} cx="64" cy="64" r={chartRadius} fill="none" stroke={colorForFiscalYearFund(fund.colorIndex)} strokeDasharray={`${dashLength} ${chartCircumference - dashLength}`} strokeDashoffset={dashOffset} strokeLinecap="butt" strokeWidth={chartStroke} transform="rotate(-90 64 64)" />;
+        return <circle onMouseEnter={() => onFundHover(fund.name)} onMouseLeave={() => onFundHover(null)} opacity={activeFund && activeFund !== fund.name ? 0.2 : 1} key={fund.id} cx="64" cy="64" r={chartRadius} fill="none" stroke={colorForFiscalYearFund(fund.colorIndex)} strokeDasharray={`${dashLength} ${chartCircumference - dashLength}`} strokeDashoffset={dashOffset} strokeLinecap="butt" strokeWidth={activeFund === fund.name ? chartStroke + 4 : chartStroke} transform="rotate(-90 64 64)" />;
       })}
       <text className="fiscal-year-category-total" x="64" y="64" textAnchor="middle" dominantBaseline="middle">{centerLabel}</text>
     </svg>
   );
 }
 
-export function FiscalYearFundDonuts({ amountDisplayMode, years }: {
+export function FiscalYearFundDonuts({ amountDisplayMode, years, activeFund, onFundHover, activeYear, onYearHover }: {
+  activeYear: number | null;
+  onYearHover: (year: number | null) => void;
+  activeFund: string | null;
+  onFundHover: (name: string | null) => void;
   amountDisplayMode: AmountDisplayMode;
   years: FiscalYearComparisonViewYear[];
 }) {
@@ -41,13 +45,13 @@ export function FiscalYearFundDonuts({ amountDisplayMode, years }: {
       </div>
       <div className="fiscal-year-fund-grid" role="group" aria-label="年度別の予算構成比">
         {years.map((year) => (
-          <Link key={year.fiscalYear} className="fiscal-year-fund-card" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
+          <Link key={year.fiscalYear} data-year-muted={activeYear !== null && activeYear !== year.fiscalYear} onMouseEnter={() => onYearHover(year.fiscalYear)} onMouseLeave={() => onYearHover(null)} className="fiscal-year-fund-card" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
             <strong>{year.fiscalYear}年度</strong>
-            <span className="fiscal-year-fund-donut"><FiscalYearFundDonut year={year} /></span>
+            <span className="fiscal-year-fund-donut"><FiscalYearFundDonut onFundHover={onFundHover} activeFund={activeFund} year={year} /></span>
             {year.funds.length > 0 ? (
               <ul className="fiscal-year-fund-list">
                 {year.funds.map((fund) => (
-                  <li key={fund.id}>
+                  <li key={fund.id} data-legend-active={activeFund === fund.name} data-legend-muted={activeFund !== null && activeFund !== fund.name} onMouseEnter={() => onFundHover(fund.name)} onMouseLeave={() => onFundHover(null)}>
                     <i style={{ backgroundColor: colorForFiscalYearFund(fund.colorIndex) }} aria-hidden="true" />
                     <span className="fiscal-year-fund-name" title={fund.name}>{fund.name}</span>
                     <span className="fiscal-year-fund-percentage">{fund.percentage === null ? "割合なし" : `${fund.percentage.toFixed(1)}%`}</span>

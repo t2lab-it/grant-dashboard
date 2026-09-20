@@ -114,13 +114,20 @@ function legendForMode(
   }));
 }
 
-export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAssets, years }: {
+export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAssets, years, activeFund, onFundHover, activeYear, onYearHover }: {
+  activeYear: number | null;
+  onYearHover: (year: number | null) => void;
+  activeFund: string | null;
+  onFundHover: (name: string | null) => void;
   amountDisplayMode: AmountDisplayMode;
   categoryColors: CrossAggregateChartColors;
   maxAssets: number;
   years: FiscalYearComparisonViewYear[];
 }) {
   const [breakdownMode, setBreakdownMode] = useState<BreakdownMode>("funds");
+  const [activeBreakdown, setActiveBreakdown] = useState<string | null>(null);
+  const activeLegend = breakdownMode === "funds" ? activeFund : activeBreakdown;
+  const setActiveLegend = breakdownMode === "funds" ? onFundHover : setActiveBreakdown;
   const axis = buildBudgetAxis(maxAssets);
   const legend = breakdownMode === "months" ? [] : legendForMode(breakdownMode, years, categoryColors);
 
@@ -135,7 +142,7 @@ export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAss
               type="button"
               className="fiscal-year-budget-breakdown-button"
               aria-pressed={breakdownMode === option.mode}
-              onClick={() => setBreakdownMode(option.mode)}
+              onClick={() => { setBreakdownMode(option.mode); setActiveBreakdown(null); onFundHover(null); }}
             >
               {option.label}
             </button>
@@ -145,13 +152,15 @@ export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAss
       {breakdownMode === "months" && (
         <div className="fiscal-year-budget-legend fiscal-year-budget-month-legend" role="group" aria-label="月別執行額の凡例">
           <span>4月</span>
-          <span className="fiscal-year-budget-month-colorbar" role="img" aria-label="4月から3月の月別執行額カラーバー" style={{ backgroundImage: MONTH_COLORBAR_BACKGROUND }} />
+          <span className="fiscal-year-budget-month-colorbar" role="img" aria-label="4月から3月の月別執行額カラーバー" style={{ backgroundImage: MONTH_COLORBAR_BACKGROUND }}>
+            {FISCAL_YEAR_MONTH_LABELS.map((label) => <span key={label} data-legend-active={activeLegend === label} data-legend-muted={activeLegend !== null && activeLegend !== label} title={label} aria-label={label} onMouseEnter={() => setActiveLegend(label)} onMouseLeave={() => setActiveLegend(null)} />)}
+          </span>
           <span>3月</span>
         </div>
       )}
       <div className="fiscal-year-comparison-legend fiscal-year-budget-legend" aria-label={`${BREAKDOWN_OPTIONS.find((option) => option.mode === breakdownMode)?.label}の凡例`}>
         {legend.map((item) => (
-          <span key={item.label}><i className="fiscal-year-swatch" style={{ backgroundColor: item.color }} aria-hidden="true" />{item.label}</span>
+          <span key={item.label} data-legend-active={activeLegend === item.label} data-legend-muted={activeLegend !== null && activeLegend !== item.label} onMouseEnter={() => setActiveLegend(item.label)} onMouseLeave={() => setActiveLegend(null)}><i className="fiscal-year-swatch" style={{ backgroundColor: item.color }} aria-hidden="true" />{item.label}</span>
         ))}
       </div>
       <div className="fiscal-year-budget-chart" role="group" aria-label={`年度別の予算総額。共通軸の最大値は${formatAmount(axis.maximum, amountDisplayMode)}です。`}>
@@ -166,6 +175,8 @@ export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAss
           const segmentElements = activeSegments.map((segment) => (
             <span
               key={segment.key}
+              onMouseEnter={() => setActiveLegend(segment.label)}
+              onMouseLeave={() => setActiveLegend(null)}
               role="img"
               className="fiscal-year-budget-segment"
               aria-label={`${year.fiscalYear}年度 ${segment.label} ${formatAmount(segment.amount, amountDisplayMode)}`}
@@ -173,12 +184,15 @@ export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAss
               style={{
                 width: `${segmentDenominator > 0 ? (segment.amount / segmentDenominator) * 100 : 0}%`,
                 backgroundColor: monthHeatmap ? undefined : segment.color,
+                opacity: activeLegend && activeLegend !== segment.label ? 0.2 : 1,
+                boxShadow: activeLegend === segment.label ? "inset 0 0 0 2px var(--app-text)" : undefined,
+                ...(monthHeatmap && activeLegend && activeLegend !== segment.label ? { backgroundColor: "var(--surface-muted)", opacity: 0.85 } : {}),
               }}
             />
           ));
           const outerWidth = axis.maximum > 0 ? Math.max(0, Math.min((year.budget.assets / axis.maximum) * 100, 100)) : 0;
           return (
-            <Link key={year.fiscalYear} className="fiscal-year-budget-row" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
+            <Link key={year.fiscalYear} data-year-muted={activeYear !== null && activeYear !== year.fiscalYear} onMouseEnter={() => onYearHover(year.fiscalYear)} onMouseLeave={() => onYearHover(null)} className="fiscal-year-budget-row" to={`/?year=${year.fiscalYear}`} aria-label={`${year.fiscalYear}年度の年度ページを開く`}>
               <span className="fiscal-year-budget-year">{year.fiscalYear}年度</span>
               <span className="fiscal-year-budget-scale">
                 <span className="fiscal-year-budget-tick-guides" aria-hidden="true">

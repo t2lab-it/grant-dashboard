@@ -296,6 +296,129 @@ describe("FiscalYearComparisonPage", () => {
     expect(colorbar.getAttribute("style")).toContain("linear-gradient(to right");
     expect(colorbar.getAttribute("style")).toContain("#440154");
     expect(colorbar.getAttribute("style")).toContain("#fde725");
+    await user.hover(within(colorbar).getByTitle("4月"));
+    const april = scope.getByRole("img", { name: /2027年度 4月 / });
+    const may = scope.getByRole("img", { name: /2027年度 5月 / });
+    expect(april).toHaveStyle({ opacity: "1" });
+    expect(may).toHaveStyle({ opacity: "0.85" });
+    await user.unhover(within(colorbar).getByTitle("4月"));
+    expect(may).toHaveStyle({ opacity: "1" });
+  });
+
+  test("highlights matching chart regions while hovering legends and restores them on leave", async () => {
+    const user = userEvent.setup();
+    okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current"), comparisonYear(2027, "future")] });
+    renderPage();
+    const budget = (await screen.findByRole("heading", { name: "年度別の予算総額" })).closest("section")!;
+    await user.hover(within(budget).getByText("基盤研究費"));
+    expect(within(budget).getByRole("img", { name: "2026年度 基盤研究費 600,000円" })).toHaveStyle({ opacity: "1" });
+    expect(within(budget).getByRole("img", { name: "2027年度 基盤研究費 1,200,000円" })).toHaveStyle({ opacity: "1" });
+    const otherFund = within(budget).getByRole("img", { name: "2026年度 共同研究費 400,000円" });
+    expect(otherFund).toHaveStyle({ opacity: "0.2" });
+    await user.unhover(within(budget).getByText("基盤研究費"));
+    expect(otherFund).toHaveStyle({ opacity: "1" });
+
+    const categories = screen.getByRole("heading", { name: "横断集計カテゴリの構成比" }).closest("section")!;
+    await user.hover(within(categories).getByText("物品系"));
+    const circles = within(categories).getByRole("img", { name: "2026年度の横断集計カテゴリ構成比グラフ" }).querySelectorAll("circle[stroke]");
+    expect(circles[0]).toHaveAttribute("opacity", "1");
+    expect(circles[0]).toHaveAttribute("stroke-width", "20");
+    expect(circles[1]).toHaveAttribute("opacity", "0.2");
+    await user.unhover(within(categories).getByText("物品系"));
+    expect(circles[1]).toHaveAttribute("opacity", "1");
+
+    const funds = screen.getByRole("heading", { name: "各年度の予算構成比" }).closest("section")!;
+    await user.hover(within(funds).getAllByText("基盤研究費")[0]);
+    const fundCircles = within(funds).getByRole("img", { name: "2027年度の予算構成比グラフ" }).querySelectorAll("circle[stroke]");
+    expect(fundCircles[0]).toHaveAttribute("stroke-width", "20");
+    expect(fundCircles[1]).toHaveAttribute("opacity", "0.2");
+
+    const pace = screen.getByRole("heading", { name: "月別の執行ペース" }).closest("section")!;
+    await user.hover(within(pace).getByText("2026年度"));
+    const groups = pace.querySelectorAll("g[opacity]");
+    expect([...groups].map((group) => group.getAttribute("opacity")).sort()).toEqual(["0.2", "1"]);
+    await user.hover(within(pace).getByText("実績（実線）"));
+    expect(pace.querySelector("path[stroke-dasharray]")).toHaveAttribute("opacity", "0.2");
+    await user.unhover(within(pace).getByText("実績（実線）"));
+    expect(pace.querySelector("path[stroke-dasharray]")).toHaveAttribute("opacity", "1");
+  });
+
+  test("highlights legends from chart segments and clears them on leave", async () => {
+    const user = userEvent.setup();
+    okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current")] });
+    renderPage();
+    const budget = (await screen.findByRole("heading", { name: "年度別の予算総額" })).closest("section")!;
+    const bar = within(budget).getByRole("img", { name: "2026年度 基盤研究費 600,000円" });
+    await user.hover(bar);
+    expect(within(budget).getByText("基盤研究費")).toHaveAttribute("data-legend-active", "true");
+    await user.unhover(bar);
+    expect(within(budget).getByText("基盤研究費")).toHaveAttribute("data-legend-active", "false");
+    await user.click(within(budget).getByRole("button", { name: "月別執行額" }));
+    const month = within(budget).getAllByRole("img").find((element) => element.classList.contains("fiscal-year-budget-segment"))!;
+    const monthLabel = month.getAttribute("aria-label")!.split(" ")[1];
+    await user.hover(month);
+    expect(within(budget).getByTitle(monthLabel)).toHaveAttribute("data-legend-active", "true");
+    await user.unhover(month);
+    expect(within(budget).getByTitle(monthLabel)).toHaveAttribute("data-legend-active", "false");
+
+    for (const [heading, chartName, legendText] of [
+      ["横断集計カテゴリの構成比", "2026年度の横断集計カテゴリ構成比グラフ", "物品系"],
+      ["各年度の予算構成比", "2026年度の予算構成比グラフ", "基盤研究費"],
+    ]) {
+      const section = screen.getByRole("heading", { name: heading }).closest("section")!;
+      const circle = within(section).getByRole("img", { name: chartName }).querySelector("circle[stroke]")!;
+      const label = within(section).getByText(legendText).closest("[data-legend-active]")!;
+      await user.hover(circle);
+      expect(label).toHaveAttribute("data-legend-active", "true");
+      await user.unhover(circle);
+      expect(label).toHaveAttribute("data-legend-active", "false");
+    }
+
+    const pace = screen.getByRole("heading", { name: "月別の執行ペース" }).closest("section")!;
+    for (const [selector, label] of [["path:not([stroke-dasharray])", "実績（実線）"], ["path[stroke-dasharray]", "見込み・予定（破線）"]]) {
+      const path = pace.querySelector(selector)!;
+      await user.hover(path);
+      expect(within(pace).getByText("2026年度")).toHaveAttribute("data-legend-active", "true");
+      expect(within(pace).getByText(label)).toHaveAttribute("data-legend-active", "true");
+      await user.unhover(path);
+      expect(within(pace).getByText("2026年度")).toHaveAttribute("data-legend-active", "false");
+      expect(within(pace).getByText(label)).toHaveAttribute("data-legend-active", "false");
+    }
+  });
+
+  test("links fund highlights between budget bars and fund donuts without affecting other breakdowns", async () => {
+    const user = userEvent.setup();
+    okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current"), comparisonYear(2027, "future")] });
+    renderPage();
+    const budget = (await screen.findByRole("heading", { name: "年度別の予算総額" })).closest("section")!;
+    const funds = screen.getByRole("heading", { name: "各年度の予算構成比" }).closest("section")!;
+    const bar = within(budget).getByRole("img", { name: "2026年度 基盤研究費 600,000円" });
+    const barLegend = within(budget).getByText("基盤研究費");
+    const donut = within(funds).getByRole("img", { name: "2027年度の予算構成比グラフ" });
+    const circle = donut.querySelector("circle[stroke]")!;
+    const fundLegend = within(funds).getAllByText("基盤研究費")[0].closest("li")!;
+    for (const target of [bar, barLegend, circle, fundLegend]) {
+      await user.hover(target);
+      expect(barLegend).toHaveAttribute("data-legend-active", "true");
+      for (const label of within(funds).getAllByText("基盤研究費")) {
+        expect(label.closest("li")).toHaveAttribute("data-legend-active", "true");
+      }
+      expect(circle).toHaveAttribute("stroke-width", "20");
+      expect(within(budget).getByRole("img", { name: "2026年度 共同研究費 400,000円" })).toHaveStyle({ opacity: "0.2" });
+      await user.unhover(target);
+      expect(barLegend).toHaveAttribute("data-legend-active", "false");
+      expect(fundLegend).toHaveAttribute("data-legend-active", "false");
+      expect(circle).toHaveAttribute("stroke-width", "16");
+    }
+    await user.click(within(budget).getByRole("button", { name: "横断集計カテゴリ" }));
+    await user.hover(within(budget).getByText("物品系"));
+    expect(funds.querySelector('[data-legend-active="true"]')).toBeNull();
+    await user.hover(circle);
+    expect(budget.querySelector('[data-legend-active="true"]')).toBeNull();
+    expect(within(budget).getByRole("img", { name: "2026年度 物品系 300,000円" })).toHaveStyle({ opacity: "1" });
+    await user.click(within(budget).getByRole("button", { name: "予算構成" }));
+    expect(funds.querySelector('[data-legend-active="true"]')).toBeNull();
+    expect(budget.querySelector('[data-legend-active="true"]')).toBeNull();
   });
 
   test("describes April-to-March actual and forecast pace", async () => {

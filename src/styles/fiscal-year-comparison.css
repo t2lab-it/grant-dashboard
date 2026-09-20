@@ -569,15 +569,12 @@
   height: 100%;
 }
 
-.fiscal-year-comparison-section [data-legend-active="true"] {
-  color: var(--app-text);
-  background-color: var(--surface-soft);
-  border-radius: 3px;
-  outline: 2px solid var(--interactive-strong);
-  outline-offset: 2px;
+/* Match the dimming of the corresponding chart regions. */
+.fiscal-year-comparison-section [data-legend-muted="true"] {
+  opacity: 0.2;
 }
 
-.fiscal-year-budget-month-colorbar > [data-legend-active="true"] {
-  background-color: transparent;
-  outline-offset: -2px;
+.fiscal-year-budget-month-colorbar > [data-legend-muted="true"] {
+  background-color: var(--surface-muted);
+  opacity: 0.85;
 }

@@ -43,8 +43,8 @@ export function FiscalYearExecutionPaceChart({ maxPaceRate, years }: {
       <div className="fiscal-year-comparison-section-heading">
         <div><h2 id="fiscal-year-pace-title">月別の執行ペース</h2></div>
         <div className="fiscal-year-comparison-legend" aria-label="月別執行ペースの凡例">
-          <span data-legend-active={activeKind === "actual"} onMouseEnter={() => setActiveKind("actual")} onMouseLeave={() => setActiveKind(null)}><i className="fiscal-year-line-sample" aria-hidden="true" />実績（実線）</span>
-          <span data-legend-active={activeKind === "projected"} onMouseEnter={() => setActiveKind("projected")} onMouseLeave={() => setActiveKind(null)}><i className="fiscal-year-line-sample fiscal-year-line-sample-dashed" aria-hidden="true" />見込み・予定（破線）</span>
+          <span data-legend-active={activeKind === "actual"} data-legend-muted={activeKind !== null && activeKind !== "actual"} onMouseEnter={() => setActiveKind("actual")} onMouseLeave={() => setActiveKind(null)}><i className="fiscal-year-line-sample" aria-hidden="true" />実績（実線）</span>
+          <span data-legend-active={activeKind === "projected"} data-legend-muted={activeKind !== null && activeKind !== "projected"} onMouseEnter={() => setActiveKind("projected")} onMouseLeave={() => setActiveKind(null)}><i className="fiscal-year-line-sample fiscal-year-line-sample-dashed" aria-hidden="true" />見込み・予定（破線）</span>
         </div>
       </div>
       <figure className="fiscal-year-pace-figure">
@@ -66,7 +66,7 @@ export function FiscalYearExecutionPaceChart({ maxPaceRate, years }: {
             </g>;
           })}
         </svg>
-        <figcaption><ul className="fiscal-year-pace-year-legend">{years.map((year, index) => <li key={year.fiscalYear} data-legend-active={activeYear === year.fiscalYear} onMouseEnter={() => setActiveYear(year.fiscalYear)} onMouseLeave={() => setActiveYear(null)}><i style={{ backgroundColor: colorForFiscalYear(index, years.length) }} aria-hidden="true" />{year.fiscalYear}年度{year.pace.hasBudget ? "" : " 予算総額なし"}</li>)}</ul></figcaption>
+        <figcaption><ul className="fiscal-year-pace-year-legend">{years.map((year, index) => <li key={year.fiscalYear} data-legend-active={activeYear === year.fiscalYear} data-legend-muted={activeYear !== null && activeYear !== year.fiscalYear} onMouseEnter={() => setActiveYear(year.fiscalYear)} onMouseLeave={() => setActiveYear(null)}><i style={{ backgroundColor: colorForFiscalYear(index, years.length) }} aria-hidden="true" />{year.fiscalYear}年度{year.pace.hasBudget ? "" : " 予算総額なし"}</li>)}</ul></figcaption>
       </figure>
     </section>
   );

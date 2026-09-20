@@ -151,14 +151,14 @@ export function FiscalYearBudgetBars({ amountDisplayMode, categoryColors, maxAss
         <div className="fiscal-year-budget-legend fiscal-year-budget-month-legend" role="group" aria-label="月別執行額の凡例">
           <span>4月</span>
           <span className="fiscal-year-budget-month-colorbar" role="img" aria-label="4月から3月の月別執行額カラーバー" style={{ backgroundImage: MONTH_COLORBAR_BACKGROUND }}>
-            {FISCAL_YEAR_MONTH_LABELS.map((label) => <span key={label} data-legend-active={activeLegend === label} title={label} aria-label={label} onMouseEnter={() => setActiveLegend(label)} onMouseLeave={() => setActiveLegend(null)} />)}
+            {FISCAL_YEAR_MONTH_LABELS.map((label) => <span key={label} data-legend-active={activeLegend === label} data-legend-muted={activeLegend !== null && activeLegend !== label} title={label} aria-label={label} onMouseEnter={() => setActiveLegend(label)} onMouseLeave={() => setActiveLegend(null)} />)}
           </span>
           <span>3月</span>
         </div>
       )}
       <div className="fiscal-year-comparison-legend fiscal-year-budget-legend" aria-label={`${BREAKDOWN_OPTIONS.find((option) => option.mode === breakdownMode)?.label}の凡例`}>
         {legend.map((item) => (
-          <span key={item.label} data-legend-active={activeLegend === item.label} onMouseEnter={() => setActiveLegend(item.label)} onMouseLeave={() => setActiveLegend(null)}><i className="fiscal-year-swatch" style={{ backgroundColor: item.color }} aria-hidden="true" />{item.label}</span>
+          <span key={item.label} data-legend-active={activeLegend === item.label} data-legend-muted={activeLegend !== null && activeLegend !== item.label} onMouseEnter={() => setActiveLegend(item.label)} onMouseLeave={() => setActiveLegend(null)}><i className="fiscal-year-swatch" style={{ backgroundColor: item.color }} aria-hidden="true" />{item.label}</span>
         ))}
       </div>
       <div className="fiscal-year-budget-chart" role="group" aria-label={`年度別の予算総額。共通軸の最大値は${formatAmount(axis.maximum, amountDisplayMode)}です。`}>

@@ -49,7 +49,7 @@ export function FiscalYearFundDonuts({ amountDisplayMode, years, activeFund, onF
             {year.funds.length > 0 ? (
               <ul className="fiscal-year-fund-list">
                 {year.funds.map((fund) => (
-                  <li key={fund.id} data-legend-active={activeFund === fund.name} onMouseEnter={() => onFundHover(fund.name)} onMouseLeave={() => onFundHover(null)}>
+                  <li key={fund.id} data-legend-active={activeFund === fund.name} data-legend-muted={activeFund !== null && activeFund !== fund.name} onMouseEnter={() => onFundHover(fund.name)} onMouseLeave={() => onFundHover(null)}>
                     <i style={{ backgroundColor: colorForFiscalYearFund(fund.colorIndex) }} aria-hidden="true" />
                     <span className="fiscal-year-fund-name" title={fund.name}>{fund.name}</span>
                     <span className="fiscal-year-fund-percentage">{fund.percentage === null ? "割合なし" : `${fund.percentage.toFixed(1)}%`}</span>

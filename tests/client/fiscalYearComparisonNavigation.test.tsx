@@ -72,15 +72,35 @@ describe("fiscal year comparison navigation", () => {
     cleanup();
   });
 
-  test("links the selected annual overview to the comparison page", async () => {
-    renderAppRoute("/?year=2026");
+  test("toggles comparison on and off while preserving the selected year", async () => {
+    const user = userEvent.setup();
+    const { router } = renderAppRoute("/?year=2025");
+    await screen.findByRole("combobox", { name: "年度" });
 
-    const comparisonLink = await screen.findByRole("link", { name: "年度比較" });
+    await user.click(screen.getByRole("button", { name: "年度比較", pressed: false }));
+
+    expect(await screen.findByRole("heading", { name: "年度横断サマリー" })).toBeInTheDocument();
+    expect(router.state.location.search).toBe("?year=2025");
+    await user.click(screen.getByRole("button", { name: "年度比較", pressed: true }));
+
     await waitFor(() => {
-      expect(comparisonLink).toHaveAttribute(
-        "href",
-        "/fiscal-years?year=2026",
-      );
+      expect(router.state.location.pathname).toBe("/");
+      expect(router.state.location.search).toBe("?year=2025");
+      expect(screen.getByRole("button", { name: "年度比較", pressed: false })).toBeInTheDocument();
+    });
+  });
+
+  test("turns comparison off with the keyboard after opening it directly", async () => {
+    const user = userEvent.setup();
+    const { router } = renderAppRoute("/fiscal-years?year=2025");
+    await screen.findByRole("heading", { name: "年度横断サマリー" });
+
+    screen.getByRole("button", { name: "年度比較", pressed: true }).focus();
+    await user.keyboard(" ");
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/");
+      expect(router.state.location.search).toBe("?year=2025");
     });
   });
 
@@ -88,7 +108,7 @@ describe("fiscal year comparison navigation", () => {
     renderAppRoute("/fiscal-years?year=2026");
 
     expect(await screen.findByRole("heading", { name: "年度横断サマリー" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "年度比較" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "年度比較", pressed: true })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "検索" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "予定作成" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "実績作成" })).toBeInTheDocument();

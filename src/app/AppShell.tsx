@@ -137,9 +137,14 @@ function AppShellInner() {
                   ))}
                 </select>
               ) : null}
-              <NavLink className="app-fiscal-year-comparison-link" to={pathWithCurrentFiscalYear("/fiscal-years")}>
+              <button
+                type="button"
+                className="app-fiscal-year-comparison-link"
+                aria-pressed={isFiscalYearComparisonPage}
+                onClick={() => navigate(pathWithCurrentFiscalYear(isFiscalYearComparisonPage ? "/" : "/fiscal-years"))}
+              >
                 年度比較
-              </NavLink>
+              </button>
             </div>
             <nav aria-label="メインナビゲーション">
               <NavLink to={pathWithCurrentFiscalYear("/search")}>検索</NavLink>

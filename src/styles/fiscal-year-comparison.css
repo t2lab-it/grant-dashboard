@@ -49,7 +49,7 @@
 
 .app-fiscal-year-comparison-link:hover,
 .app-fiscal-year-comparison-link:focus-visible,
-.app-fiscal-year-comparison-link[aria-current="page"] {
+.app-fiscal-year-comparison-link[aria-pressed="true"] {
   border-color: var(--interactive-strong);
   color: var(--interactive-strong);
   background: var(--surface-soft);

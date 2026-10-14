@@ -58,6 +58,7 @@ export const plannedItemsBulkSchema = z.object({
   notes: z.string(), auxiliaryLabelIds: classificationIdListSchema,
   items: z.array(plannedItemSchema.pick({ scheduledMonth: true, description: true, amount: true })).min(1),
 }).strict();
+// Unlike creation, edit amount represents the unsettled remaining amount.
 export const plannedItemEditSchema = plannedItemSchema;
 
 export const actualEntrySchema = z.object({

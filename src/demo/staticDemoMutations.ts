@@ -228,7 +228,9 @@ export function updateStaticPlannedItem(plannedItemId: number, input: ParsedUpda
     plannedItem.planned_date = input.plannedDate;
     plannedItem.scheduled_month = input.scheduledMonth;
     plannedItem.description = input.description;
-    plannedItem.amount = input.amount;
+    // The edit contract accepts the remaining amount; stored amounts are totals.
+    const settledAmount = getLinkedActuals(state, plannedItemId).reduce((sum, entry) => sum + entry.amount, 0);
+    plannedItem.amount = input.amount + settledAmount;
     plannedItem.notes = input.notes;
     replaceStaticAssignments(state, "planned_item", plannedItem.id, "auxiliary", input.auxiliaryLabelIds);
 

@@ -525,6 +525,11 @@ export function updatePlannedItem(db: Database.Database, plannedItemId: number, 
       throwEntryWorkflowError("planned_item_not_found");
     }
 
+    // Editing changes the remaining amount while preserving linked settlements.
+    const { settledAmount } = db
+      .prepare("SELECT COALESCE(SUM(amount), 0) AS settledAmount FROM actual_entries WHERE planned_item_id = ?")
+      .get(plannedItemId) as { settledAmount: number };
+
     const result = upsertPlannedItem(db, {
       id: plannedItemId,
       fundId: input.fundId,
@@ -532,7 +537,7 @@ export function updatePlannedItem(db: Database.Database, plannedItemId: number, 
       plannedDate: input.plannedDate,
       scheduledMonth: input.scheduledMonth,
       description: input.description,
-      amount: input.amount,
+      amount: input.amount + settledAmount,
       notes: input.notes,
       auxiliaryLabelIds: input.auxiliaryLabelIds ?? [],
     });

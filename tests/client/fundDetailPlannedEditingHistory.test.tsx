@@ -7,7 +7,7 @@ import { fetchMock, renderAppRoute, setupFundDetailTests } from "./fundDetailTes
 describe("Fund detail interactions", () => {
   setupFundDetailTests();
 
-  it("scopes planned-item destination choices to the displayed historical fiscal year", async () => {
+  it("edits a planned item with historical-year destinations and a calendar-selected month", async () => {
     const user = userEvent.setup();
     const overviewResponse = {
       funds: [
@@ -138,9 +138,24 @@ describe("Fund detail interactions", () => {
     fireEvent.change(within(dialog).getByLabelText("費目ID"), {
       target: { value: "2" },
     });
-    fireEvent.change(within(dialog).getByLabelText("執行予定月"), {
-      target: { value: "2026-08" },
+    const scheduledMonthInput = within(dialog).getByLabelText("執行予定月");
+    expect(scheduledMonthInput).toHaveValue("2026/07");
+    const calendarButton = within(dialog).getByRole("button", {
+      name: "執行予定月カレンダーを開く",
     });
+    await user.click(calendarButton);
+    const calendar = within(dialog).getByRole("dialog", { name: "執行予定月カレンダー" });
+    expect(within(calendar).getByRole("button", { name: "2026/07" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await user.keyboard("{Escape}");
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).queryByRole("dialog", { name: "執行予定月カレンダー" })).not.toBeInTheDocument();
+    await user.click(calendarButton);
+    await user.click(within(dialog).getByRole("button", { name: "2026/08" }));
+    expect(scheduledMonthInput).toHaveValue("2026/08");
+    expect(within(dialog).queryByRole("dialog", { name: "執行予定月カレンダー" })).not.toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText("説明"), {
       target: { value: "GPU サーバ保守更新 改" },
     });

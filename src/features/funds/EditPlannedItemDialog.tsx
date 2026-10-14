@@ -9,6 +9,7 @@ import { normalizeClassifications } from "../classifications/classificationTypes
 import { FundCategorySelectFields } from "../forms/FundCategorySelectFields";
 import { DateField, formatDateForDisplay, normalizeDateForApi } from "../forms/DateField";
 import { FormFeedback } from "../forms/FormFeedback";
+import { MonthField } from "../forms/MonthField";
 import { parsePositiveAmountExpression } from "../forms/amountExpression";
 import { useFundCategorySelection } from "./fundDetailDialogSupport";
 import type { PlannedItem } from "./fundDetailTypes";
@@ -186,15 +187,15 @@ export function EditPlannedItemDialog({
             textAriaLabel="立案日"
             value={plannedDate}
           />
-          <label className="budget-entry-field">
-            <span>執行予定月</span>
-            <input
-              aria-label="執行予定月"
-              name="scheduledMonth"
-              onChange={(event) => setScheduledMonth(event.target.value)}
-              value={scheduledMonth}
-            />
-          </label>
+          <MonthField
+            buttonAriaLabel="執行予定月カレンダーを開く"
+            calendarAriaLabel="執行予定月カレンダー"
+            label="執行予定月"
+            name="scheduledMonth"
+            onChange={setScheduledMonth}
+            textAriaLabel="執行予定月"
+            value={scheduledMonth}
+          />
           <label className="budget-entry-field">
             <span>説明</span>
             <input

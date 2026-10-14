@@ -289,6 +289,7 @@
   z-index: 40;
   box-sizing: border-box;
   width: min(360px, calc(100vw - 48px));
+  max-width: 100%;
   border: 1px solid var(--surface-border);
   border-radius: 16px;
   padding: 14px;

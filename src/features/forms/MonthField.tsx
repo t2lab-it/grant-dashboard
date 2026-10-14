@@ -62,6 +62,7 @@ export function MonthField({
 
     function handleDocumentKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        event.stopPropagation();
         setIsOpen(false);
         calendarButtonRef.current?.focus();
       }

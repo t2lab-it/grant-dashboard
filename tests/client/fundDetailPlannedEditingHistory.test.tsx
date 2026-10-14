@@ -1,11 +1,34 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
+import { handleStaticDemoRequest, resetStaticDemoStore } from "../../src/demo/staticDemoApi";
 import type { FundDetailResponse } from "../../src/features/funds/fundDetailTypes";
 import { fetchMock, renderAppRoute, setupFundDetailTests } from "./fundDetailTestUtils";
 
 describe("Fund detail interactions", () => {
   setupFundDetailTests();
+
+  it("keeps a partially settled demo item and its remaining amount after repeated edits", async () => {
+    resetStaticDemoStore();
+    fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      return handleStaticDemoRequest(url, init);
+    });
+    const user = userEvent.setup();
+    const view = renderAppRoute("/funds/1");
+    for (const month of ["2026-08", "2026-09"]) {
+      const table = await within(view.container).findByRole("table", { name: "計画項目一覧" });
+      const row = within(table).getByText("GPUサーバ更新").closest('[role="row"]')!;
+      await user.click(within(row as HTMLElement).getByRole("button", { name: "編集" }));
+      const dialog = await screen.findByRole("dialog", { name: "計画項目を編集" });
+      expect(within(dialog).getByText("金額（未精算残額）")).toBeInTheDocument();
+      expect(within(dialog).getByLabelText("金額")).toHaveValue("400000");
+      fireEvent.change(within(dialog).getByLabelText("執行予定月"), { target: { value: month } });
+      fireEvent.change(within(dialog).getByLabelText("メモ"), { target: { value: "残額を維持" } });
+      await user.click(within(dialog).getByRole("button", { name: "更新を保存" }));
+      await waitFor(() => expect(screen.queryByRole("dialog", { name: "計画項目を編集" })).not.toBeInTheDocument());
+    }
+  });
 
   it("edits a planned item with historical-year destinations and a calendar-selected month", async () => {
     const user = userEvent.setup();

@@ -15,6 +15,26 @@ describe("static demo API", () => {
     resetStaticDemoStore();
   });
 
+  test("editing remaining planned amounts preserves linked settlements across repeated saves", async () => {
+    for (const remainingAmount of [400000, 400000, 450000]) {
+      const response = await handleStaticDemoRequest("/api/planned-items/1", {
+        method: "PUT",
+        body: JSON.stringify({ fundId: 1, categoryId: 1, plannedDate: "2026-04-01",
+          scheduledMonth: "2026-08", description: "GPUサーバ更新", amount: remainingAmount,
+          notes: "月とメモを編集", auxiliaryLabelIds: [] }),
+      });
+      expect(response.ok).toBe(true);
+      const state = readStaticDemoState();
+      expect(state.planned_items.find((item) => item.id === 1)?.amount).toBe(remainingAmount + 300000);
+      expect(state.actual_entries.filter((entry) => entry.planned_item_id === 1)
+        .reduce((sum, entry) => sum + entry.amount, 0)).toBe(300000);
+      const detail = await readJson(await handleStaticDemoRequest("/api/funds/1", { method: "GET" }));
+      expect(detail.plannedItems).toEqual(expect.arrayContaining([
+        expect.objectContaining({ id: 1, amount: remainingAmount, scheduledMonth: "2026-08" }),
+      ]));
+    }
+  });
+
   test("serves the same lazy monthly summary contract from static demo data", async () => {
     const response = await handleStaticDemoRequest(
       "/api/overview/monthly-summary?year=2026&month=2026-06",

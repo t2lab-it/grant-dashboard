@@ -20,6 +20,21 @@ describe("API planned-item routes", () => {
     }
   });
 
+  it("edits remaining amounts without subtracting linked settlements again", async () => {
+    for (const remainingAmount of [150000, 150000, 180000]) {
+      const response = await app.inject({ method: "PUT", url: "/api/planned-items/1",
+        payload: { fundId: 1, categoryId: 1, plannedDate: "2026-10-01", scheduledMonth: "2026-11",
+          description: "計算サーバ購入", amount: remainingAmount, notes: "月とメモを編集" } });
+      expect(response.statusCode).toBe(200);
+      expect(app.db.prepare("SELECT amount FROM planned_items WHERE id = 1").get()).toEqual({ amount: remainingAmount + 50000 });
+      expect(app.db.prepare("SELECT SUM(amount) AS amount FROM actual_entries WHERE planned_item_id = 1").get()).toEqual({ amount: 50000 });
+      const detail = await app.inject({ method: "GET", url: "/api/funds/1" });
+      expect(detail.json().plannedItems).toEqual(expect.arrayContaining([
+        expect.objectContaining({ id: 1, amount: remainingAmount, scheduledMonth: "2026-11" }),
+      ]));
+    }
+  });
+
   it("creates a planned item and returns warnings", async () => {
     const response = await app.inject({
       method: "POST",
@@ -351,7 +366,7 @@ describe("API planned-item routes", () => {
       planned_date: "2026-10-25",
       scheduled_month: "2026-11",
       description: "更新後の予定",
-      amount: 4500,
+      amount: 5500,
       notes: "新メモ",
     });
     expect(

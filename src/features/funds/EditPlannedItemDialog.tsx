@@ -206,7 +206,7 @@ export function EditPlannedItemDialog({
             />
           </label>
           <label className="budget-entry-field">
-            <span>金額</span>
+            <span>金額（未精算残額）</span>
             <input
               aria-label="金額"
               data-direct-number-input="true"

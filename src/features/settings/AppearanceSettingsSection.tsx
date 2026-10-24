@@ -401,7 +401,6 @@ export function AppearanceSettingsSection() {
                   </div>
                   <div className="settings-custom-theme-preview" aria-label="カスタムプリセット例">
                     <OverviewFundChart
-                      legendMode="inline"
                       fund={customPresetPreviewFund}
                       palette={customPresetPreviewPalette}
                       rateMetric="execution"
@@ -442,7 +441,6 @@ export function AppearanceSettingsSection() {
                     </span>
                     <div className="settings-theme-preview">
                       <OverviewFundChart
-                      legendMode="inline"
                         fund={previewFund}
                         palette={preset.palette}
                         rateMetric="execution"
@@ -506,7 +504,6 @@ export function AppearanceSettingsSection() {
                     </span>
                     <div className="settings-theme-preview">
                       <OverviewFundChart
-                      legendMode="inline"
                         fund={previewFund}
                         palette={preset.palette}
                         rateMetric="execution"

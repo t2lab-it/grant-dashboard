@@ -107,6 +107,20 @@ for (const width of [390, 768, 1440]) {
       const dismiss = page.getByRole("button", { name: "今回は始めない" });
       if (await dismiss.isVisible()) await dismiss.click();
       expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBeLessThanOrEqual(width);
+      if (path === "/?year=2026") {
+        const sharedLegend = page.getByLabel("予算の共通凡例");
+        const cardLegend = page.locator(".overview-fund-card-legend").first();
+        if (width >= 860) {
+          await expect(sharedLegend).toBeVisible();
+          await expect(cardLegend).not.toBeVisible();
+        } else {
+          await expect(sharedLegend).not.toBeVisible();
+          await expect(cardLegend).toBeVisible();
+        }
+      }
+      if (path === "/settings?year=2026") {
+        await expect(page.locator(".overview-fund-card-legend").first()).toBeVisible();
+      }
       for (const region of await page.locator(".comparison-scroll").all()) {
         await region.evaluate((element) => { element.scrollLeft = element.scrollWidth; });
         const extent = await region.evaluate((element) => ({ end: element.scrollLeft + element.clientWidth, width: element.scrollWidth }));

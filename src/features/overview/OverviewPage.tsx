@@ -471,7 +471,6 @@ export function OverviewPage() {
               ) : null}
               {displayMode === "chart" ? (
                 <OverviewFundChart
-                  legendMode="shared-on-wide"
                   fund={fund}
                   palette={palette}
                   rateMetric={rateMetric}

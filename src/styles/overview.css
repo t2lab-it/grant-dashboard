@@ -1022,7 +1022,7 @@
   .overview-funds, .overview-latest-import { grid-column: 1; }
   .overview-shared-legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: .85rem; }
   .overview-shared-legend > span { display: flex; align-items: center; gap: 6px; }
-  .overview-legend-shared-on-wide { display: none; }
+  .overview-funds .overview-fund-card-legend { display: none; }
 }
 
 .first-run-choice { display: grid; align-content: start; gap: 12px; padding-block: 8px; }

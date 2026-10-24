@@ -15,7 +15,6 @@ import {
 } from "./overviewChart";
 
 type OverviewFundChartProps = {
-  legendMode: "inline" | "shared-on-wide";
   fund: OverviewChartFund;
   palette: OverviewChartPalette;
   rateMetric: RateMetricKey;
@@ -25,7 +24,6 @@ type OverviewFundChartProps = {
 };
 
 export function OverviewFundChart({
-  legendMode,
   fund,
   palette,
   rateMetric,
@@ -66,11 +64,6 @@ export function OverviewFundChart({
     `執行予定 ${formatAmount(fund.committed_amount, amountDisplayMode)}`,
     `残高 ${formatAmount(fund.freeBalance, amountDisplayMode)}`,
   ].join("、");
-  const legendLabelBySegment = {
-    執行済: "執行済",
-    執行予定: "執行予定",
-    残高: "残高",
-  } as const;
 
   return (
     <div className="fund-card-chart">
@@ -185,7 +178,7 @@ export function OverviewFundChart({
         </figcaption>
       </figure>
 
-      <div className={`fund-card-legend overview-fund-card-legend overview-legend-${legendMode}`} aria-label={`${fund.name} の凡例`}>
+      <div className="fund-card-legend overview-fund-card-legend" aria-label={`${fund.name} の凡例`}>
         {segments.map((segment) => (
           <p key={segment.label} className="fund-card-legend-row">
             <span
@@ -200,7 +193,7 @@ export function OverviewFundChart({
             <span
               className={segment.isNegative ? "fund-card-legend-label detail-rate-alert" : "fund-card-legend-label"}
             >
-              {legendLabelBySegment[segment.label]}
+              {segment.label}
             </span>
           </p>
         ))}

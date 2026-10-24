@@ -840,7 +840,6 @@
 
 .detail-summary { min-width: 0; }
 .detail-hero > * { min-width: 0; }
-@media (min-width: 860px) { .overview-funds .overview-legend-shared-on-wide { display: none; } }
 @media (max-width: 640px) {
   .detail-summary { width: 100%; justify-content: flex-start; align-items: start; }
   .detail-summary-metrics { width: 100%; }

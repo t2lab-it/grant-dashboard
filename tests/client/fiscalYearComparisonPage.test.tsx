@@ -123,10 +123,10 @@ describe("FiscalYearComparisonPage", () => {
     okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current")] });
     renderPage();
 
-    expect(await screen.findByRole("heading", { name: "年度横断サマリー" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "年度比較" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "年度別の予算総額" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "各年度の予算構成比" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "横断集計カテゴリの構成比" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "予算構成" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "大費目構成" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "月別の執行ペース" })).toBeInTheDocument();
   });
 
@@ -137,7 +137,7 @@ describe("FiscalYearComparisonPage", () => {
     });
     renderPage();
 
-    await screen.findByRole("heading", { name: "年度横断サマリー" });
+    await screen.findByRole("heading", { name: "年度比較" });
     const links = screen.getAllByRole("link", { name: /年度の年度ページを開く/ });
     expect(links).toHaveLength(6);
     expect(links[0]).toHaveAttribute("href", "/?year=2027");
@@ -161,7 +161,7 @@ describe("FiscalYearComparisonPage", () => {
     });
     renderPage();
 
-    const heading = await screen.findByRole("heading", { name: "各年度の予算構成比" });
+    const heading = await screen.findByRole("heading", { name: "予算構成" });
     const section = heading.closest("section");
     expect(section).not.toBeNull();
     const scope = within(section!);
@@ -318,7 +318,7 @@ describe("FiscalYearComparisonPage", () => {
     await user.unhover(within(budget).getByText("基盤研究費"));
     expect(otherFund).toHaveStyle({ opacity: "1" });
 
-    const categories = screen.getByRole("heading", { name: "横断集計カテゴリの構成比" }).closest("section")!;
+    const categories = screen.getByRole("heading", { name: "大費目構成" }).closest("section")!;
     await user.hover(within(categories).getByText("物品系"));
     const circles = within(categories).getByRole("img", { name: "2026年度の横断集計カテゴリ構成比グラフ" }).querySelectorAll("circle[stroke]");
     expect(circles[0]).toHaveAttribute("opacity", "1");
@@ -327,7 +327,7 @@ describe("FiscalYearComparisonPage", () => {
     await user.unhover(within(categories).getByText("物品系"));
     expect(circles[1]).toHaveAttribute("opacity", "1");
 
-    const funds = screen.getByRole("heading", { name: "各年度の予算構成比" }).closest("section")!;
+    const funds = screen.getByRole("heading", { name: "予算構成" }).closest("section")!;
     await user.hover(within(funds).getAllByText("基盤研究費")[0]);
     const fundCircles = within(funds).getByRole("img", { name: "2027年度の予算構成比グラフ" }).querySelectorAll("circle[stroke]");
     expect(fundCircles[0]).toHaveAttribute("stroke-width", "20");
@@ -337,9 +337,9 @@ describe("FiscalYearComparisonPage", () => {
     await user.hover(within(pace).getByText("2026年度"));
     const groups = pace.querySelectorAll("g[opacity]");
     expect([...groups].map((group) => group.getAttribute("opacity")).sort()).toEqual(["0.2", "1"]);
-    await user.hover(within(pace).getByText("実績（実線）"));
+    await user.hover(within(pace).getByText("実績", { exact: true }));
     expect(pace.querySelector("path[stroke-dasharray]")).toHaveAttribute("opacity", "0.2");
-    await user.unhover(within(pace).getByText("実績（実線）"));
+    await user.unhover(within(pace).getByText("実績", { exact: true }));
     expect(pace.querySelector("path[stroke-dasharray]")).toHaveAttribute("opacity", "1");
   });
 
@@ -362,8 +362,8 @@ describe("FiscalYearComparisonPage", () => {
     expect(within(budget).getByTitle(monthLabel)).toHaveAttribute("data-legend-active", "false");
 
     for (const [heading, chartName, legendText] of [
-      ["横断集計カテゴリの構成比", "2026年度の横断集計カテゴリ構成比グラフ", "物品系"],
-      ["各年度の予算構成比", "2026年度の予算構成比グラフ", "基盤研究費"],
+      ["大費目構成", "2026年度の横断集計カテゴリ構成比グラフ", "物品系"],
+      ["予算構成", "2026年度の予算構成比グラフ", "基盤研究費"],
     ]) {
       const section = screen.getByRole("heading", { name: heading }).closest("section")!;
       const circle = within(section).getByRole("img", { name: chartName }).querySelector("circle[stroke]")!;
@@ -375,7 +375,7 @@ describe("FiscalYearComparisonPage", () => {
     }
 
     const pace = screen.getByRole("heading", { name: "月別の執行ペース" }).closest("section")!;
-    for (const [selector, label] of [["path:not([stroke-dasharray])", "実績（実線）"], ["path[stroke-dasharray]", "見込み・予定（破線）"]]) {
+    for (const [selector, label] of [["path:not([stroke-dasharray])", "実績"], ["path[stroke-dasharray]", "見込み・予定"]]) {
       const path = pace.querySelector(selector)!;
       await user.hover(path);
       expect(within(pace).getByText("2026年度")).toHaveAttribute("data-legend-active", "true");
@@ -391,7 +391,7 @@ describe("FiscalYearComparisonPage", () => {
     okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current"), comparisonYear(2027, "future")] });
     renderPage();
     const budget = (await screen.findByRole("heading", { name: "年度別の予算総額" })).closest("section")!;
-    const funds = screen.getByRole("heading", { name: "各年度の予算構成比" }).closest("section")!;
+    const funds = screen.getByRole("heading", { name: "予算構成" }).closest("section")!;
     const bar = within(budget).getByRole("img", { name: "2026年度 基盤研究費 600,000円" });
     const barLegend = within(budget).getByText("基盤研究費");
     const donut = within(funds).getByRole("img", { name: "2027年度の予算構成比グラフ" });
@@ -425,8 +425,8 @@ describe("FiscalYearComparisonPage", () => {
     const user = userEvent.setup();
     okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current"), comparisonYear(2027, "future")] });
     renderPage();
-    await screen.findByRole("heading", { name: "年度横断サマリー" });
-    const sections = ["年度別の予算総額", "各年度の予算構成比", "横断集計カテゴリの構成比"].map((name) => screen.getByRole("heading", { name }).closest("section")!);
+    await screen.findByRole("heading", { name: "年度比較" });
+    const sections = ["年度別の予算総額", "予算構成", "大費目構成"].map((name) => screen.getByRole("heading", { name }).closest("section")!);
     const pace = screen.getByRole("heading", { name: "月別の執行ペース" }).closest("section")!;
     const yearLegend = within(pace).getByText("2026年度");
     const targets = sections.map((section) => within(section).getByRole("link", { name: "2026年度の年度ページを開く" }));
@@ -454,8 +454,8 @@ describe("FiscalYearComparisonPage", () => {
     const paceChart = await screen.findByRole("img", { name: /4月から3月までの累積執行率/ });
     expect(within(paceChart).getByText("4月")).toBeInTheDocument();
     expect(within(paceChart).getByText("3月")).toBeInTheDocument();
-    expect(screen.getByText("実績（実線）")).toBeInTheDocument();
-    expect(screen.getByText("見込み・予定（破線）")).toBeInTheDocument();
+    expect(screen.getByText("実績", { exact: true })).toBeInTheDocument();
+    expect(screen.getByText("見込み・予定", { exact: true })).toBeInTheDocument();
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith("/api/fiscal-year-comparison", {});
     });
@@ -483,7 +483,7 @@ describe("FiscalYearComparisonPage", () => {
     okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current")] });
     const view = renderPage();
 
-    await screen.findByRole("heading", { name: "年度横断サマリー" });
+    await screen.findByRole("heading", { name: "年度比較" });
 
     expect(view.container.querySelector(".fiscal-year-category-donut circle[stroke='#7c3aed']")).toBeInTheDocument();
   });

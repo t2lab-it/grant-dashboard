@@ -8,6 +8,7 @@ type TwoChoiceToggleOption<Value extends string> = {
   title: string;
   copy?: string;
 };
+const thresholdLabels = { normal: "通常", notice: "注意", warning: "警告", alert: "要対応" };
 const thresholdFieldOrder: Array<keyof ExecutionRateThresholds> = ["notice", "warning", "alert"];
 function createThresholdExamples(
   metric: RateMetricKey,
@@ -212,11 +213,11 @@ export function DisplaySettingsSection() {
                     <div className="settings-threshold-inline">
                       {thresholdFieldOrder.map((field) => (
                         <label key={field} className="settings-threshold-inline-item">
-                          <span className="settings-threshold-inline-text">{`${field} ${thresholdDirection}`}</span>
+                          <span className="settings-threshold-inline-text">{`${thresholdLabels[field]} ${thresholdDirection}`}</span>
                           <input
                             type="number"
                             className="settings-threshold-input"
-                            aria-label={field}
+                            aria-label={`${thresholdLabels[field]}のしきい値（%）`}
                             value={editedThresholds[field]}
                             onChange={(event) =>
                               updateThreshold(
@@ -224,7 +225,7 @@ export function DisplaySettingsSection() {
                                 Number.isNaN(event.target.valueAsNumber) ? 0 : event.target.valueAsNumber,
                               )
                             }
-                          />
+                          /><span>%</span>
                         </label>
                       ))}
                     </div>
@@ -261,7 +262,7 @@ export function DisplaySettingsSection() {
                                 : "settings-threshold-example"
                             }
                           >
-                            {`${example.tone}: ${valueLabel}`}
+                            {`${thresholdLabels[example.tone]}: ${valueLabel}`}
                           </span>
                         );
                       })}
@@ -280,8 +281,7 @@ export function DisplaySettingsSection() {
                       checked={amountDisplayMode === "grouped-yen"}
                       onChange={() => setAmountDisplayMode("grouped-yen")}
                     />
-                    <span className="settings-option-title">千円区切り</span>
-                    <span className="settings-option-copy">例: 1,234,567円</span>
+                    <span className="settings-option-title">1,234,567円</span>
                   </label>
                   <label className="settings-option-card">
                     <input
@@ -291,8 +291,7 @@ export function DisplaySettingsSection() {
                       checked={amountDisplayMode === "plain-yen"}
                       onChange={() => setAmountDisplayMode("plain-yen")}
                     />
-                    <span className="settings-option-title">円のみ</span>
-                    <span className="settings-option-copy">例: 1234567円</span>
+                    <span className="settings-option-title">1234567円</span>
                   </label>
                   <label className="settings-option-card">
                     <input
@@ -302,8 +301,7 @@ export function DisplaySettingsSection() {
                       checked={amountDisplayMode === "thousand-yen"}
                       onChange={() => setAmountDisplayMode("thousand-yen")}
                     />
-                    <span className="settings-option-title">千円</span>
-                    <span className="settings-option-copy">例: 1235千円</span>
+                    <span className="settings-option-title">1235千円</span>
                   </label>
                 </div>
               </fieldset>

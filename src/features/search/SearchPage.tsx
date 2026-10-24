@@ -92,7 +92,7 @@ export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchPath = buildSearchApiPath(searchParams);
   const activeTab = getSearchTab(searchParams.get("tab"));
-  const { data, isError } = useQuery({
+  const { data, isError, error, isFetching, refetch } = useQuery({
     queryKey: ["search", searchPath],
     queryFn: () => apiGet<SearchResponse>(searchPath),
   });
@@ -108,10 +108,6 @@ export function SearchPage() {
     setOrDelete(nextParams, "tab", tab);
     const search = nextParams.toString();
     return `/search${search ? `?${search}` : ""}`;
-  }
-
-  if (isError) {
-    return <div>検索結果を読み込めませんでした。</div>;
   }
 
   const results = data?.results ?? [];
@@ -216,7 +212,7 @@ export function SearchPage() {
         ))}
       </nav>
 
-      {results.length === 0 ? (
+      {isError ? <div role="alert"><p>検索結果を読み込めませんでした。{error.message}</p><button type="button" disabled={isFetching} onClick={() => void refetch()}>再試行</button></div> : !data ? <p role="status">検索中...</p> : results.length === 0 ? (
         <p className="search-empty-state">条件に一致する項目はありません。</p>
       ) : (
         <>

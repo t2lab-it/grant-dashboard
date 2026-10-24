@@ -1,4 +1,5 @@
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { mockOverviewResponse, renderAppRoute, resetOverviewTestState } from "./overviewTestUtils";
 
@@ -16,13 +17,21 @@ describe("first-run local onboarding", () => {
 
     renderAppRoute("/");
 
-    expect(await screen.findByRole("heading", { name: "初回ローカル利用の準備" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "はじめに" })).toBeInTheDocument();
     expect(screen.getByText("npm run seed:demo")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "template.xlsx をダウンロード" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "テンプレートを取得" })).toHaveAttribute(
       "href",
       "/api/imports/workbook/template.xlsx",
     );
-    expect(screen.getByRole("button", { name: "インポート" })).toBeInTheDocument();
+    const guide = screen.getByRole("region", { name: "はじめに" });
+    expect(within(guide).getByRole("link", { name: "架空データのデモを開く" })).toHaveAttribute("href", "https://t2lab-it.github.io/grant-dashboard/");
+    const user = userEvent.setup();
+    await user.click(within(guide).getByRole("button", { name: "インポート" }));
+    const firstDialog = screen.getByRole("dialog", { name: "workbook をインポート" });
+    const firstId = firstDialog.getAttribute("aria-labelledby");
+    await user.click(within(firstDialog).getByRole("button", { name: "キャンセル" }));
+    await user.click(within(screen.getByRole("navigation", {name: "メインナビゲーション"})).getByRole("button", {name: "インポート"}));
+    expect(screen.getByRole("dialog", {name: "workbook をインポート"}).getAttribute("aria-labelledby")).not.toBe(firstId);
     expect(screen.getByRole("link", { name: "Workbook 運用を読む" })).toHaveAttribute(
       "href",
       "https://github.com/t2lab-it/grant-dashboard/blob/main/docs/workbook.md",

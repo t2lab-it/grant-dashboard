@@ -66,8 +66,8 @@ export function FundHistoryEntry({
       tabIndex={isInteractive ? 0 : undefined}
     >
       <div className={`detail-table-row detail-history-row ${rowClassName}`} role="row">
-        <strong>{primaryText}</strong>
-        <span>{item.categoryName}</span>
+        <strong className="detail-history-date">{primaryText}</strong>
+        <span className="detail-history-category">{item.categoryName}</span>
         <span className="detail-history-description">
           <span className="detail-history-description-main">
             <span>{item.description}</span>

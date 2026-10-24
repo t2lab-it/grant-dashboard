@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ModalShell } from "../../app/ModalShell";
 import type { WorkbookImportPreview, WorkbookImportResult } from "../../contracts/imports";
 import { apiPostFile } from "../../lib/api";
 import { invalidateFinancialSummaryQueries } from "../../lib/invalidateFinancialSummaryQueries";
 
+import { ImportWarningList } from "./ImportWarningList";
+
 export function WorkbookImportControl() {
+  const headingId = useId();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -83,16 +86,16 @@ export function WorkbookImportControl() {
       ) : null}
       {isOpen ? (
         <ModalShell
-          ariaLabelledBy="workbook-import-dialog-title"
+          ariaLabelledBy={headingId}
           canClose={!isPreviewLoading && !isImporting}
           onRequestClose={() => setIsOpen(false)}
           usePortal
         >
           <div className="budget-modal-header">
             <div>
-              <h3 id="workbook-import-dialog-title">workbook をインポート</h3>
+              <h3 id={headingId}>workbook をインポート</h3>
               <p className="budget-modal-description">
-                `.xlsx` を選び、件数と警告を確認してから既存データを置き換えます。
+                Excelを選び、件数と警告を確認してください。
               </p>
             </div>
           </div>
@@ -101,6 +104,7 @@ export function WorkbookImportControl() {
             <span>.xlsx ファイル</span>
             <input
               type="file"
+              disabled={isPreviewLoading || isImporting}
               accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               aria-label=".xlsx ファイル"
               onChange={(event) => {
@@ -111,15 +115,14 @@ export function WorkbookImportControl() {
             />
           </label>
 
-          <p className="budget-modal-copy">この workbook で既存データを置き換えます。</p>
           {isPreviewLoading ? <p className="budget-modal-copy">取り込み内容を確認中...</p> : null}
-          {dialogError ? <p className="budget-form-status budget-form-status-error">{dialogError}</p> : null}
+          {dialogError ? <p className="budget-form-status budget-form-status-error" role="alert">{dialogError} ファイルと保存先を確認して再試行してください。</p> : null}
           {preview ? (
             <>
               <div className="workbook-export-meta">
                 <p className="budget-modal-copy">{preview.source_filename}</p>
                 <p className="budget-modal-copy">
-                  資金 {preview.counts.funds} / 費目 {preview.counts.categories} / 予算行{" "}
+                  予算 {preview.counts.funds} / 費目 {preview.counts.categories} / 予算行{" "}
                   {preview.counts.budget_lines} / 予定 {preview.counts.planned_items} / 実績{" "}
                   {preview.counts.actual_entries}
                 </p>
@@ -127,19 +130,14 @@ export function WorkbookImportControl() {
               </div>
 
               {preview.warnings.length > 0 ? (
-                <ul className="workbook-export-change-list">
-                  {preview.warnings.map((warning) => (
-                    <li key={`${warning.sheet_name}:${warning.row_number}:${warning.code}`}>
-                      {warning.sheet_name} {warning.row_number}行目: {warning.message}
-                    </li>
-                  ))}
-                </ul>
+                <ImportWarningList warnings={preview.warnings} />
               ) : (
                 <p className="workbook-export-empty">警告はありません</p>
               )}
             </>
           ) : null}
 
+          <p className="budget-modal-copy">選択したExcelで既存の予算・予定・実績・分類を置換します。現在の登録内容は失われます。</p>
           <div className="budget-modal-actions">
             <button
               type="button"
@@ -163,7 +161,7 @@ export function WorkbookImportControl() {
               disabled={!preview || isPreviewLoading || isImporting}
               onClick={() => void handleImport()}
             >
-              {isImporting ? "取込中..." : "取り込む"}
+              {isImporting ? "取込中..." : "既存データを置換して取り込む"}
             </button>
           </div>
         </ModalShell>

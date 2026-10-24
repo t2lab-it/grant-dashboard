@@ -16,15 +16,15 @@
 
 .app-header-primary-row {
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
-  line-height: 1;
+  font-size: clamp(1.2rem, 1.5vw, 1.6rem);
+  line-height: 1.35;
 }
 
 .app-header-title-group {
@@ -33,6 +33,7 @@
   gap: 12px;
   flex-wrap: wrap;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .app-fiscal-year-select {
@@ -55,8 +56,8 @@
 
 .app-header nav {
   display: flex;
-  gap: 8px;
-  flex-wrap: nowrap;
+  gap: 20px;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
 }
@@ -334,4 +335,22 @@
   margin: 12px 0 0;
   color: var(--app-text-muted);
   font-size: 0.9rem;
+}
+
+.app-header-action-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.app-main, .app-main > *, .app-header-primary-row > * { min-width: 0; }
+@media (max-width: 1100px) {
+  .app-header-primary-row { align-items: flex-start; flex-direction: column; gap: 16px; }
+  .app-header nav { justify-content: flex-start; }
+}
+@media (max-width: 760px) {
+  .app-alert-strip { justify-self: stretch; width: 100%; }
+}
+@media (max-width: 640px) {
+  .app-shell { padding: 16px; }
+  .app-main { padding: 16px; border-radius: 16px; }
+  .app-header { gap: 16px; margin-bottom: 24px; }
+  .app-header nav { gap: 12px 18px; }
+  .app-alert-detail-list a { flex-wrap: wrap; }
+  .app-alert-grouped-details-with-title { grid-template-columns: max-content minmax(0, 1fr); }
 }

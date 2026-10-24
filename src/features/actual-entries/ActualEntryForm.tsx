@@ -211,7 +211,7 @@ export function ActualEntryForm() {
     >
       <div className="budget-form-panel-header">
         <div>
-          <h2>実績作成</h2>
+          <h2>実績を追加</h2>
         </div>
       </div>
 
@@ -250,7 +250,6 @@ export function ActualEntryForm() {
               </option>
             ))}
           </select>
-          <small>未入力でも実績を登録できます。</small>
         </label>
         <DateField
           buttonAriaLabel="実績日カレンダーを開く"
@@ -262,9 +261,9 @@ export function ActualEntryForm() {
           value={values.actualDate}
         />
         <label className="budget-entry-field">
-          <span>説明</span>
+          <span>内容</span>
           <input
-            aria-label="説明"
+            aria-label="内容"
             name="description"
             onChange={(event) => setValue("description", event.target.value)}
             value={values.description}

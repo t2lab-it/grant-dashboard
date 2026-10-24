@@ -15,6 +15,7 @@ import {
 } from "./overviewChart";
 
 type OverviewFundChartProps = {
+  legendMode: "inline" | "shared-on-wide";
   fund: OverviewChartFund;
   palette: OverviewChartPalette;
   rateMetric: RateMetricKey;
@@ -24,6 +25,7 @@ type OverviewFundChartProps = {
 };
 
 export function OverviewFundChart({
+  legendMode,
   fund,
   palette,
   rateMetric,
@@ -156,6 +158,8 @@ export function OverviewFundChart({
                 y="92"
                 textAnchor="middle"
                 className="fund-card-donut-value fund-card-donut-alert-amount detail-rate-alert"
+                textLength={formatAmount(-overBudgetAmount, amountDisplayMode).length > 12 ? 110 : undefined}
+                lengthAdjust="spacingAndGlyphs"
               >
                 {formatAmount(-overBudgetAmount, amountDisplayMode)}
               </text>
@@ -181,7 +185,7 @@ export function OverviewFundChart({
         </figcaption>
       </figure>
 
-      <div className="fund-card-legend overview-fund-card-legend" aria-label={`${fund.name} の凡例`}>
+      <div className={`fund-card-legend overview-fund-card-legend overview-legend-${legendMode}`} aria-label={`${fund.name} の凡例`}>
         {segments.map((segment) => (
           <p key={segment.label} className="fund-card-legend-row">
             <span

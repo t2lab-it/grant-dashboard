@@ -11,9 +11,7 @@ type CategoryOption = {
 type FundCategorySelectFieldsProps = {
   categories: CategoryOption[];
   categoryId: string;
-  categoryLabel?: string;
   fundId: string;
-  fundLabel?: string;
   funds: FundOption[];
   hasSelectedFund: boolean;
   isFundLocked?: boolean;
@@ -25,9 +23,7 @@ type FundCategorySelectFieldsProps = {
 export function FundCategorySelectFields({
   categories,
   categoryId,
-  categoryLabel = "費目",
   fundId,
-  fundLabel = "資金",
   funds,
   hasSelectedFund,
   isFundLocked = false,
@@ -36,21 +32,21 @@ export function FundCategorySelectFields({
   onFundChange,
 }: FundCategorySelectFieldsProps) {
   return (
-    <>
+    <div className="budget-field-group">
       <label className="budget-entry-field">
-        <span>{fundLabel}</span>
+        <span>予算</span>
         {isFundLocked ? (
-          <select aria-label={fundLabel} disabled name="fundId" value={fundId}>
+          <select aria-label="予算" disabled name="fundId" value={fundId}>
             <option value={fundId}>{lockedFundName}</option>
           </select>
         ) : (
           <select
-            aria-label={fundLabel}
+            aria-label="予算"
             name="fundId"
             onChange={(event) => onFundChange(event.target.value)}
             value={fundId}
           >
-            <option value="">資金を選択してください</option>
+            <option value="">予算を選択してください</option>
             {funds.map((fund) => (
               <option key={fund.id} value={String(fund.id)}>
                 {fund.name}
@@ -60,9 +56,9 @@ export function FundCategorySelectFields({
         )}
       </label>
       <label className="budget-entry-field">
-        <span>{categoryLabel}</span>
+        <span>費目</span>
         <select
-          aria-label={categoryLabel}
+          aria-label="費目"
           disabled={!hasSelectedFund}
           name="categoryId"
           onChange={(event) => onCategoryChange(event.target.value)}
@@ -76,6 +72,6 @@ export function FundCategorySelectFields({
           ))}
         </select>
       </label>
-    </>
+    </div>
   );
 }

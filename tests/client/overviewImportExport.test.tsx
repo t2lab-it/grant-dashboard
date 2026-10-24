@@ -91,7 +91,7 @@ describe("Overview import/export", () => {
     renderAppRoute("/");
 
     await screen.findByText("まだインポート実行なし");
-    await user.click(screen.getByRole("button", { name: "インポート" }));
+    await user.click(within(screen.getByRole("navigation", { name: "メインナビゲーション" })).getByRole("button", { name: "インポート" }));
 
     const dialog = await screen.findByRole("dialog", { name: "workbook をインポート" });
     const workbookFile = new File(["dummy workbook"], "budget2026.xlsx", {
@@ -102,13 +102,13 @@ describe("Overview import/export", () => {
     await user.click(within(dialog).getByRole("button", { name: "プレビュー" }));
 
     expect(await within(dialog).findByText("budget2026.xlsx")).toBeInTheDocument();
-    expect(within(dialog).getByText("資金 1 / 費目 1 / 予算行 1 / 予定 1 / 実績 1")).toBeInTheDocument();
+    expect(within(dialog).getByText("予算 1 / 費目 1 / 予算行 1 / 予定 1 / 実績 1")).toBeInTheDocument();
     expect(within(dialog).getByText("警告 1件")).toBeInTheDocument();
     expect(
-      within(dialog).getByText("planned_items 7行目: negative planned adjustment is treated as a warning"),
+      within(dialog).getByText(/planned_items.*7行目/),
     ).toBeInTheDocument();
 
-    await user.click(within(dialog).getByRole("button", { name: "取り込む" }));
+    await user.click(within(dialog).getByRole("button", { name: "既存データを置換して取り込む" }));
 
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "workbook をインポート" })).not.toBeInTheDocument();
@@ -213,16 +213,18 @@ describe("Overview import/export", () => {
     await screen.findByRole("link", { name: /基盤研究費/i });
     await user.click(screen.getByRole("button", { name: "エクスポート" }));
 
-    const dialog = await screen.findByRole("dialog", { name: "workbook をエクスポート" });
+    const dialog = await screen.findByRole("dialog", { name: "取込済みExcelを上書き保存" });
     expect(within(dialog).getByText("/tmp/budget2026.xlsx")).toBeInTheDocument();
-    expect(within(dialog).getByText("計画項目")).toBeInTheDocument();
-    expect(within(dialog).getByText("追加 1 / 更新 1 / 削除 0")).toBeInTheDocument();
+    expect(within(dialog).getByText("予定")).toBeInTheDocument();
+    const diffTable = within(dialog).getByRole("table", { name: "Excel差分" });
+    expect(within(diffTable).getByRole("rowheader", { name: "予定" }).closest("tr")).toHaveTextContent("予定110");
+    await user.click(within(dialog).getByText("予定の変更内容"));
     expect(within(dialog).getByText("更新 計算サーバ購入 (金額, メモ)")).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "上書き保存" }));
 
     await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "workbook をエクスポート" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "取込済みExcelを上書き保存" })).not.toBeInTheDocument();
     });
     const latestImportSection = screen.getByLabelText("直近インポート");
     const latestExportStatus = within(latestImportSection).getByRole("status");
@@ -274,7 +276,7 @@ describe("Overview import/export", () => {
     await screen.findByText("まだインポート実行なし");
     await user.click(screen.getByRole("button", { name: "エクスポート" }));
 
-    const dialog = await screen.findByRole("dialog", { name: "workbook をエクスポート" });
+    const dialog = await screen.findByRole("dialog", { name: "取込済みExcelを上書き保存" });
     expect(within(dialog).getByText("元の workbook ファイルが見つかりません。")).toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: "上書き保存" })).toBeDisabled();
   });

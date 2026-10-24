@@ -110,3 +110,28 @@ describe("SettingsPage", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/classifications/1", { method: "DELETE" });
   }, 10_000);
 });
+
+describe("classification failure recovery", () => {
+  setupSettingsTests();
+  it("keeps a failed new classification's name and color available for retry", async () => {
+    const user = userEvent.setup();
+    let fail = true;
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input) === "/api/classifications" && init?.method === "POST") {
+        return fail ? { ok: false, status: 503, json: async () => ({ code: "storage_unavailable", message: "保存先に書き込めません" }) } : { ok: true, json: async () => ({ id: 5 }) };
+      }
+      return { ok: true, json: async () => ({ projectTags: [], auxiliaryLabels: [], funds: [], availableFiscalYears: [], selectedFiscalYear: null }) };
+    });
+    renderSettingsRoute();
+    const name = await screen.findByRole("textbox", { name: "研究プロジェクトタグ名" });
+    await user.type(name, "再試行PJ");
+    fireEvent.change(screen.getByLabelText("研究プロジェクトタグ色"), { target: { value: "#7c3aed" } });
+    await user.click(screen.getByRole("button", { name: "研究プロジェクトタグを追加" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存先に書き込めません");
+    expect(name).toHaveValue("再試行PJ");
+    expect(screen.getByLabelText("研究プロジェクトタグ色")).toHaveValue("#7c3aed");
+    fail = false;
+    await user.click(screen.getByRole("button", { name: "研究プロジェクトタグを追加" }));
+    expect(name).toHaveValue("");
+  });
+});

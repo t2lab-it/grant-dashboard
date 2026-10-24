@@ -17,16 +17,16 @@ describe("Fund detail interactions", () => {
     const user = userEvent.setup();
     const view = renderAppRoute("/funds/1");
     for (const month of ["2026-08", "2026-09"]) {
-      const table = await within(view.container).findByRole("table", { name: "計画項目一覧" });
+      const table = await within(view.container).findByRole("table", { name: "予定" });
       const row = within(table).getByText("GPUサーバ更新").closest('[role="row"]')!;
       await user.click(within(row as HTMLElement).getByRole("button", { name: "編集" }));
-      const dialog = await screen.findByRole("dialog", { name: "計画項目を編集" });
+      const dialog = await screen.findByRole("dialog", { name: "予定を編集" });
       expect(within(dialog).getByText("金額（未精算残額）")).toBeInTheDocument();
       expect(within(dialog).getByLabelText("金額")).toHaveValue("400000");
       fireEvent.change(within(dialog).getByLabelText("執行予定月"), { target: { value: month } });
       fireEvent.change(within(dialog).getByLabelText("メモ"), { target: { value: "残額を維持" } });
       await user.click(within(dialog).getByRole("button", { name: "更新を保存" }));
-      await waitFor(() => expect(screen.queryByRole("dialog", { name: "計画項目を編集" })).not.toBeInTheDocument());
+      await waitFor(() => expect(screen.queryByRole("dialog", { name: "予定を編集" })).not.toBeInTheDocument());
     }
   });
 
@@ -148,17 +148,17 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
+    const plannedTable = await fundPage.findByRole("table", { name: "予定" });
 
     await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
 
-    const dialog = await screen.findByRole("dialog", { name: "計画項目を編集" });
+    const dialog = await screen.findByRole("dialog", { name: "予定を編集" });
     expect(within(dialog).getByRole("button", { name: "閉じる" })).toBeInTheDocument();
-    fireEvent.change(within(dialog).getByLabelText("資金ID"), {
+    fireEvent.change(within(dialog).getByLabelText("予算"), {
       target: { value: "2" },
     });
     await screen.findByRole("option", { name: "旅費" });
-    fireEvent.change(within(dialog).getByLabelText("費目ID"), {
+    fireEvent.change(within(dialog).getByLabelText("費目"), {
       target: { value: "2" },
     });
     const scheduledMonthInput = within(dialog).getByLabelText("執行予定月");
@@ -179,7 +179,7 @@ describe("Fund detail interactions", () => {
     await user.click(within(dialog).getByRole("button", { name: "2026/08" }));
     expect(scheduledMonthInput).toHaveValue("2026/08");
     expect(within(dialog).queryByRole("dialog", { name: "執行予定月カレンダー" })).not.toBeInTheDocument();
-    fireEvent.change(within(dialog).getByLabelText("説明"), {
+    fireEvent.change(within(dialog).getByLabelText("内容"), {
       target: { value: "GPU サーバ保守更新 改" },
     });
     fireEvent.change(within(dialog).getByLabelText("金額"), {
@@ -205,7 +205,7 @@ describe("Fund detail interactions", () => {
       }),
     });
     await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "計画項目を編集" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "予定を編集" })).not.toBeInTheDocument();
     });
   });
 
@@ -272,12 +272,12 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
+    const plannedTable = await fundPage.findByRole("table", { name: "予定" });
 
     await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
 
-    const dialog = await screen.findByRole("dialog", { name: "計画項目を編集" });
-    fireEvent.change(within(dialog).getByLabelText("説明"), {
+    const dialog = await screen.findByRole("dialog", { name: "予定を編集" });
+    fireEvent.change(within(dialog).getByLabelText("内容"), {
       target: { value: "GPU サーバ保守更新 改" },
     });
     await user.click(within(dialog).getByRole("button", { name: "更新を保存" }));
@@ -351,18 +351,18 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
+    const plannedTable = await fundPage.findByRole("table", { name: "予定" });
 
     await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
 
-    const dialog = await screen.findByRole("dialog", { name: "計画項目を編集" });
+    const dialog = await screen.findByRole("dialog", { name: "予定を編集" });
     expect(within(dialog).getByRole("button", { name: "取消" })).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "削除" }));
 
     expect(fetchMock).toHaveBeenCalledWith("/api/planned-items/10", {
       method: "DELETE",
     });
-    expect(await fundPage.findByText("未精算の計画項目はまだありません。")).toBeInTheDocument();
+    expect(await fundPage.findByText("未精算の予定はまだありません。")).toBeInTheDocument();
   });
 
   it("keeps destination fund options out of the fund detail query cache", async () => {
@@ -425,12 +425,12 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
+    const plannedTable = await fundPage.findByRole("table", { name: "予定" });
 
     await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
 
-    const dialog = await screen.findByRole("dialog", { name: "計画項目を編集" });
-    fireEvent.change(within(dialog).getByLabelText("資金ID"), {
+    const dialog = await screen.findByRole("dialog", { name: "予定を編集" });
+    fireEvent.change(within(dialog).getByLabelText("予算"), {
       target: { value: "2" },
     });
     await screen.findByRole("option", { name: "旅費" });
@@ -522,22 +522,22 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
+    const plannedTable = await fundPage.findByRole("table", { name: "予定" });
 
     await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
 
-    const dialog = await screen.findByRole("dialog", { name: "計画項目を編集" });
-    fireEvent.change(within(dialog).getByLabelText("資金ID"), {
+    const dialog = await screen.findByRole("dialog", { name: "予定を編集" });
+    fireEvent.change(within(dialog).getByLabelText("予算"), {
       target: { value: "2" },
     });
     await screen.findByRole("option", { name: "旅費" });
-    fireEvent.change(within(dialog).getByLabelText("費目ID"), {
+    fireEvent.change(within(dialog).getByLabelText("費目"), {
       target: { value: "2" },
     });
     fireEvent.change(within(dialog).getByLabelText("執行予定月"), {
       target: { value: "2026-08" },
     });
-    fireEvent.change(within(dialog).getByLabelText("説明"), {
+    fireEvent.change(within(dialog).getByLabelText("内容"), {
       target: { value: "GPU サーバ保守更新 改" },
     });
     fireEvent.change(within(dialog).getByLabelText("金額"), {
@@ -548,7 +548,7 @@ describe("Fund detail interactions", () => {
     });
     await user.click(within(dialog).getByRole("button", { name: "更新を保存" }));
 
-    expect(await screen.findByRole("dialog", { name: "計画項目を編集" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "予定を編集" })).toBeInTheDocument();
     expect(screen.getByText("Category budget exceeded for 旅費")).toBeInTheDocument();
     expect(await fundPage.findByText("GPU サーバ保守更新 改")).toBeInTheDocument();
   });
@@ -639,7 +639,7 @@ describe("Fund detail interactions", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/planned-items/10/restore", {
       method: "POST",
     });
-    const plannedTable = await fundPage.findByRole("table", { name: "計画項目一覧" });
+    const plannedTable = await fundPage.findByRole("table", { name: "予定" });
     expect(within(plannedTable).getByText("取消済み研究会")).toBeInTheDocument();
   });
 });

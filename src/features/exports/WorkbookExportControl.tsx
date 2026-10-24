@@ -37,11 +37,11 @@ type WorkbookExportPreview = {
 };
 
 const SHEET_LABELS: Record<WorkbookSheetName, string> = {
-  funds: "資金",
+  funds: "予算",
   categories: "費目",
   budget_lines: "予算行",
-  planned_items: "計画項目",
-  actual_entries: "実績項目",
+  planned_items: "予定",
+  actual_entries: "実績",
 };
 
 const CHANGE_ACTION_LABELS: Record<WorkbookChangeRow["action"], string> = {
@@ -61,7 +61,7 @@ const CHANGE_FIELD_LABELS: Record<string, string> = {
   planned_date: "立案日",
   scheduled_month: "執行予定月",
   actual_date: "実績日",
-  description: "説明",
+  description: "内容",
   status: "状態",
   notes: "メモ",
   project_tags: "研究プロジェクトタグ",
@@ -76,6 +76,7 @@ function formatChangedFields(fields: string[]) {
 
 export function WorkbookExportControl() {
   const { setStatus } = useWorkbookExportStatus();
+  const [previewAttempt, setPreviewAttempt] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [preview, setPreview] = useState<WorkbookExportPreview | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
@@ -131,7 +132,7 @@ export function WorkbookExportControl() {
     return () => {
       cancelled = true;
     };
-  }, [isOpen]);
+  }, [isOpen, previewAttempt]);
 
   async function handleSave() {
     setDialogError("");
@@ -180,59 +181,66 @@ export function WorkbookExportControl() {
         >
           <div className="budget-modal-header">
             <div>
-              <h3 id="workbook-export-dialog-title">workbook をエクスポート</h3>
+              <h3 id="workbook-export-dialog-title">取込済みExcelを上書き保存</h3>
               <p className="budget-modal-description">
-                現在の DB 内容で、最後に import した workbook を上書きします。
+                保存先と差分を確認してください。
               </p>
             </div>
           </div>
 
           {isPreviewLoading ? <p className="budget-modal-copy">差分を確認中...</p> : null}
-          {dialogError ? <p className="budget-form-status budget-form-status-error">{dialogError}</p> : null}
+          {dialogError ? <p className="budget-form-status budget-form-status-error" role="alert">{dialogError} 保存先を確認して再試行してください。</p> : null}
           {preview ? (
             <>
               <div className="workbook-export-meta">
-                <p className="budget-modal-copy">{preview.workbook_path}</p>
+                <p className="budget-modal-copy">{preview.source_filename}</p>
+                <details><summary>保存先のパス</summary><p className="workbook-path">{preview.workbook_path}</p></details>
                 <p className="budget-modal-copy">最終インポート: {preview.imported_at || "不明"}</p>
                 {preview.reason ? (
-                  <p className="budget-form-status budget-form-status-error">{preview.reason}</p>
+                  <p className="budget-form-status budget-form-status-error">{preview.message ?? preview.reason}</p>
                 ) : null}
               </div>
 
-              <div className="workbook-export-sheet-list">
-                {(Object.keys(preview.changes) as WorkbookSheetName[]).map((sheetName) => {
-                  const change = preview.changes[sheetName];
-
-                  return (
-                    <section className="workbook-export-sheet" key={sheetName}>
-                      <div className="workbook-export-sheet-header">
-                        <strong>{SHEET_LABELS[sheetName]}</strong>
-                        <span>
-                          追加 {change.added} / 更新 {change.updated} / 削除 {change.removed}
-                        </span>
-                      </div>
-                      {change.rows.length > 0 ? (
-                        <ul className="workbook-export-change-list">
-                          {change.rows.map((row) => (
-                            <li key={`${sheetName}:${row.action}:${row.key}`}>
-                              {CHANGE_ACTION_LABELS[row.action]} {row.label || row.key}
-                              {row.fields.length > 0 ? ` (${formatChangedFields(row.fields)})` : ""}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="workbook-export-empty">変更サンプルなし</p>
-                      )}
-                      {change.more_count > 0 ? (
-                        <p className="workbook-export-empty">他 {change.more_count} 件</p>
-                      ) : null}
-                    </section>
-                  );
-                })}
+              <div className="comparison-scroll" tabIndex={0} role="region" aria-label="Excel差分の横スクロール">
+                <table className="comparison-table" aria-label="Excel差分">
+                  <thead><tr>
+                    <th scope="col">シート</th><th scope="col">追加</th>
+                    <th scope="col">更新</th><th scope="col">削除</th>
+                  </tr></thead>
+                  <tbody>
+                    {(Object.keys(preview.changes) as WorkbookSheetName[]).map((name) => {
+                      const change = preview.changes[name];
+                      return (
+                        <tr key={name}>
+                          <th scope="row">{SHEET_LABELS[name]}</th>
+                          <td>{change.added}</td><td>{change.updated}</td><td>{change.removed}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
+              {(Object.keys(preview.changes) as WorkbookSheetName[])
+                .filter((name) => preview.changes[name].rows.length || preview.changes[name].more_count)
+                .map((name) => (
+                  <details className="workbook-export-sheet" key={name}>
+                    <summary>{SHEET_LABELS[name]}の変更内容</summary>
+                    <ul className="workbook-export-change-list">
+                      {preview.changes[name].rows.map((row) => (
+                        <li key={`${row.action}:${row.key}`}>
+                          {CHANGE_ACTION_LABELS[row.action]} {row.label || row.key}
+                          {row.fields.length ? ` (${formatChangedFields(row.fields)})` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                    {preview.changes[name].more_count > 0 ? <p>他 {preview.changes[name].more_count} 件</p> : null}
+                  </details>
+                ))}
             </>
           ) : null}
 
+          {dialogError && !preview ? <button type="button" className="budget-modal-secondary" disabled={isPreviewLoading} onClick={() => setPreviewAttempt((attempt) => attempt + 1)}>再試行</button> : null}
+          <p className="budget-modal-copy">現在の登録内容で取込済みExcelを上書きします。ファイル内の以前の内容は失われます。</p>
           <div className="budget-modal-actions">
             <button
               type="button"

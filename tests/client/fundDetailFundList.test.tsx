@@ -258,7 +258,7 @@ describe("Fund detail interactions", () => {
     const deleteDialog = await screen.findByRole("dialog", { name: "予算を削除" });
     expect(
       within(deleteDialog).getByText(
-        "この予算を削除すると、費目、計画項目、精算項目もすべて削除されます。この操作は取り消せません。",
+        "この予算を削除すると、費目、予定、実績もすべて削除されます。この操作は取り消せません。",
       ),
     ).toBeInTheDocument();
     const confirmationInput = within(deleteDialog).getByLabelText("削除する予算名");
@@ -374,8 +374,8 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const actualSection = (await fundPage.findByRole("heading", { name: "精算項目一覧" })).closest("section");
-    const plannedSection = fundPage.getByRole("heading", { name: "計画項目一覧" }).closest("section");
+    const actualSection = (await fundPage.findByRole("heading", { name: "実績" })).closest("section");
+    const plannedSection = fundPage.getByRole("heading", { name: "予定" }).closest("section");
     const plannedHistorySection = fundPage.getByRole("heading", { name: "完了・取消済項目一覧" }).closest("section");
 
     expect(actualSection).not.toBeNull();
@@ -488,8 +488,8 @@ describe("Fund detail interactions", () => {
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
     const timelineSection = (await fundPage.findByRole("heading", { name: "月別の状況" })).closest("section");
-    const actualSection = fundPage.getByRole("heading", { name: "精算項目一覧" }).closest("section");
-    const plannedSection = fundPage.getByRole("heading", { name: "計画項目一覧" }).closest("section");
+    const actualSection = fundPage.getByRole("heading", { name: "実績" }).closest("section");
+    const plannedSection = fundPage.getByRole("heading", { name: "予定" }).closest("section");
 
     expect(timelineSection).not.toBeNull();
     expect(actualSection).not.toBeNull();
@@ -598,11 +598,11 @@ describe("Fund detail interactions", () => {
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
 
-    await fundPage.findByRole("heading", { name: "精算項目一覧" });
+    await fundPage.findByRole("heading", { name: "実績" });
 
     const sectionNames = new Set([
-      "精算項目一覧",
-      "計画項目一覧",
+      "実績",
+      "予定",
       "費目別の状況",
       "月別の状況",
     ]);
@@ -611,8 +611,8 @@ describe("Fund detail interactions", () => {
       .filter((name): name is string => name !== null && sectionNames.has(name));
 
     expect(panelHeadings).toEqual([
-      "精算項目一覧",
-      "計画項目一覧",
+      "実績",
+      "予定",
       "費目別の状況",
       "月別の状況",
     ]);
@@ -656,8 +656,8 @@ describe("Fund detail interactions", () => {
 
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
-    const historyTable = await fundPage.findByRole("table", { name: "精算項目一覧" });
-    const plannedTable = fundPage.getByRole("table", { name: "計画項目一覧" });
+    const historyTable = await fundPage.findByRole("table", { name: "実績" });
+    const plannedTable = fundPage.getByRole("table", { name: "予定" });
     const actualEntry = within(historyTable)
       .getByText("GPU サーバ保守")
       .closest(".detail-history-entry");

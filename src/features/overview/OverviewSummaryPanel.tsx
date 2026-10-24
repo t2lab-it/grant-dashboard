@@ -155,7 +155,7 @@ export function OverviewSummaryPanel({
     >
       <div className="overview-context-panel-header">
         <div>
-          <h2>{`${copy.label}の分析`}</h2>
+          <h2>{`${copy.label}の内訳`}</h2>
         </div>
         <div className="overview-context-panel-value">
           <strong>{formatAmount(totalValue, amountDisplayMode)}</strong>
@@ -164,8 +164,7 @@ export function OverviewSummaryPanel({
 
       <section className="overview-context-panel-section" aria-labelledby={`${id}-breakdown-heading`}>
         <div className="overview-context-panel-section-header">
-          <h3 id={`${id}-breakdown-heading`}>予算別内訳</h3>
-          <span>{copy.breakdownLabel}</span>
+          <h3 id={`${id}-breakdown-heading`}>予算別</h3>
         </div>
         {breakdown.length > 0 ? (
           <ol className="overview-context-list">
@@ -188,8 +187,7 @@ export function OverviewSummaryPanel({
       {metric !== "balance" ? (
         <section className="overview-context-panel-section" aria-labelledby={`${id}-cross-aggregate-heading`}>
           <div className="overview-context-panel-section-header">
-            <h3 id={`${id}-cross-aggregate-heading`}>大費目別内訳</h3>
-            <span>{`${copy.label}（パーセント）`}</span>
+            <h3 id={`${id}-cross-aggregate-heading`}>大費目別</h3>
           </div>
           <OverviewCrossAggregateDonut
             amountDisplayMode={amountDisplayMode}
@@ -203,13 +201,12 @@ export function OverviewSummaryPanel({
 
       <section className="overview-context-panel-section" aria-labelledby={`${id}-trend-heading`}>
         <div className="overview-context-panel-section-header">
-          <h3 id={`${id}-trend-heading`}>月次推移</h3>
-          <span className="overview-context-panel-section-label">
+          <h3 id={`${id}-trend-heading`}>
             {copy.trendLabel}
             {"trendHelp" in copy ? (
               <OverviewHelp label={copy.trendLabel} description={copy.trendHelp} />
             ) : null}
-          </span>
+          </h3>
         </div>
         {monthlySeries.length > 0 ? (
           <OverviewTrendChart

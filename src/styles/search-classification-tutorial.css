@@ -325,28 +325,7 @@
   background: rgba(37, 99, 235, 0.2);
 }
 
-@media (min-width: 640px) {
-  .overview-hero-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 760px) {
-  .app-alert-strip {
-    justify-self: stretch;
-    width: 100%;
-  }
-
-  .app-header-primary-row {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .app-header nav {
-    justify-content: flex-start;
-    flex-wrap: wrap;
-  }
-
   .classification-create-row,
   .classification-edit-row {
     grid-template-columns: 1fr;
@@ -374,33 +353,38 @@
 }
 
 @media (min-width: 860px) {
-  .overview-hero-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .overview-grid-with-context {
-    grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.95fr);
-    align-items: start;
-  }
-
-  .overview-grid-with-context .overview-hero-grid {
-    grid-column: 1 / -1;
-  }
-
-  .overview-grid-with-context .overview-context-panel {
-    grid-column: 2;
-    grid-row: 2 / span 4;
-    position: sticky;
-    top: 24px;
-  }
-
-  .overview-grid-with-context .overview-section-header,
-  .overview-grid-with-context .fund-grid,
-  .overview-grid-with-context .overview-latest-import {
-    grid-column: 1;
-  }
-
   .detail-categories-layout {
     grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.95fr);
   }
+}
+
+.search-filters > label:first-child { grid-column: 1 / -1; }
+.search-filters { grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); }
+.search-result-main { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .search-result-row { grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; }
+  .search-result-main { grid-column: 1 / -1; grid-row: 1; }
+  .search-result-status { justify-self: start; }
+  .search-result-amount { justify-self: end; }
+}
+
+.classification-settings-heading { position: relative; }
+.settings-inline-help { position: static; }
+.settings-inline-help-tooltip { width: min(360px, calc(100vw - 96px)); }
+
+.classification-feedback { grid-column: 1 / -1; color: var(--accent-text); overflow-wrap: anywhere; }
+
+.classification-settings-grid, .classification-settings-panel { grid-template-columns: minmax(0, 1fr); }
+.classification-create-row .detail-action-button { white-space: normal; overflow-wrap: anywhere; }
+.classification-saved-label > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.classification-settings-heading h4 { min-width: 0; }
+
+.classification-result-label { max-width: 100%; min-width: 0; overflow-wrap: anywhere; }
+.classification-result-label > span { min-width: 0; }
+.classification-color-swatch { flex: 0 0 auto; }
+
+.classification-settings-panel { container-type: inline-size; }
+@container (max-width: 20rem) {
+  .classification-saved-row > .classification-saved-label { grid-column: 1 / -1; }
+  .classification-saved-row > button:first-of-type { grid-column: 2; }
 }

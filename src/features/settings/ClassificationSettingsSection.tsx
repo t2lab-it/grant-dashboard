@@ -43,6 +43,7 @@ function ClassificationCreateForm({
   const [name, setName] = useState("");
   const [color, setColor] = useState(defaultColor);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   async function handleCreate() {
     const trimmedName = name.trim();
@@ -50,6 +51,7 @@ function ClassificationCreateForm({
       return;
     }
 
+    setErrorMessage("");
     setIsSubmitting(true);
     try {
       const result = await apiPostJson<CreateClassificationRequest, { id: number }>(
@@ -60,7 +62,11 @@ function ClassificationCreateForm({
         setName("");
         setColor(defaultColor);
         await onCreated();
+      } else {
+        setErrorMessage(result.error.message);
       }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "保存先に接続できませんでした。");
     } finally {
       setIsSubmitting(false);
     }
@@ -68,6 +74,7 @@ function ClassificationCreateForm({
 
   return (
     <div className="classification-create-row">
+      {errorMessage ? <p className="classification-feedback" role="alert">{errorMessage} 入力を保持しています。保存先を確認して再試行してください。</p> : null}
       <label className="budget-entry-field">
         <input
           aria-label={`${label}名`}
@@ -108,6 +115,7 @@ function ClassificationEditRow({
   const [color, setColor] = useState(tag.color);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     setName(tag.name);
@@ -120,6 +128,7 @@ function ClassificationEditRow({
       return;
     }
 
+    setErrorMessage("");
     setIsSubmitting(true);
     try {
       const result = await apiMutateJson<unknown, UpdateClassificationRequest>(`/api/classifications/${tag.id}`, "PUT", {
@@ -129,19 +138,28 @@ function ClassificationEditRow({
       if (result.ok) {
         await onChanged();
         setIsEditing(false);
+      } else {
+        setErrorMessage(result.error.message);
       }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "保存先に接続できませんでした。");
     } finally {
       setIsSubmitting(false);
     }
   }
 
   async function handleDelete() {
+    setErrorMessage("");
     setIsSubmitting(true);
     try {
       const result = await apiMutateJson(`/api/classifications/${tag.id}`, "DELETE");
       if (result.ok) {
         await onChanged();
+      } else {
+        setErrorMessage(result.error.message);
       }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "保存先に接続できませんでした。");
     } finally {
       setIsSubmitting(false);
     }
@@ -156,6 +174,7 @@ function ClassificationEditRow({
   if (!isEditing) {
     return (
       <div className="classification-saved-row">
+        {errorMessage ? <p className="classification-feedback" role="alert">{errorMessage} 保存先を確認して再試行してください。</p> : null}
         <span className="classification-saved-label">
           <span
             className="classification-color-swatch"
@@ -164,7 +183,6 @@ function ClassificationEditRow({
             style={{ backgroundColor: tag.color }}
           />
           <span>{tag.name}</span>
-          <span className="classification-saved-color-code">{tag.color}</span>
         </span>
         <button
           type="button"
@@ -190,6 +208,7 @@ function ClassificationEditRow({
 
   return (
     <div className="classification-edit-row">
+      {errorMessage ? <p className="classification-feedback" role="alert">{errorMessage} 入力を保持しています。保存先を確認して再試行してください。</p> : null}
       <label className="budget-entry-field">
         <input
           aria-label={`${label}名: ${tag.name}`}
@@ -205,6 +224,7 @@ function ClassificationEditRow({
           onChange={(event) => setColor(event.target.value)}
         />
       </label>
+      <code>{color}</code>
       <button
         type="button"
         className="detail-action-button"
@@ -235,7 +255,7 @@ function ClassificationEditRow({
 
 export function ClassificationSettingsSection() {
   const queryClient = useQueryClient();
-  const { data: rawClassificationData } = useQuery({
+  const { data: rawClassificationData, isError, error, refetch, isFetching } = useQuery({
     queryKey: queryKeys.classifications.all,
     queryFn: () => apiGet<ClassificationResponse>("/api/classifications"),
   });
@@ -245,6 +265,8 @@ export function ClassificationSettingsSection() {
   return (
         <section className="settings-section">
           <h3>分類</h3>
+          <p className="settings-copy">分類を削除すると、予算・予定・実績からその分類が外れます。</p>
+          {isError ? <div role="alert"><p>分類を読み込めませんでした。{error.message}</p><button type="button" disabled={isFetching} onClick={() => void refetch()}>再試行</button></div> : null}
           <div className="classification-settings-grid">
             <section className="classification-settings-panel" aria-label="研究プロジェクトタグ">
               <div className="classification-settings-heading">

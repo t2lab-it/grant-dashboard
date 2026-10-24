@@ -27,9 +27,9 @@ describe("Overview navigation", () => {
       );
     });
     await waitFor(() => {
-      expect(appScope.getByRole("link", { name: "実績作成" })).toHaveAttribute("href", "/actual-entries/new?year=2026");
+      expect(appScope.getByRole("link", { name: "実績を追加" })).toHaveAttribute("href", "/actual-entries/new?year=2026");
     });
-    expect(appScope.getByRole("button", { name: "インポート" })).toBeInTheDocument();
+    expect(within(appScope.getByRole("navigation", { name: "メインナビゲーション" })).getByRole("button", { name: "インポート" })).toBeInTheDocument();
     expect(appScope.getByRole("button", { name: "エクスポート" })).toBeInTheDocument();
     await waitFor(() => {
       expect(appScope.getByRole("link", { name: "設定" })).toHaveAttribute("href", "/settings?year=2026");
@@ -44,11 +44,11 @@ describe("Overview navigation", () => {
     const view = renderAppRoute("/");
     const appScope = within(view.container);
 
-    expect(await screen.findByRole("heading", { name: "予算別の状況" })).toBeInTheDocument();
-    await user.click(appScope.getByRole("link", { name: "予定作成" }));
+    expect(await screen.findByRole("heading", { name: "予算" })).toBeInTheDocument();
+    await user.click(appScope.getByRole("link", { name: "予定を追加" }));
 
-    const dialog = await screen.findByRole("dialog", { name: "予定作成" });
+    const dialog = await screen.findByRole("dialog", { name: "予定を追加" });
     expect(await within(dialog).findByRole("button", { name: "閉じる" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "予算別の状況" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "予算" })).toBeInTheDocument();
   });
 });

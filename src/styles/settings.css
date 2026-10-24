@@ -65,7 +65,7 @@
 .settings-theme-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
 }
 
 .settings-custom-theme-controls {
@@ -253,7 +253,7 @@
 .settings-option-choices {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
 }
 
 .settings-toggle-strip {
@@ -453,4 +453,13 @@
   .settings-threshold-input {
     width: 80px;
   }
+}
+
+.settings-section, .settings-option-group, .settings-theme-card, .classification-settings-panel { min-width: 0; }
+.settings-default-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 16px; }
+.settings-threshold-inline { flex-wrap: wrap; }
+.settings-threshold-bar { flex-wrap: wrap; }
+.settings-threshold-inline-item { flex-wrap: wrap; }
+@media (max-width: 640px) {
+  .settings-theme-mode-toggle { flex-wrap: wrap; border-radius: 12px; }
 }

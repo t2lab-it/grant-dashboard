@@ -62,7 +62,7 @@ function HeaderAlertCategorySection({ category }: { category: HeaderAlertCategor
                   {item.description === undefined ? null : <span>{item.description}</span>}
                   {details.length === 0 ? null : <HeaderAlertGroupedDetails details={details} />}
                 </span>
-                {item.amount === undefined ? null : <span className="app-alert-detail-amount">{formatAmount(item.amount, "grouped-yen")}</span>}
+                {item.amount === undefined || details.some((detail) => detail.amount === item.amount) ? null : <span className="app-alert-detail-amount">{formatAmount(item.amount, "grouped-yen")}</span>}
               </Link>
             </li>
           );

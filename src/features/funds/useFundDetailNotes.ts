@@ -56,7 +56,7 @@ function useNoteController({
     entryId: number,
     hasNotes: boolean,
   ) {
-    if (!hasNotes || (event.key !== "Enter" && event.key !== " ")) {
+    if (event.target !== event.currentTarget || !hasNotes || (event.key !== "Enter" && event.key !== " ")) {
       return;
     }
 

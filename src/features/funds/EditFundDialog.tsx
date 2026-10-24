@@ -203,7 +203,7 @@ export function EditFundDialog({ fundId, initialValues, onClose, onDeleted, onSa
         {isConfirmingDelete ? (
           <div className="budget-entry-form">
             <p className="budget-modal-copy">
-              この予算を削除すると、費目、計画項目、精算項目もすべて削除されます。この操作は取り消せません。
+              この予算を削除すると、費目、予定、実績もすべて削除されます。この操作は取り消せません。
             </p>
             <label className="budget-entry-field">
               <span>確認のため予算名「{initialValues.name}」を入力してください。</span>

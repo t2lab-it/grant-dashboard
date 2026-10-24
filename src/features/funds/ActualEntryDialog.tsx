@@ -54,16 +54,16 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
   const auxiliaryLabelsInitialValue =
     isEditMode || isDuplicateMode ? props.entry.auxiliaryLabels : [];
   const dialogTitle = isEditMode
-    ? "精算項目を編集"
+    ? "実績を編集"
     : isDuplicateMode
-      ? "精算項目を複製"
-      : "計画項目を精算";
+      ? "実績を複製"
+      : "予定を精算";
   const submitLabel = isEditMode ? "更新を保存" : isDuplicateMode ? "複製を保存" : "精算を登録";
   const submittingLabel = isEditMode ? "保存中..." : isDuplicateMode ? "保存中..." : "登録中...";
   const submitErrorMessage = isEditMode
-    ? "精算項目を更新できませんでした。"
+    ? "実績を更新できませんでした。"
     : isDuplicateMode
-      ? "精算項目を複製できませんでした。"
+      ? "実績を複製できませんでした。"
       : "精算を登録できませんでした。";
   const [actualDate, setActualDate] = useState(formatDateForDisplay(actualDateInitialValue));
   const [description, setDescription] = useState(descriptionInitialValue);
@@ -163,7 +163,7 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
       await props.onSaved();
       props.onClose();
     } catch {
-      setBlockingMessage("精算項目を取り消せませんでした。");
+      setBlockingMessage("実績を取り消せませんでした。");
     } finally {
       setIsSubmitting(false);
     }
@@ -188,10 +188,8 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
             <FundCategorySelectFields
               categories={categories}
               categoryId={selectedCategoryId}
-              categoryLabel="費目ID"
-              fundId={selectedFundId}
-              fundLabel="資金ID"
-              funds={funds}
+                fundId={selectedFundId}
+                funds={funds}
               hasSelectedFund={hasSelectedFund}
               onCategoryChange={onCategoryChange}
               onFundChange={onFundChange}
@@ -207,9 +205,9 @@ export function ActualEntryDialog(props: ActualEntryDialogProps) {
             value={actualDate}
           />
           <label className="budget-entry-field">
-            <span>説明</span>
+            <span>内容</span>
             <input
-              aria-label="説明"
+              aria-label="内容"
               name="description"
               onChange={(event) => setDescription(event.target.value)}
               value={description}

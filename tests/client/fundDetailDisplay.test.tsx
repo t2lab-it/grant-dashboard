@@ -192,7 +192,7 @@ describe("Fund detail display", () => {
     await user.click(fundPage.getByRole("button", { name: "横断集計カテゴリ別の状況" }));
     const crossAggregateTable = fundPage.getByRole("table", { name: "横断集計カテゴリ別の状況" });
     const crossAggregateScope = within(crossAggregateTable);
-    expect(crossAggregateScope.getByText("横断集計カテゴリ")).toBeInTheDocument();
+    expect(crossAggregateScope.getByRole("columnheader", { name: "大費目" })).toBeInTheDocument();
     expect(crossAggregateScope.getByText("物品系")).toBeInTheDocument();
     expect(crossAggregateScope.getAllByText("未設定").length).toBeGreaterThanOrEqual(1);
     expect(crossAggregateScope.getByText("-500,000円")).toBeInTheDocument();
@@ -204,8 +204,8 @@ describe("Fund detail display", () => {
     expect(timelineScope.getByText("執行済額")).toBeInTheDocument();
     expect(timelineScope.getByText("執行予定額+執行済額")).toBeInTheDocument();
     expect(timelineScope.getByText("2026-04")).toBeInTheDocument();
-    expect(fundPage.getByRole("heading", { name: "精算項目一覧" })).toBeInTheDocument();
-    const historyTable = fundPage.getByRole("table", { name: "精算項目一覧" });
+    expect(fundPage.getByRole("heading", { name: "実績" })).toBeInTheDocument();
+    const historyTable = fundPage.getByRole("table", { name: "実績" });
     const historyScope = within(historyTable);
 
     expect(historyScope.getByText("GPU サーバ保守")).toBeInTheDocument();
@@ -213,15 +213,15 @@ describe("Fund detail display", () => {
     expect(historyScope.getByText("研究ノート")).toBeInTheDocument();
     expect(historyScope.getByText("300,000円")).toBeInTheDocument();
     expect(historyScope.getByText("5,000円")).toBeInTheDocument();
-    const actualHistorySection = fundPage.getByRole("heading", { name: "精算項目一覧" }).closest("section");
+    const actualHistorySection = fundPage.getByRole("heading", { name: "実績" }).closest("section");
     expect(actualHistorySection).not.toBeNull();
-    expect(fundPage.getByRole("heading", { name: "計画項目一覧" })).toBeInTheDocument();
-    const plannedTable = fundPage.getByRole("table", { name: "計画項目一覧" });
+    expect(fundPage.getByRole("heading", { name: "予定" })).toBeInTheDocument();
+    const plannedTable = fundPage.getByRole("table", { name: "予定" });
     const plannedScope = within(plannedTable);
-    const plannedSection = fundPage.getByRole("heading", { name: "計画項目一覧" }).closest("section");
+    const plannedSection = fundPage.getByRole("heading", { name: "予定" }).closest("section");
     expect(plannedSection).not.toBeNull();
 
-    expect(within(plannedSection as HTMLElement).getByRole("link", { name: "計画作成" })).toHaveAttribute(
+    expect(within(plannedSection as HTMLElement).getByRole("link", { name: "予定を追加" })).toHaveAttribute(
       "href",
       "/planned-items/new?fundId=1&year=2026",
     );
@@ -263,9 +263,9 @@ describe("Fund detail display", () => {
 
     renderAppRoute("/planned-items/new");
 
-    expect(await screen.findByRole("heading", { name: "予定作成" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "予定を追加" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "閉じる" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("dialog", { name: "予定作成" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "予定を追加" })).not.toBeInTheDocument();
   });
 
   it("renders fund detail amounts in rounded thousand-yen units when the saved amount display mode is thousand-yen", async () => {

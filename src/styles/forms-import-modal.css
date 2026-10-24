@@ -1000,3 +1000,30 @@ input[data-direct-number-input="true"] {
   color: #26364d;
   font: inherit;
 }
+
+.budget-field-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; grid-column: 1 / -1; }
+.budget-entry-field, .budget-form-panel { min-width: 0; }
+.budget-entry-field input, .budget-entry-field select, .budget-entry-field textarea { max-width: 100%; min-width: 0; }
+.budget-entry-form > .budget-field-group + * { margin-top: 8px; }
+@media (max-width: 640px) {
+  .budget-field-group { grid-template-columns: 1fr; }
+}
+
+.import-counts { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 0; }
+.import-counts > div { display: flex; gap: 12px; align-items: baseline; }
+.import-counts dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.import-year-group { margin-top: 24px; }
+.import-year-group h4 { margin: 0 0 10px; }
+.comparison-group-heading th { text-align: left; background: var(--surface-soft); }
+.comparison-table [data-mismatch] td:last-child { color: var(--accent-text); font-weight: 700; background: var(--accent-surface); }
+.comparison-note { color: var(--app-text-muted); font-size: .85rem; }
+.import-warning-list { list-style: none; padding: 0; display: grid; gap: 16px; }
+.import-warning-list li { display: grid; gap: 4px; border-bottom: 1px solid var(--surface-border); padding-bottom: 12px; overflow-wrap: anywhere; }
+.import-warning-location { color: var(--app-text-muted); font-size: .85rem; }
+.workbook-path { overflow-wrap: anywhere; }
+.import-card { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; box-shadow: none; }
+.import-card-header { flex: 1 1 20rem; }
+.import-card p { margin: 0; }
+
+.budget-entry-date-row { position: relative; }
+.budget-entry-date-row .budget-entry-calendar-input { width: 1px; min-width: 0; max-width: 1px; height: 1px; }

@@ -37,13 +37,13 @@ export function FundActualEntriesSection({
     >
       <div className="detail-panel-header">
         <div className="detail-panel-title-actions">
-          <h3 id="fund-actual-history-heading">精算項目一覧</h3>
+          <h3 id="fund-actual-history-heading">実績</h3>
           <Link
             className="detail-action-button detail-action-button-settle"
             to={createHref}
             state={createState}
           >
-            実績作成
+            実績を追加
           </Link>
         </div>
       </div>
@@ -55,7 +55,7 @@ export function FundActualEntriesSection({
         <div
           className="detail-table detail-history-table detail-history-table-actual"
           role="table"
-          aria-label="精算項目一覧"
+          aria-label="実績"
         >
           <div className="detail-table-head detail-history-head detail-actual-head detail-sort-head" role="row">
             {sortControls}

@@ -93,14 +93,14 @@ export function EditPlannedItemDialog({
         : [];
 
       if (nextWarnings.length > 0) {
-        setInfoMessage("計画項目を保存しました。警告を確認してください。");
+        setInfoMessage("予定を保存しました。警告を確認してください。");
         setWarnings(nextWarnings);
         return;
       }
 
       onClose();
     } catch {
-      setBlockingMessage("計画項目を更新できませんでした。");
+      setBlockingMessage("予定を更新できませんでした。");
     } finally {
       setIsSubmitting(false);
     }
@@ -123,7 +123,7 @@ export function EditPlannedItemDialog({
       await onSaved();
       onClose();
     } catch {
-      setBlockingMessage("計画項目を取り消せませんでした。");
+      setBlockingMessage("予定を取り消せませんでした。");
     } finally {
       setIsSubmitting(false);
     }
@@ -146,7 +146,7 @@ export function EditPlannedItemDialog({
       await onSaved();
       onClose();
     } catch {
-      setBlockingMessage("計画項目を削除できませんでした。");
+      setBlockingMessage("予定を削除できませんでした。");
     } finally {
       setIsSubmitting(false);
     }
@@ -161,7 +161,7 @@ export function EditPlannedItemDialog({
       <>
         <div className="budget-modal-header">
           <div>
-            <h3 id="edit-planned-item-dialog-title">計画項目を編集</h3>
+            <h3 id="edit-planned-item-dialog-title">予定を編集</h3>
             <p className="budget-modal-description">{item.description}</p>
           </div>
         </div>
@@ -170,9 +170,7 @@ export function EditPlannedItemDialog({
           <FundCategorySelectFields
             categories={categories}
             categoryId={selectedCategoryId}
-            categoryLabel="費目ID"
             fundId={selectedFundId}
-            fundLabel="資金ID"
             funds={funds}
             hasSelectedFund={hasSelectedFund}
             onCategoryChange={onCategoryChange}
@@ -197,9 +195,9 @@ export function EditPlannedItemDialog({
             value={scheduledMonth}
           />
           <label className="budget-entry-field">
-            <span>説明</span>
+            <span>内容</span>
             <input
-              aria-label="説明"
+              aria-label="内容"
               name="description"
               onChange={(event) => setDescription(event.target.value)}
               value={description}
@@ -233,6 +231,7 @@ export function EditPlannedItemDialog({
             selectedIds={selectedAuxiliaryLabelIds}
             onChange={setSelectedAuxiliaryLabelIds}
           />
+          <p className="budget-modal-copy">取消は予定額を集計から外して履歴に残します。削除はこの予定を履歴からも消します。</p>
           <div className="budget-modal-actions budget-modal-actions-between">
             <div className="budget-modal-actions">
               <button

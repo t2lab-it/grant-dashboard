@@ -18,9 +18,7 @@
 }
 
 .first-run-card-intro h2,
-.first-run-card-intro p,
-.first-run-step h3,
-.first-run-step p {
+.first-run-card-intro p {
   margin: 0;
 }
 
@@ -28,8 +26,7 @@
   font-size: 1.35rem;
 }
 
-.first-run-card-intro p,
-.first-run-step p {
+.first-run-card-intro p {
   color: var(--app-text-muted);
 }
 
@@ -37,51 +34,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 12px;
-}
-
-.first-run-step {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
-  padding: 14px;
-  background: var(--surface-raised);
-}
-
-.first-run-step-number {
-  display: inline-grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  color: var(--interactive-strong-text);
-  background: var(--interactive-strong);
-  font-size: 0.86rem;
-  font-weight: 700;
-}
-
-.first-run-step h3 {
-  font-size: 0.98rem;
-}
-
-.first-run-step code {
-  display: inline-block;
-  max-width: 100%;
-  margin-top: 10px;
-  border: 1px solid var(--surface-border);
-  border-radius: 6px;
-  padding: 4px 7px;
-  color: var(--app-text);
-  background: var(--surface-muted);
-  overflow-wrap: anywhere;
-}
-
-.first-run-step .detail-action-button {
-  display: inline-flex;
-  width: fit-content;
-  margin-top: 10px;
 }
 
 .first-run-doc-links {
@@ -315,7 +267,6 @@
 }
 
 .overview-context-panel-section-header span,
-.overview-context-share,
 .overview-context-empty {
   color: var(--app-text-muted);
 }
@@ -529,12 +480,6 @@
   gap: 16px;
 }
 
-.overview-context-panel-section-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .overview-context-help {
   position: relative;
   display: inline-flex;
@@ -612,12 +557,6 @@
 .overview-context-row:last-child {
   padding-bottom: 0;
   border-bottom: 0;
-}
-
-.overview-context-rank {
-  display: block;
-  color: #172033;
-  font-weight: 600;
 }
 
 .overview-context-row-compact {
@@ -709,7 +648,6 @@
   border-bottom-color: rgba(67, 96, 124, 0.44);
 }
 
-:root[data-theme="dark"] .overview-context-rank,
 :root[data-theme="dark"] .overview-context-inline-summary,
 :root[data-theme="dark"] .overview-context-inline-value,
 :root[data-theme="dark"] .overview-context-inline-name {

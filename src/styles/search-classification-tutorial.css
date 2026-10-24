@@ -277,15 +277,8 @@
 
 :root[data-theme="dark"] .demo-tutorial-prompt p,
 :root[data-theme="dark"] .demo-tutorial-callout p,
-:root[data-theme="dark"] .demo-tutorial-step-count,
-:root[data-theme="dark"] .demo-tutorial-optional {
+:root[data-theme="dark"] .demo-tutorial-step-count {
   color: #b8c6d8;
-}
-
-:root[data-theme="dark"] .demo-tutorial-optional button {
-  border-color: rgba(96, 165, 250, 0.34);
-  background: rgba(30, 45, 66, 0.98);
-  color: #f8fbff;
 }
 
 :root[data-theme="dark"] .search-filters,

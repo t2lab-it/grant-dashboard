@@ -6,13 +6,13 @@ import { apiGet } from "../../lib/api";
 import { formatLocalDateTime } from "../../lib/format";
 
 export function ImportHistoryPage() {
-  const { data, isError } = useQuery({
+  const { data, isError, error, isFetching, refetch } = useQuery({
     queryKey: ["imports"],
     queryFn: () => apiGet<ImportHistoryResponse>("/api/imports"),
   });
 
   if (isError) {
-    return <PageStatusMessage kind="error">インポート履歴を読み込めませんでした。</PageStatusMessage>;
+    return <PageStatusMessage kind="error">インポート履歴を読み込めませんでした。<p>{error.message}</p><button type="button" disabled={isFetching} onClick={() => void refetch()}>再試行</button></PageStatusMessage>;
   }
 
   if (!data) {
@@ -27,7 +27,6 @@ export function ImportHistoryPage() {
     <section className="detail-grid">
       <header className="detail-hero">
         <div>
-          <p className="eyebrow">インポート確認</p>
           <h2>インポート履歴</h2>
         </div>
       </header>
@@ -39,7 +38,7 @@ export function ImportHistoryPage() {
                 <Link to={`/imports/${item.id}`}>{item.source_filename}</Link>
               </strong>
               <span className={item.reconciliation_ok ? "status-pill ok" : "status-pill warn"}>
-                {item.reconciliation_ok ? "照合OK" : "照合不一致"}
+                {item.reconciliation_ok === null ? "照合履歴は読込不可" : item.reconciliation_ok ? "照合OK" : "照合不一致"}
               </span>
             </div>
             <p>{formatLocalDateTime(item.imported_at)}</p>

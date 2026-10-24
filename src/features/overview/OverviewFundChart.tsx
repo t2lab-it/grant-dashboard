@@ -64,11 +64,6 @@ export function OverviewFundChart({
     `執行予定 ${formatAmount(fund.committed_amount, amountDisplayMode)}`,
     `残高 ${formatAmount(fund.freeBalance, amountDisplayMode)}`,
   ].join("、");
-  const legendLabelBySegment = {
-    執行済: "執行済",
-    執行予定: "執行予定",
-    残高: "残高",
-  } as const;
 
   return (
     <div className="fund-card-chart">
@@ -156,6 +151,8 @@ export function OverviewFundChart({
                 y="92"
                 textAnchor="middle"
                 className="fund-card-donut-value fund-card-donut-alert-amount detail-rate-alert"
+                textLength={formatAmount(-overBudgetAmount, amountDisplayMode).length > 12 ? 110 : undefined}
+                lengthAdjust="spacingAndGlyphs"
               >
                 {formatAmount(-overBudgetAmount, amountDisplayMode)}
               </text>
@@ -196,7 +193,7 @@ export function OverviewFundChart({
             <span
               className={segment.isNegative ? "fund-card-legend-label detail-rate-alert" : "fund-card-legend-label"}
             >
-              {legendLabelBySegment[segment.label]}
+              {segment.label}
             </span>
           </p>
         ))}

@@ -29,7 +29,7 @@ export function FiscalYearComparisonPage() {
   const categoryColors = getCrossAggregateChartColors(getOverviewChartPalette(themePreset, customChartPresets));
   return (
     <div className="fiscal-year-comparison-page">
-      <header className="fiscal-year-comparison-page-heading"><h1>年度横断サマリー</h1></header>
+      <header className="fiscal-year-comparison-page-heading"><h1>年度比較</h1></header>
       <FiscalYearBudgetBars activeYear={activeYear} onYearHover={setActiveYear} activeFund={activeFund} onFundHover={setActiveFund} amountDisplayMode={amountDisplayMode} categoryColors={categoryColors} maxAssets={model.maxAssets} years={model.years} />
       <FiscalYearFundDonuts activeYear={activeYear} onYearHover={setActiveYear} activeFund={activeFund} onFundHover={setActiveFund} amountDisplayMode={amountDisplayMode} years={model.years} />
       <FiscalYearCategoryDonuts activeYear={activeYear} onYearHover={setActiveYear} amountDisplayMode={amountDisplayMode} colors={categoryColors} years={model.years} />

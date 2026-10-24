@@ -72,34 +72,16 @@ export function FundCategoriesSection({
       </div>
       <div className="detail-categories-layout">
         <div className="detail-category-tables">
-          <div className="detail-table" role="table" aria-label="費目別の状況">
-            <div className="detail-table-head" role="row">
-              <span>費目</span>
-              <span className="detail-table-money-heading">予算</span>
-              <span className="detail-table-money-heading">執行予定額</span>
-              <span className="detail-table-money-heading">執行済額</span>
-              <span className="detail-table-rate-heading">{getRateMetricLabel(rateMetric).replace(" [%]", "")}</span>
-            </div>
-            {categories.map((row) => {
-              const rate = getRateMetric(rateMetric, row.budgetAmount, row.plannedAmount, row.actualAmount,
-                (row.budgetAmount ?? 0) - row.plannedAmount - row.actualAmount,
-                executionRateThresholds, balanceRateThresholds);
-              return (
-                <div key={row.id} className="detail-table-row" role="row">
-                  <strong>{row.categoryName}</strong>
-                  <span className="detail-table-money-cell">{formatBudgetAmount(row.budgetAmount, amountDisplayMode)}</span>
-                  <span className="detail-table-money-cell">{formatAmount(row.plannedAmount, amountDisplayMode)}</span>
-                  <span className="detail-table-money-cell">{formatAmount(row.actualAmount, amountDisplayMode)}</span>
-                  <span className={`detail-table-rate-cell ${rate.className}`}>{rate.label}</span>
-                </div>
-              );
-            })}
-            <div className="detail-table-row detail-table-total-row" role="row">
-              <strong>合計</strong><span className="detail-table-money-cell" />
-              <span className="detail-table-money-cell">{formatAmount(plannedAmount, amountDisplayMode)}</span>
-              <span className="detail-table-money-cell">{formatAmount(actualAmount, amountDisplayMode)}</span>
-              <span className="detail-table-rate-cell" />
-            </div>
+          <div className="comparison-scroll" role="region" aria-label="費目別の状況の横スクロール" tabIndex={0}>
+            <table className="comparison-table" aria-label="費目別の状況">
+              <thead><tr><th scope="col">費目</th><th scope="col">予算</th><th scope="col">執行予定額</th><th scope="col">執行済額</th><th scope="col">{getRateMetricLabel(rateMetric).replace(" [%]", "")}</th></tr></thead>
+              <tbody>{categories.map((row) => {
+                const rate = getRateMetric(rateMetric, row.budgetAmount, row.plannedAmount, row.actualAmount,
+                  (row.budgetAmount ?? 0) - row.plannedAmount - row.actualAmount, executionRateThresholds, balanceRateThresholds);
+                return <tr key={row.id}><th scope="row">{row.categoryName}</th><td>{formatBudgetAmount(row.budgetAmount, amountDisplayMode)}</td><td>{formatAmount(row.plannedAmount, amountDisplayMode)}</td><td>{formatAmount(row.actualAmount, amountDisplayMode)}</td><td className={rate.className}>{rate.label}</td></tr>;
+              })}</tbody>
+              <tfoot><tr><th scope="row">合計</th><td></td><td>{formatAmount(plannedAmount, amountDisplayMode)}</td><td>{formatAmount(actualAmount, amountDisplayMode)}</td><td></td></tr></tfoot>
+            </table>
           </div>
           {crossAggregateCategories.length > 0 ? (
             <div className="detail-cross-aggregate-disclosure">
@@ -108,24 +90,14 @@ export function FundCategoriesSection({
                 横断集計カテゴリ別の状況
               </button>
               {isCrossAggregateExpanded ? (
-                <div className="detail-table detail-cross-aggregate-table" role="table" aria-label="横断集計カテゴリ別の状況">
-                  <div className="detail-table-head" role="row">
-                    <span>横断集計カテゴリ</span><span className="detail-table-money-heading">予算</span>
-                    <span className="detail-table-money-heading">執行予定額</span><span className="detail-table-money-heading">執行済額</span>
-                    <span className="detail-table-money-heading">残高</span>
-                  </div>
-                  {crossAggregateCategories.map((row) => {
-                    const balance = (row.budgetAmount ?? 0) - row.plannedAmount - row.actualAmount;
-                    return (
-                      <div key={row.crossAggregateCategory} className="detail-table-row" role="row">
-                        <strong>{CROSS_AGGREGATE_CATEGORY_LABELS[row.crossAggregateCategory]}</strong>
-                        <span className="detail-table-money-cell">{formatBudgetAmount(row.budgetAmount, amountDisplayMode)}</span>
-                        <span className="detail-table-money-cell">{formatAmount(row.plannedAmount, amountDisplayMode)}</span>
-                        <span className="detail-table-money-cell">{formatAmount(row.actualAmount, amountDisplayMode)}</span>
-                        <span className="detail-table-money-cell">{formatAmount(balance, amountDisplayMode)}</span>
-                      </div>
-                    );
-                  })}
+                <div className="comparison-scroll" role="region" aria-label="大費目別の横スクロール" tabIndex={0}>
+                  <table className="comparison-table" aria-label="横断集計カテゴリ別の状況">
+                    <thead><tr><th scope="col">大費目</th><th scope="col">予算</th><th scope="col">執行予定額</th><th scope="col">執行済額</th><th scope="col">残高</th></tr></thead>
+                    <tbody>{crossAggregateCategories.map((row) => <tr key={row.crossAggregateCategory}>
+                      <th scope="row">{CROSS_AGGREGATE_CATEGORY_LABELS[row.crossAggregateCategory]}</th>
+                      <td>{formatBudgetAmount(row.budgetAmount, amountDisplayMode)}</td><td>{formatAmount(row.plannedAmount, amountDisplayMode)}</td><td>{formatAmount(row.actualAmount, amountDisplayMode)}</td><td>{formatAmount((row.budgetAmount ?? 0) - row.plannedAmount - row.actualAmount, amountDisplayMode)}</td>
+                    </tr>)}</tbody>
+                  </table>
                 </div>
               ) : null}
             </div>

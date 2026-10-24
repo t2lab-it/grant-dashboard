@@ -41,7 +41,7 @@ export function FiscalYearFundDonuts({ amountDisplayMode, years, activeFund, onF
   return (
     <section className="fiscal-year-comparison-section" aria-labelledby="fiscal-year-fund-title">
       <div className="fiscal-year-comparison-section-heading">
-        <h2 id="fiscal-year-fund-title">各年度の予算構成比</h2>
+        <h2 id="fiscal-year-fund-title">予算構成</h2>
       </div>
       <div className="fiscal-year-fund-grid" role="group" aria-label="年度別の予算構成比">
         {years.map((year) => (

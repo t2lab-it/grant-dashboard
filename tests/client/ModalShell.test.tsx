@@ -210,3 +210,23 @@ describe("ModalShell", () => {
     expect(document.body.style.overflow).toBe("scroll");
   });
 });
+
+describe("ModalShell disclosure focus", () => {
+  afterEach(cleanup);
+  it("includes disclosure summaries and skips controls hidden in closed details", () => {
+  render(<ModalShell ariaLabel="詳細を確認" onRequestClose={() => {}}>
+    <details><summary>診断の詳細</summary><button type="button">非表示の操作</button></details>
+    <input aria-label="非表示カレンダー" tabIndex={-1} />
+    <button type="button">保存</button>
+  </ModalShell>);
+  const summary = screen.getByText("診断の詳細");
+  const save = screen.getByRole("button", {name: "保存"});
+  expect(summary).toHaveFocus();
+  save.focus();
+  fireEvent.keyDown(window, {key: "Tab"});
+  expect(summary).toHaveFocus();
+  fireEvent.keyDown(window, {key: "Tab", shiftKey: true});
+  expect(save).toHaveFocus();
+});
+
+});

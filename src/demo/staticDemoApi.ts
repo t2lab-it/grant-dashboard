@@ -96,22 +96,22 @@ function invalidRouteIdResponse(method: string, pathname: string) {
     {
       methods: ["PUT", "DELETE"],
       pattern: /^\/api\/planned-items\/[^/]+$/,
-      payload: { code: "invalid_planned_item_id", message: "計画項目IDを確認してください。" },
+      payload: { code: "invalid_planned_item_id", message: "予定IDを確認してください。" },
     },
     {
       methods: ["POST"],
       pattern: /^\/api\/planned-items\/[^/]+\/(cancel|complete|restore)$/,
-      payload: { code: "invalid_planned_item_id", message: "計画項目IDを確認してください。" },
+      payload: { code: "invalid_planned_item_id", message: "予定IDを確認してください。" },
     },
     {
       methods: ["PUT"],
       pattern: /^\/api\/actual-entries\/[^/]+$/,
-      payload: { code: "invalid_actual_entry_id", message: "精算項目IDを確認してください。" },
+      payload: { code: "invalid_actual_entry_id", message: "実績IDを確認してください。" },
     },
     {
       methods: ["POST"],
       pattern: /^\/api\/actual-entries\/[^/]+\/cancel$/,
-      payload: { code: "invalid_actual_entry_id", message: "精算項目IDを確認してください。" },
+      payload: { code: "invalid_actual_entry_id", message: "実績IDを確認してください。" },
     },
     {
       methods: ["PUT", "DELETE"],
@@ -132,27 +132,27 @@ function domainErrorResponse(error: unknown, pathname: string, method: string) {
     },
     "Category has linked planned or actual entries": {
       status: 409,
-      payload: { code: "category_has_entries", message: "計画項目または精算項目がある費目は削除できません。" },
+      payload: { code: "category_has_entries", message: "予定または実績がある費目は削除できません。" },
     },
     "Planned item not found": {
       status: 404,
-      payload: { code: "planned_item_not_found", message: "対象の計画項目が見つかりません。" },
+      payload: { code: "planned_item_not_found", message: "対象の予定が見つかりません。" },
     },
     "Planned item is not partially settled": {
       status: 409,
-      payload: { code: "planned_item_complete_requires_actuals", message: "精算が紐づいている未精算の計画項目のみ完了にできます。" },
+      payload: { code: "planned_item_complete_requires_actuals", message: "精算が紐づいている未精算の予定のみ完了にできます。" },
     },
     "Planned item has no remaining amount": {
       status: 409,
-      payload: { code: "planned_item_complete_requires_remaining", message: "残予定額がある計画項目のみ完了にできます。" },
+      payload: { code: "planned_item_complete_requires_remaining", message: "残予定額がある予定のみ完了にできます。" },
     },
     "Planned item is not deletable": {
       status: 409,
-      payload: { code: "planned_item_not_deletable", message: "この計画項目は削除できません。" },
+      payload: { code: "planned_item_not_deletable", message: "この予定は削除できません。" },
     },
     "Planned item is not restorable": {
       status: 409,
-      payload: { code: "planned_item_not_cancelled_for_restore", message: "完了または取消済みの計画項目のみ計画に戻せます。" },
+      payload: { code: "planned_item_not_cancelled_for_restore", message: "完了または取消済みの予定のみ計画に戻せます。" },
     },
     "Planned item does not match fund and category": {
       status: 400,
@@ -160,7 +160,7 @@ function domainErrorResponse(error: unknown, pathname: string, method: string) {
     },
     "Actual entry not found": {
       status: 404,
-      payload: { code: "actual_entry_not_found", message: "対象の精算項目が見つかりません。" },
+      payload: { code: "actual_entry_not_found", message: "対象の実績が見つかりません。" },
     },
     "Classification not found": {
       status: 404,
@@ -170,20 +170,20 @@ function domainErrorResponse(error: unknown, pathname: string, method: string) {
 
   if (detail === "Planned item has linked actual entries") {
     return method === "DELETE"
-      ? errorResponse({ code: "planned_item_delete_has_actuals", message: "精算が紐づいている計画項目は削除できません。" }, 409)
-      : errorResponse({ code: "planned_item_has_actuals", message: "精算が紐づいている計画項目は取り消せません。" }, 409);
+      ? errorResponse({ code: "planned_item_delete_has_actuals", message: "精算が紐づいている予定は削除できません。" }, 409)
+      : errorResponse({ code: "planned_item_has_actuals", message: "精算が紐づいている予定は取り消せません。" }, 409);
   }
 
   if (detail === "Fund not found") {
     return pathname.startsWith("/api/funds/")
       ? errorResponse({ code: "fund_not_found", message: "対象の予算が見つかりません。" }, 404)
-      : errorResponse({ code: "invalid_reference", message: "選択した資金IDまたは費目IDを確認してください。" }, 400);
+      : errorResponse({ code: "invalid_reference", message: "選択した予算または費目を確認してください。" }, 400);
   }
 
   if (detail === "Category not found" || detail === "Category does not belong to fund") {
     return pathname.startsWith("/api/funds/")
-      ? errorResponse({ code: "invalid_category_reference", message: "編集対象の費目IDを確認してください。" }, 400)
-      : errorResponse({ code: detail === "Category not found" ? "invalid_reference" : "category_fund_mismatch", message: detail === "Category not found" ? "選択した資金IDまたは費目IDを確認してください。" : "選択した費目が資金に紐づいていません。" }, 400);
+      ? errorResponse({ code: "invalid_category_reference", message: "編集対象の費目を確認してください。" }, 400)
+      : errorResponse({ code: detail === "Category not found" ? "invalid_reference" : "category_fund_mismatch", message: detail === "Category not found" ? "選択した予算または費目を確認してください。" : "選択した費目が資金に紐づいていません。" }, 400);
   }
 
   const match = mapped[detail];

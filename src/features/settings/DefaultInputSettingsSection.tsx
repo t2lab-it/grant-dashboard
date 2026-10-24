@@ -50,10 +50,9 @@ export function DefaultInputSettingsSection() {
     <section className="settings-section">
       <h3>入力の既定値</h3>
       <div className="settings-option-grid">
-        <fieldset className="settings-option-group">
-          <legend>新規作成時の既定値</legend>
+        <div className="settings-default-fields">
           <label className="budget-entry-field">
-            <span>新規作成時の既定予算</span>
+            <span>予算</span>
             <select
               aria-label="新規作成時の既定予算"
               value={defaultFundId === null ? "" : String(defaultFundId)}
@@ -70,7 +69,7 @@ export function DefaultInputSettingsSection() {
             </select>
           </label>
           <label className="budget-entry-field">
-            <span>新規作成時の既定費目</span>
+            <span>費目</span>
             <select
               aria-label="新規作成時の既定費目"
               disabled={!hasDefaultFund}
@@ -87,7 +86,7 @@ export function DefaultInputSettingsSection() {
               ))}
             </select>
           </label>
-        </fieldset>
+        </div>
       </div>
     </section>
   );

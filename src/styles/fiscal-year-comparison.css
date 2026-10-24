@@ -299,7 +299,7 @@
 
 .fiscal-year-fund-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
   gap: 12px;
   margin-top: 18px;
 }
@@ -472,25 +472,6 @@
 }
 
 @media (max-width: 760px) {
-  .app-shell-fiscal-year-comparison {
-    padding: 16px;
-  }
-
-  .app-shell-fiscal-year-comparison .app-header-primary-row {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .app-shell-fiscal-year-comparison .app-header nav {
-    justify-content: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .app-shell-fiscal-year-comparison .app-main {
-    border-radius: 16px;
-    padding: 16px;
-  }
-
   .fiscal-year-budget-breakdown-toggle {
     width: 100%;
   }
@@ -581,4 +562,13 @@
 
 .fiscal-year-comparison-section [data-year-muted="true"] {
   opacity: 0.2;
+}
+
+.fiscal-year-budget-chart { container-type: inline-size; }
+@container (max-width: 32rem) {
+  .fiscal-year-budget-axis { margin-inline: 8px; }
+  .fiscal-year-budget-row { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+  .fiscal-year-budget-year { grid-column: 1; grid-row: 1; }
+  .fiscal-year-budget-value { grid-column: 2; grid-row: 1; }
+  .fiscal-year-budget-scale { grid-column: 1 / -1; grid-row: 2; }
 }

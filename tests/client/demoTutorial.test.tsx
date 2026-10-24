@@ -57,6 +57,9 @@ function mockDemoOverviewAndFundDetail() {
     const url = String(input);
     const method = init?.method ?? "GET";
 
+    if (url.startsWith("/api/overview/monthly-summary")) {
+      return { ok: true, json: async () => ({ summary: { actualCumulativeAmount: 10, actualAmount: 10, plannedAmount: 20, plannedRemainingAmount: 20, spendAndPlannedCumulativeAmount: 30, calculatedBalance: 70 }, funds: [], crossAggregateCategories: [] }) };
+    }
     if (url.startsWith("/api/overview") && method === "GET") {
       return {
         ok: true,
@@ -117,6 +120,16 @@ describe("Demo tutorial", () => {
     expect(await screen.findByRole("dialog", { name: "チュートリアルを始めますか？" })).toBeInTheDocument();
   });
 
+  it("waits for a directly opened monthly summary to close before prompting", async () => {
+    const user = userEvent.setup();
+    mockDemoOverviewAndFundDetail();
+    renderAppRoute("/?year=2026&month=2026-06&summaryMetric=balance");
+    const monthly = await screen.findByRole("dialog", { name: "2026年6月の予算横断サマリ" });
+    expect(screen.queryByRole("dialog", { name: "チュートリアルを始めますか？" })).not.toBeInTheDocument();
+    await user.click(within(monthly).getByRole("button", { name: "月別サマリを閉じる" }));
+    expect(await screen.findByRole("dialog", { name: "チュートリアルを始めますか？" })).toBeInTheDocument();
+  });
+
   it("uses back, complete, and advanced actions on the final workbook preview step", async () => {
     const user = userEvent.setup();
     mockDemoOverviewAndFundDetail();
@@ -158,7 +171,7 @@ describe("Demo tutorial", () => {
     expect(view.router.state.location.search).toBe("?fundId=1&year=2026");
     const plannedTutorial = await screen.findByRole("dialog", { name: "チュートリアル" });
     expect(within(plannedTutorial).getByText("予定を作成する")).toBeInTheDocument();
-    expect(await screen.findByRole("heading", { name: "予定作成" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "予定を追加" })).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByTestId("tour-target-planned-item-form")).toHaveAttribute(
         "data-tour-active",
@@ -174,7 +187,7 @@ describe("Demo tutorial", () => {
     expect(view.router.state.location.search).toBe("?fundId=1&year=2026");
     const actualTutorial = await screen.findByRole("dialog", { name: "チュートリアル" });
     expect(within(actualTutorial).getByText("実績を作成する")).toBeInTheDocument();
-    expect(await screen.findByRole("heading", { name: "実績作成" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "実績を追加" })).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByTestId("tour-target-actual-entry-form")).toHaveAttribute(
         "data-tour-active",

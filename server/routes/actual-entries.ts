@@ -24,7 +24,7 @@ export function registerActualEntryRoutes(app: FastifyInstance) {
       reply,
       (request.params as { actualEntryId?: string }).actualEntryId,
       "invalid_actual_entry_id",
-      "精算項目IDを確認してください。",
+      "実績IDを確認してください。",
     );
     if (actualEntryId === undefined) {
       return;
@@ -48,7 +48,7 @@ export function registerActualEntryRoutes(app: FastifyInstance) {
       reply,
       (request.params as { actualEntryId?: string }).actualEntryId,
       "invalid_actual_entry_id",
-      "精算項目IDを確認してください。",
+      "実績IDを確認してください。",
     );
     if (actualEntryId === undefined) {
       return;

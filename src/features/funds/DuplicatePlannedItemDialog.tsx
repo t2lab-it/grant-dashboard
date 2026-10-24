@@ -93,14 +93,14 @@ export function DuplicatePlannedItemDialog({
         : [];
 
       if (nextWarnings.length > 0) {
-        setInfoMessage("計画項目を複製しました。警告を確認してください。");
+        setInfoMessage("予定を複製しました。警告を確認してください。");
         setWarnings(nextWarnings);
         return;
       }
 
       onClose();
     } catch {
-      setBlockingMessage("計画項目を複製できませんでした。");
+      setBlockingMessage("予定を複製できませんでした。");
     } finally {
       setIsSubmitting(false);
     }
@@ -115,7 +115,7 @@ export function DuplicatePlannedItemDialog({
       <>
         <div className="budget-modal-header">
           <div>
-            <h3 id="duplicate-planned-item-dialog-title">計画項目を複製</h3>
+            <h3 id="duplicate-planned-item-dialog-title">予定を複製</h3>
             <p className="budget-modal-description">{item.description}</p>
           </div>
         </div>
@@ -124,9 +124,7 @@ export function DuplicatePlannedItemDialog({
           <FundCategorySelectFields
             categories={categories}
             categoryId={selectedCategoryId}
-            categoryLabel="費目ID"
             fundId={selectedFundId}
-            fundLabel="資金ID"
             funds={funds}
             hasSelectedFund={hasSelectedFund}
             onCategoryChange={onCategoryChange}
@@ -151,9 +149,9 @@ export function DuplicatePlannedItemDialog({
             />
           </label>
           <label className="budget-entry-field">
-            <span>説明</span>
+            <span>内容</span>
             <input
-              aria-label="説明"
+              aria-label="内容"
               name="description"
               onChange={(event) => setDescription(event.target.value)}
               value={description}

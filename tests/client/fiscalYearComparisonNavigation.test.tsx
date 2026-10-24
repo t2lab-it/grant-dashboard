@@ -79,7 +79,7 @@ describe("fiscal year comparison navigation", () => {
 
     await user.click(screen.getByRole("button", { name: "年度比較", pressed: false }));
 
-    expect(await screen.findByRole("heading", { name: "年度横断サマリー" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "年度比較" })).toBeInTheDocument();
     expect(router.state.location.search).toBe("?year=2025");
     await user.click(screen.getByRole("button", { name: "年度比較", pressed: true }));
 
@@ -93,7 +93,7 @@ describe("fiscal year comparison navigation", () => {
   test("turns comparison off with the keyboard after opening it directly", async () => {
     const user = userEvent.setup();
     const { router } = renderAppRoute("/fiscal-years?year=2025");
-    await screen.findByRole("heading", { name: "年度横断サマリー" });
+    await screen.findByRole("heading", { name: "年度比較" });
 
     screen.getByRole("button", { name: "年度比較", pressed: true }).focus();
     await user.keyboard(" ");
@@ -107,11 +107,11 @@ describe("fiscal year comparison navigation", () => {
   test("marks comparison current, hides HeaderAlerts, and keeps global navigation", async () => {
     renderAppRoute("/fiscal-years?year=2026");
 
-    expect(await screen.findByRole("heading", { name: "年度横断サマリー" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "年度比較" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "年度比較", pressed: true })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "検索" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "予定作成" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "実績作成" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "予定を追加" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "実績を追加" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "設定" })).toBeInTheDocument();
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith("/api/fiscal-year-comparison", {});

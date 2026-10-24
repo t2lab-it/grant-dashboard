@@ -73,9 +73,9 @@ export const shellRoutes: RouteObject[] = [
 export function getCreateEntryModalTitle(pathname: string) {
   switch (pathname) {
     case "/planned-items/new":
-      return "予定作成";
+      return "予定を追加";
     case "/actual-entries/new":
-      return "実績作成";
+      return "実績を追加";
     default:
       return null;
   }

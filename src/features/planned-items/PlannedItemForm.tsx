@@ -194,7 +194,7 @@ export function PlannedItemForm() {
     }
 
     if (baseDescription.length === 0) {
-      setBulkPreviewError("基準説明を入力してください。");
+      setBulkPreviewError("共通の内容を入力してください。");
       setBulkPreviewRows([]);
       return;
     }
@@ -346,7 +346,7 @@ export function PlannedItemForm() {
     >
       <div className="budget-form-panel-header">
         <div>
-          <h2>予定作成</h2>
+          <h2>予定を追加</h2>
         </div>
       </div>
 
@@ -404,9 +404,9 @@ export function PlannedItemForm() {
               value={values.scheduledMonth}
             />
             <label className="budget-entry-field">
-              <span>説明</span>
+              <span>内容</span>
               <input
-                aria-label="説明"
+                aria-label="内容"
                 name="description"
                 onChange={(event) => setValue("description", event.target.value)}
                 value={values.description}
@@ -449,9 +449,9 @@ export function PlannedItemForm() {
                 />
               </label>
               <label className="budget-entry-field">
-                <span>基準説明</span>
+                <span>共通の内容</span>
                 <input
-                  aria-label="基準説明"
+                  aria-label="共通の内容"
                   name="bulkBaseDescription"
                   onChange={(event) => setBulkBaseDescription(event.target.value)}
                   value={bulkBaseDescription}
@@ -484,14 +484,14 @@ export function PlannedItemForm() {
               <div className="planned-item-preview-table" aria-label="一括作成プレビュー">
                 <div className="planned-item-preview-head" aria-hidden="true">
                   <span>執行予定月</span>
-                  <span>説明</span>
+                  <span>内容</span>
                   <span>金額</span>
                 </div>
                 {bulkPreviewRows.map((row) => (
                   <div className="planned-item-preview-row" key={row.scheduledMonth}>
                     <span className="planned-item-preview-month">{row.scheduledMonth}</span>
                     <input
-                      aria-label={`説明 ${row.scheduledMonth}`}
+                      aria-label={`内容 ${row.scheduledMonth}`}
                       value={row.description}
                       onChange={(event) =>
                         updateBulkPreviewRow(row.scheduledMonth, "description", event.target.value)

@@ -38,6 +38,8 @@ export function AppShell() {
 function AppShellInner() {
   const {
     settings: { appThemeMode },
+    storageError,
+    retrySettingsSave,
   } = useAppSettings();
   useAppThemeSync(appThemeMode);
   const queryClient = useQueryClient();
@@ -147,13 +149,19 @@ function AppShellInner() {
               </button>
             </div>
             <nav aria-label="メインナビゲーション">
+              <div className="app-header-action-group">
               <NavLink to={pathWithCurrentFiscalYear("/search")}>検索</NavLink>
+              <NavLink to={pathWithCurrentFiscalYear("/settings")}>設定</NavLink>
+              </div>
+              <div className="app-header-action-group">
               <NavLink to={pathWithCurrentFiscalYear("/planned-items/new")} state={{ backgroundLocation: baseLocation }}>
-                予定作成
+                予定を追加
               </NavLink>
               <NavLink to={pathWithCurrentFiscalYear("/actual-entries/new")} state={{ backgroundLocation: baseLocation }}>
-                実績作成
+                実績を追加
               </NavLink>
+              </div>
+              <div className="app-header-action-group">
               {staticDemoMode ? (
                 <button
                   type="button"
@@ -168,15 +176,16 @@ function AppShellInner() {
                   <WorkbookExportControl />
                 </>
               )}
-              <NavLink to={pathWithCurrentFiscalYear("/settings")}>設定</NavLink>
+              </div>
             </nav>
           </div>
           {staticDemoMode ? (
             <div className="static-demo-notice" role="note">
-              <span>静的デモでは実ファイルのインポート・エクスポートと SQLite は使えません。</span>
+              <span>デモの変更はこのブラウザに保存されます。Excel入出力はローカル版で利用できます。</span>
               <a href="https://github.com/t2lab-it/grant-dashboard#readme">ローカル利用の手順を読む</a>
             </div>
           ) : null}
+          {storageError ? <div className="app-page-status app-route-error" role="alert"><p>{storageError} 選択値を保持しています。ブラウザの保存容量・権限を確認してください。</p><button type="button" className="detail-action-button" onClick={retrySettingsSave}>再試行</button></div> : null}
           {isFiscalYearComparisonPage ? null : <HeaderAlerts selectedFiscalYear={selectedFiscalYear} />}
         </header>
         <main className="app-main">{needsFiscalYearSync ? <div>読み込み中...</div> : pageContent}</main>

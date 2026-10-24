@@ -44,8 +44,8 @@ export function FiscalYearExecutionPaceChart({ maxPaceRate, years, activeYear, o
       <div className="fiscal-year-comparison-section-heading">
         <div><h2 id="fiscal-year-pace-title">月別の執行ペース</h2></div>
         <div className="fiscal-year-comparison-legend" aria-label="月別執行ペースの凡例">
-          <span data-legend-active={activeKind === "actual"} data-legend-muted={activeKind !== null && activeKind !== "actual"} onMouseEnter={() => setActiveKind("actual")} onMouseLeave={() => setActiveKind(null)}><i className="fiscal-year-line-sample" aria-hidden="true" />実績（実線）</span>
-          <span data-legend-active={activeKind === "projected"} data-legend-muted={activeKind !== null && activeKind !== "projected"} onMouseEnter={() => setActiveKind("projected")} onMouseLeave={() => setActiveKind(null)}><i className="fiscal-year-line-sample fiscal-year-line-sample-dashed" aria-hidden="true" />見込み・予定（破線）</span>
+          <span data-legend-active={activeKind === "actual"} data-legend-muted={activeKind !== null && activeKind !== "actual"} onMouseEnter={() => setActiveKind("actual")} onMouseLeave={() => setActiveKind(null)}><i className="fiscal-year-line-sample" aria-hidden="true" />実績<span className="sr-only">（実線）</span></span>
+          <span data-legend-active={activeKind === "projected"} data-legend-muted={activeKind !== null && activeKind !== "projected"} onMouseEnter={() => setActiveKind("projected")} onMouseLeave={() => setActiveKind(null)}><i className="fiscal-year-line-sample fiscal-year-line-sample-dashed" aria-hidden="true" />見込み・予定<span className="sr-only">（破線）</span></span>
         </div>
       </div>
       <figure className="fiscal-year-pace-figure">

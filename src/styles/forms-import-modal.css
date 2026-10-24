@@ -1,11 +1,9 @@
 
-.import-list,
-.import-detail-list {
+.import-list {
   display: grid;
   gap: 16px;
 }
-.import-card,
-.import-detail-row {
+.import-card {
   display: grid;
   gap: 10px;
   border-radius: 18px;
@@ -89,21 +87,6 @@
 :root[data-theme="dark"] .status-pill.warn {
   background: rgba(180, 83, 9, 0.26);
   color: #fdba74;
-}
-
-.import-detail-row {
-  padding: 16px 18px;
-}
-
-:root[data-theme="dark"] .import-detail-row {
-  border-color: rgba(67, 96, 124, 0.44);
-  background: linear-gradient(180deg, rgba(24, 37, 55, 0.96), rgba(20, 31, 46, 0.96));
-  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.28);
-  color: #c4d1e2;
-}
-
-:root[data-theme="dark"] .import-detail-row strong {
-  color: #f8fbff;
 }
 
 .budget-form-panel {
@@ -680,11 +663,6 @@ input[data-direct-number-input="true"] {
   margin-bottom: 18px;
 }
 
-.workbook-export-sheet-list {
-  display: grid;
-  gap: 12px;
-}
-
 .workbook-export-sheet {
   border: 1px solid #d7e1ec;
   border-radius: 16px;
@@ -697,16 +675,6 @@ input[data-direct-number-input="true"] {
   background: linear-gradient(180deg, rgba(24, 37, 55, 0.96), rgba(20, 31, 46, 0.96));
 }
 
-.workbook-export-sheet-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-  color: #304055;
-}
-
-:root[data-theme="dark"] .workbook-export-sheet-header,
 :root[data-theme="dark"] .workbook-export-change-list,
 :root[data-theme="dark"] .workbook-export-empty {
   color: #c4d1e2;
@@ -853,27 +821,23 @@ input[data-direct-number-input="true"] {
     gap: 12px;
   }
 
-  .detail-award,
   .detail-balance,
   .detail-summary-metric {
     text-align: left;
   }
 
-  .detail-table-head,
-  .timeline-head {
+  .detail-table-head {
     display: none;
   }
 
-  .detail-sort-head,
-  .timeline-sort-head {
+  .detail-sort-head {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     padding: 0 0 12px;
   }
 
-  .detail-sort-head .detail-sort-button,
-  .timeline-sort-head .detail-sort-button {
+  .detail-sort-head .detail-sort-button {
     width: auto;
     padding: 6px 10px;
     border: 1px solid #c6d3e0;
@@ -881,28 +845,24 @@ input[data-direct-number-input="true"] {
     background: rgba(255, 255, 255, 0.9);
   }
 
-  .detail-sort-head .detail-sort-button-active,
-  .timeline-sort-head .detail-sort-button-active {
+  .detail-sort-head .detail-sort-button-active {
     border-color: #8ea7bf;
     background: rgba(226, 236, 246, 0.95);
   }
 
-  :root[data-theme="dark"] .detail-sort-head .detail-sort-button,
-  :root[data-theme="dark"] .timeline-sort-head .detail-sort-button {
+  :root[data-theme="dark"] .detail-sort-head .detail-sort-button {
     border-color: rgba(67, 96, 124, 0.62);
     background: rgba(27, 41, 60, 0.96);
     color: #b4c1d2;
   }
 
-  :root[data-theme="dark"] .detail-sort-head .detail-sort-button-active,
-  :root[data-theme="dark"] .timeline-sort-head .detail-sort-button-active {
+  :root[data-theme="dark"] .detail-sort-head .detail-sort-button-active {
     border-color: rgba(96, 165, 250, 0.46);
     background: rgba(33, 49, 72, 0.96);
     color: #f8fbff;
   }
 
-  .detail-table-row,
-  .timeline-row {
+  .detail-table-row {
     grid-template-columns: 1fr;
   }
 
@@ -917,16 +877,6 @@ input[data-direct-number-input="true"] {
   outline: 3px solid #2563eb;
   outline-offset: 4px;
   box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.16);
-}
-
-.demo-tutorial-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(15, 23, 42, 0.42);
 }
 
 .demo-tutorial-prompt,
@@ -984,19 +934,29 @@ input[data-direct-number-input="true"] {
   opacity: 0.45;
 }
 
-.demo-tutorial-optional {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-  color: #536176;
-  font-size: 0.9rem;
+.budget-field-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; grid-column: 1 / -1; }
+.budget-entry-field, .budget-form-panel { min-width: 0; }
+.budget-entry-field input, .budget-entry-field select, .budget-entry-field textarea { max-width: 100%; min-width: 0; }
+.budget-entry-form > .budget-field-group + * { margin-top: 8px; }
+@media (max-width: 640px) {
+  .budget-field-group { grid-template-columns: 1fr; }
 }
 
-.demo-tutorial-optional button {
-  border: 1px solid #cbd5e1;
-  border-radius: 999px;
-  background: #f8fafc;
-  color: #26364d;
-  font: inherit;
-}
+.import-counts { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 0; }
+.import-counts > div { display: flex; gap: 12px; align-items: baseline; }
+.import-counts dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.import-year-group { margin-top: 24px; }
+.import-year-group h4 { margin: 0 0 10px; }
+.comparison-group-heading th { text-align: left; background: var(--surface-soft); }
+.comparison-table [data-mismatch] td:last-child { color: var(--accent-text); font-weight: 700; background: var(--accent-surface); }
+.comparison-note { color: var(--app-text-muted); font-size: .85rem; }
+.import-warning-list { list-style: none; padding: 0; display: grid; gap: 16px; }
+.import-warning-list li { display: grid; gap: 4px; border-bottom: 1px solid var(--surface-border); padding-bottom: 12px; overflow-wrap: anywhere; }
+.import-warning-location { color: var(--app-text-muted); font-size: .85rem; }
+.workbook-path { overflow-wrap: anywhere; }
+.import-card { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; box-shadow: none; }
+.import-card-header { flex: 1 1 20rem; }
+.import-card p { margin: 0; }
+
+.budget-entry-date-row { position: relative; }
+.budget-entry-date-row .budget-entry-calendar-input { width: 1px; min-width: 0; max-width: 1px; height: 1px; }

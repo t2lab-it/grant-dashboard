@@ -40,25 +40,25 @@ export function FundPlannedItemsSection({
     >
       <div className="detail-panel-header">
         <div className="detail-panel-title-actions">
-          <h3 id="fund-planned-items-heading">計画項目一覧</h3>
+          <h3 id="fund-planned-items-heading">予定</h3>
           <Link
             className="detail-action-button detail-action-button-edit"
             to={createHref}
             state={createState}
           >
-            計画作成
+            予定を追加
           </Link>
         </div>
       </div>
       {totalItemCount === 0 ? (
-        <p className="detail-empty-state">未精算の計画項目はまだありません。</p>
+        <p className="detail-empty-state">未精算の予定はまだありません。</p>
       ) : items.length === 0 ? (
         <p className="detail-empty-state">条件に一致する項目はありません。</p>
       ) : (
         <div
           className="detail-table detail-history-table detail-history-table-planned"
           role="table"
-          aria-label="計画項目一覧"
+          aria-label="予定"
         >
           <div className="detail-table-head detail-history-head detail-planned-head detail-sort-head" role="row">
             {sortControls}

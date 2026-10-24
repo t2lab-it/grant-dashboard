@@ -127,7 +127,7 @@ describe("PlannedItemForm", () => {
 
   async function selectActxCategory() {
     expect(await screen.findByRole("option", { name: "ACT-X" })).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("資金"), { target: { value: "3" } });
+    fireEvent.change(screen.getByLabelText("予算"), { target: { value: "3" } });
     expect(await screen.findByRole("option", { name: "旅費" })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("費目"), { target: { value: "8" } });
   }
@@ -135,7 +135,7 @@ describe("PlannedItemForm", () => {
   function fillPlannedItemDetails() {
     fireEvent.change(screen.getByLabelText("立案日"), { target: { value: "2026/10/01" } });
     fireEvent.change(screen.getByLabelText("執行予定月"), { target: { value: "2026/10" } });
-    fireEvent.change(screen.getByLabelText("説明"), { target: { value: "追加出張" } });
+    fireEvent.change(screen.getByLabelText("内容"), { target: { value: "追加出張" } });
     fireEvent.change(screen.getByLabelText("金額"), { target: { value: "25,000 * 2" } });
     fireEvent.change(screen.getByLabelText("メモ"), { target: { value: "学会対応" } });
   }
@@ -284,12 +284,12 @@ describe("PlannedItemForm", () => {
       ok: false,
       json: async () => ({
         code: "category_fund_mismatch",
-        message: "選択した費目が資金に紐づいていません。",
+        message: "選択した費目が予算に紐づいていません。",
       }),
     });
 
-    expect(await screen.findByText("選択した費目が資金に紐づいていません。")).toBeInTheDocument();
-    expect(screen.getByLabelText("説明")).toHaveValue("追加出張");
+    expect(await screen.findByText("選択した費目が予算に紐づいていません。")).toBeInTheDocument();
+    expect(screen.getByLabelText("内容")).toHaveValue("追加出張");
     expect(screen.getByLabelText("金額")).toHaveValue("25,000 * 2");
     expect(screen.getByLabelText("メモ")).toHaveValue("学会対応");
   });
@@ -311,17 +311,17 @@ describe("PlannedItemForm", () => {
     fireEvent.change(screen.getByLabelText("立案日"), { target: { value: "2026/10/01" } });
     fireEvent.change(screen.getByLabelText("開始月"), { target: { value: "2026-10" } });
     fireEvent.change(screen.getByLabelText("終了月"), { target: { value: "2026-12" } });
-    fireEvent.change(screen.getByLabelText("基準説明"), { target: { value: "TA賃金" } });
+    fireEvent.change(screen.getByLabelText("共通の内容"), { target: { value: "TA賃金" } });
     fireEvent.change(screen.getByLabelText("基準金額"), { target: { value: "50000" } });
     fireEvent.change(screen.getByLabelText("メモ"), { target: { value: "毎月支払い" } });
 
     fireEvent.click(screen.getByRole("button", { name: "プレビュー生成" }));
 
-    expect(screen.getByLabelText("説明 2026-10")).toHaveValue("TA賃金 2026-10");
-    expect(screen.getByLabelText("説明 2026-11")).toHaveValue("TA賃金 2026-11");
-    expect(screen.getByLabelText("説明 2026-12")).toHaveValue("TA賃金 2026-12");
+    expect(screen.getByLabelText("内容 2026-10")).toHaveValue("TA賃金 2026-10");
+    expect(screen.getByLabelText("内容 2026-11")).toHaveValue("TA賃金 2026-11");
+    expect(screen.getByLabelText("内容 2026-12")).toHaveValue("TA賃金 2026-12");
 
-    fireEvent.change(screen.getByLabelText("説明 2026-11"), {
+    fireEvent.change(screen.getByLabelText("内容 2026-11"), {
       target: { value: "TA賃金 2026-11 調整" },
     });
     fireEvent.change(screen.getByLabelText("金額 2026-11"), { target: { value: "55000" } });
@@ -367,13 +367,13 @@ describe("PlannedItemForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "一括" }));
     fireEvent.change(screen.getByLabelText("開始月"), { target: { value: "2026-12" } });
     fireEvent.change(screen.getByLabelText("終了月"), { target: { value: "2026-10" } });
-    fireEvent.change(screen.getByLabelText("基準説明"), { target: { value: "AIサブスク" } });
+    fireEvent.change(screen.getByLabelText("共通の内容"), { target: { value: "AIサブスク" } });
     fireEvent.change(screen.getByLabelText("基準金額"), { target: { value: "3000" } });
 
     fireEvent.click(screen.getByRole("button", { name: "プレビュー生成" }));
 
     expect(await screen.findByText("開始月は終了月以前にしてください。")).toBeInTheDocument();
-    expect(screen.queryByLabelText("説明 2026-10")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("内容 2026-10")).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(
       "/api/planned-items/bulk",
       expect.anything(),
@@ -512,14 +512,14 @@ describe("ActualEntryForm", () => {
 
   async function selectActualEntryCategory({ fundId = "2", categoryId = "5" } = {}) {
     expect(await screen.findByRole("option", { name: fundId === "4" ? "ACT-X" : "基盤研究費" })).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("資金"), { target: { value: fundId } });
+    fireEvent.change(screen.getByLabelText("予算"), { target: { value: fundId } });
     expect(await screen.findByRole("option", { name: fundId === "4" ? "会議費" : "物品費" })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("費目"), { target: { value: categoryId } });
   }
 
   function fillActualEntryDetails({ withPlannedItemId = true }: { withPlannedItemId?: boolean } = {}) {
     fireEvent.change(screen.getByLabelText("実績日"), { target: { value: "2026/09/12" } });
-    fireEvent.change(screen.getByLabelText("説明"), { target: { value: "試薬購入" } });
+    fireEvent.change(screen.getByLabelText("内容"), { target: { value: "試薬購入" } });
     fireEvent.change(screen.getByLabelText("金額"), { target: { value: "60,000 / 2" } });
     fireEvent.change(screen.getByLabelText("メモ"), { target: { value: "第2便" } });
     if (withPlannedItemId) {
@@ -535,7 +535,7 @@ describe("ActualEntryForm", () => {
     renderActualEntryForm();
 
     expect(await screen.findByRole("option", { name: "基盤研究費" })).toBeInTheDocument();
-    expect(screen.getByLabelText("資金")).toHaveDisplayValue("資金を選択してください");
+    expect(screen.getByLabelText("予算")).toHaveDisplayValue("予算を選択してください");
     expect(screen.getByLabelText("費目")).toBeDisabled();
     expect(screen.getByLabelText("予定項目")).toBeDisabled();
     expect(screen.getByLabelText("実績日")).toHaveValue(today);
@@ -547,7 +547,7 @@ describe("ActualEntryForm", () => {
     });
 
     expect(screen.getByLabelText("実績日")).toHaveValue("2026/05/01");
-    expect(screen.getByText("未入力でも実績を登録できます。")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "未連携で登録" })).toBeInTheDocument();
     expect(screen.getByLabelText("予定項目")).toHaveDisplayValue("未連携で登録");
     expect(screen.getByRole("option", { name: "試薬の追加購入" })).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: "学会出張" })).not.toBeInTheDocument();
@@ -606,7 +606,7 @@ describe("ActualEntryForm", () => {
 
     await selectActualEntryCategory({ fundId: "4", categoryId: "6" });
     fireEvent.change(screen.getByLabelText("実績日"), { target: { value: "2026/09/20" } });
-    fireEvent.change(screen.getByLabelText("説明"), { target: { value: "会場費" } });
+    fireEvent.change(screen.getByLabelText("内容"), { target: { value: "会場費" } });
     fireEvent.change(screen.getByLabelText("金額"), { target: { value: "45000" } });
     fireEvent.change(screen.getByLabelText("メモ"), { target: { value: "当日精算" } });
     fireEvent.click(screen.getByRole("button", { name: "保存" }));
@@ -632,7 +632,7 @@ describe("ActualEntryForm", () => {
         ok: false,
         json: async () => ({
           code: "planned_item_mismatch",
-          message: "予定項目IDが選択した資金または費目と一致していません。",
+          message: "予定項目IDが選択した予算または費目と一致していません。",
         }),
       },
     });
@@ -644,9 +644,9 @@ describe("ActualEntryForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "保存" }));
 
     expect(
-      await screen.findByText("予定項目IDが選択した資金または費目と一致していません。"),
+      await screen.findByText("予定項目IDが選択した予算または費目と一致していません。"),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("説明")).toHaveValue("試薬購入");
+    expect(screen.getByLabelText("内容")).toHaveValue("試薬購入");
     expect(screen.getByLabelText("予定項目")).toHaveValue("31");
   });
 

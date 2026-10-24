@@ -35,15 +35,15 @@ type MonthlySummaryColumn = { key: MonthlySummaryValueKey; label: string };
 const coreTableColumns: MonthlySummaryColumn[] = [
   { key: "actualAmount", label: "当月実績" },
   { key: "plannedAmount", label: "当月の未実行予定" },
-  { key: "actualCumulativeAmount", label: "その月までの累計執行済" },
-  { key: "calculatedBalance", label: "その月終了時点の計算残高" },
+  { key: "actualCumulativeAmount", label: "累計執行済額" },
+  { key: "calculatedBalance", label: "月末の計算残高" },
 ];
 
 function getTableColumns(metric: OverviewSummaryMetricKey) {
   const extraColumn: MonthlySummaryColumn | null = metric === "assets"
-    ? { key: "spendAndPlannedCumulativeAmount", label: "その月までの執行＋予定累計" }
+    ? { key: "spendAndPlannedCumulativeAmount", label: "執行＋予定の累計" }
     : metric === "committed"
-      ? { key: "plannedRemainingAmount", label: "その月以降の未実行予定残高" }
+      ? { key: "plannedRemainingAmount", label: "当月以降の未実行予定残高" }
       : null;
 
   if (extraColumn === null) {
@@ -87,7 +87,6 @@ export function MonthlySummaryDialog({
   onMonthChange: (month: string) => void;
 }) {
   const headingId = useId();
-  const monthNumber = Number(month.slice(5));
   const highlightedKey = metricValueKeys[metric];
   const fiscalMonths = listFiscalYearMonths(fiscalYear);
   const monthIndex = fiscalMonths.indexOf(month);
@@ -152,31 +151,31 @@ export function MonthlySummaryDialog({
           <section aria-label="月別概要">
             <div className="monthly-summary-card-grid">
               <article {...highlightedAttributes(highlightedKey === "actualCumulativeAmount")}>
-                <span>その月までの累計執行済額</span>
+                <span>累計執行済額</span>
                 <strong>{formatAmount(data.summary.actualCumulativeAmount, amountDisplayMode)}</strong>
               </article>
               <article {...highlightedAttributes(highlightedKey === "actualAmount")}>
-                <span>その月の実績額</span>
+                <span>当月実績</span>
                 <strong>{formatAmount(data.summary.actualAmount, amountDisplayMode)}</strong>
               </article>
               <article {...highlightedAttributes(highlightedKey === "plannedAmount")}>
-                <span>現在、その月に割り当てられている未実行予定額</span>
+                <span>当月の未実行予定額</span>
                 <strong>{formatAmount(data.summary.plannedAmount, amountDisplayMode)}</strong>
               </article>
               {metric === "committed" ? (
                 <article {...highlightedAttributes(true)}>
-                  <span>{`${monthNumber}月以降の未実行予定残高`}</span>
+                  <span>当月以降の未実行予定残高</span>
                   <strong>{formatAmount(data.summary.plannedRemainingAmount, amountDisplayMode)}</strong>
                 </article>
               ) : null}
               {metric === "assets" ? (
                 <article {...highlightedAttributes(true)}>
-                  <span>{`${monthNumber}月までの執行＋予定累計`}</span>
+                  <span>執行＋予定の累計</span>
                   <strong>{formatAmount(data.summary.spendAndPlannedCumulativeAmount, amountDisplayMode)}</strong>
                 </article>
               ) : null}
               <article {...highlightedAttributes(highlightedKey === "calculatedBalance")}>
-                <span>{`${monthNumber}月終了時点の計算上の残高`}</span>
+                <span>月末の計算残高</span>
                 <strong>{formatAmount(data.summary.calculatedBalance, amountDisplayMode)}</strong>
               </article>
             </div>
@@ -240,7 +239,7 @@ function MonthlySummaryTable<TRow extends MonthlySummaryFund | MonthlySummaryCro
   return (
     <section className="monthly-summary-table-section">
       <h3>{caption}</h3>
-      <div className="monthly-summary-table-scroll">
+      <div className="monthly-summary-table-scroll" tabIndex={0} role="region" aria-label={`${caption}の横スクロール`}>
         <table
           aria-label={caption}
           className={columns.length > coreTableColumns.length ? "monthly-summary-table-with-context" : undefined}

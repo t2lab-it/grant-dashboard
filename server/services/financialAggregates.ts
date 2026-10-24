@@ -2,6 +2,7 @@ import type Database from "better-sqlite3";
 import type { CrossAggregateCategory } from "../../src/contracts/crossAggregateCategory";
 
 export type FundAggregateRow = {
+  fiscal_year: number;
   id: number;
   fund_code: string;
   name: string;
@@ -148,6 +149,7 @@ export function listFundAggregateRows(db: Database.Database, fiscalYear?: number
       SELECT
         f.id,
         f.fund_code,
+        f.fiscal_year,
         f.name,
         f.awarded_amount,
         COALESCE(fc.committed_amount, 0) AS committed_amount,

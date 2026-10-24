@@ -5,24 +5,20 @@ import type { OverviewCrossAggregateCategory, OverviewMonthlyStatus, OverviewSum
 export const metricCopy = {
   assets: {
     label: "予算総額",
-    breakdownLabel: "予算総額（パーセント）",
-    trendLabel: "執行+予定累計",
+    trendLabel: "執行＋予定の累計",
   },
   actual: {
     label: "執行済額",
-    breakdownLabel: "執行済額（パーセント）",
     trendLabel: "累計執行済額",
   },
   committed: {
     label: "執行予定額",
-    breakdownLabel: "執行予定額（パーセント）",
     trendLabel: "予定残高",
     trendHelp:
       "すでに計画済みだが、まだ支出完了していない金額です。0円になるのは、事前に計画した支出がすべて完了したときです。予算の自由残高が0円という意味ではありません。例: 25万円を計画し、そのうち5万円を支出済みなら、残りの予定残高は20万円です。",
   },
   balance: {
     label: "残高",
-    breakdownLabel: "残高（パーセント）",
     trendLabel: "残高",
   },
 } as const;

@@ -12,8 +12,8 @@ export const defaultFundDetailSectionOrder: FundDetailSectionKey[] = [...fundDet
 export const fundDetailSectionLabels: Record<FundDetailSectionKey, string> = {
   categories: "費目別の状況",
   timeline: "月別の状況",
-  actualEntries: "精算項目一覧",
-  plannedItems: "計画項目一覧",
+  actualEntries: "実績",
+  plannedItems: "予定",
 };
 
 export function moveFundDetailSection(

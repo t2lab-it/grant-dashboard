@@ -325,7 +325,7 @@ export function FundDetailPage() {
 
       await refreshFundDetail();
     } catch {
-      setPlannedHistoryDeleteError("計画項目を削除できませんでした。");
+      setPlannedHistoryDeleteError("予定を削除できませんでした。");
     } finally {
       setDeletingPlannedHistoryItemId(null);
     }
@@ -346,7 +346,7 @@ export function FundDetailPage() {
 
       await refreshFundDetail();
     } catch {
-      setPlannedHistoryRestoreError("計画項目を計画に戻せませんでした。");
+      setPlannedHistoryRestoreError("予定を計画に戻せませんでした。");
     } finally {
       setRestoringPlannedHistoryItemId(null);
     }

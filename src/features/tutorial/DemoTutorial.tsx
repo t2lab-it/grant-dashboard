@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ModalShell } from "../../app/ModalShell";
+import { isFiscalYearMonth, isMonthKey } from "../../contracts/monthlySummary";
 import { setFiscalYearInSearch } from "../../app/fiscalYear";
 import {
   advancedDemoTutorialSteps,
@@ -79,14 +80,21 @@ export function DemoTutorial({ eligible, firstFundId, selectedFiscalYear }: Demo
     [firstFundId, selectedFiscalYear],
   );
 
+  const params = new URLSearchParams(location.search);
+  const summaryMonth = params.get("month");
+  const summaryMetric = params.get("summaryMetric");
+  const isMonthlySummaryOpen = location.pathname === "/" && selectedFiscalYear !== null
+    && summaryMonth !== null && isMonthKey(summaryMonth) && isFiscalYearMonth(selectedFiscalYear, summaryMonth)
+    && ["assets", "actual", "committed", "balance"].includes(summaryMetric ?? "");
+
   useEffect(() => {
-    if (!eligible || location.pathname !== "/" || activeStepIndex !== null || hasPromptedThisStartup) {
+    if (isMonthlySummaryOpen || !eligible || location.pathname !== "/" || activeStepIndex !== null || hasPromptedThisStartup) {
       return;
     }
 
     setIsPromptOpen(true);
     setHasPromptedThisStartup(true);
-  }, [activeStepIndex, eligible, hasPromptedThisStartup, location.pathname]);
+  }, [activeStepIndex, eligible, hasPromptedThisStartup, isMonthlySummaryOpen, location.pathname]);
 
   useEffect(() => {
     if (!activeStep) {
@@ -200,7 +208,7 @@ export function DemoTutorial({ eligible, firstFundId, selectedFiscalYear }: Demo
 
   return (
     <>
-      {isPromptOpen ? (
+      {isPromptOpen && !isMonthlySummaryOpen ? (
         <ModalShell
           ariaLabel="チュートリアルを始めますか？"
           className="demo-tutorial-prompt"

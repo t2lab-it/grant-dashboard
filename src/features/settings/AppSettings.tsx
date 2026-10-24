@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   defaultOverviewChartPreset,
   getCustomOverviewChartPresetId,
@@ -43,6 +43,8 @@ type AppSettings = {
 };
 
 type AppSettingsContextValue = {
+  storageError: string;
+  retrySettingsSave: () => void;
   settings: AppSettings;
   setAppThemeMode: (mode: AppThemeMode) => void;
   setThemePreset: (themePreset: OverviewChartPresetRef) => void;
@@ -77,6 +79,8 @@ const defaultSettings: AppSettings = {
 };
 
 const AppSettingsContext = createContext<AppSettingsContextValue>({
+  storageError: "",
+  retrySettingsSave: () => undefined,
   settings: defaultSettings,
   setAppThemeMode: () => undefined,
   setThemePreset: () => undefined,
@@ -111,17 +115,23 @@ function readStoredSettings(): AppSettings {
 export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(() => readStoredSettings());
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
+  const [storageError, setStorageError] = useState("");
+  const retrySettingsSave = useCallback(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(APP_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+      setStorageError("");
+    } catch (error) {
+      setStorageError(`設定を保存できませんでした。${error instanceof Error ? error.message : "ブラウザの保存領域を利用できません。"}`);
     }
-
-    window.localStorage.setItem(APP_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
+  useEffect(retrySettingsSave, [retrySettingsSave]);
 
   const value = useMemo<AppSettingsContextValue>(
     () => ({
       settings,
+      storageError,
+      retrySettingsSave,
       setAppThemeMode: (appThemeMode) =>
         setSettings((current) => ({ ...current, appThemeMode })),
       setThemePreset: (themePreset) => setSettings((current) => ({ ...current, themePreset })),
@@ -190,7 +200,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
           balanceRateThresholds: defaultBalanceRateThresholds,
         })),
     }),
-    [settings],
+    [settings, storageError, retrySettingsSave],
   );
 
   return <AppSettingsContext.Provider value={value}>{children}</AppSettingsContext.Provider>;

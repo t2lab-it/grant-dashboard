@@ -15,7 +15,7 @@ export type DemoTutorialStep = {
 export const standardDemoTutorialSteps: DemoTutorialStep[] = [
   {
     id: "overview-summary",
-    title: "予算総額の分析",
+    title: "予算総額の内訳",
     body: "最初から開いている分析パネルで、総額、予定、実績、残高の全体像を確認します。",
     targetId: "overview-summary",
     route: "overview",
@@ -54,7 +54,7 @@ export const advancedDemoTutorialSteps: DemoTutorialStep[] = [
   {
     id: "planned-item-form",
     title: "予定を作成する",
-    body: "予定作成では資金と費目を選び、執行予定月、説明、金額を入力してこれから使う予定を登録します。",
+    body: "予定作成では予算と費目を選び、執行予定月、内容、金額を入力してこれから使う予定を登録します。",
     targetId: "planned-item-form",
     route: "planned-item-form",
   },

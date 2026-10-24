@@ -46,7 +46,7 @@ export function registerPlannedItemRoutes(app: FastifyInstance) {
       reply,
       (request.params as { plannedItemId?: string }).plannedItemId,
       "invalid_planned_item_id",
-      "計画項目IDを確認してください。",
+      "予定IDを確認してください。",
     );
     if (plannedItemId === undefined) {
       return;
@@ -70,7 +70,7 @@ export function registerPlannedItemRoutes(app: FastifyInstance) {
       reply,
       (request.params as { plannedItemId?: string }).plannedItemId,
       "invalid_planned_item_id",
-      "計画項目IDを確認してください。",
+      "予定IDを確認してください。",
     );
     if (plannedItemId === undefined) {
       return;
@@ -93,7 +93,7 @@ export function registerPlannedItemRoutes(app: FastifyInstance) {
       reply,
       (request.params as { plannedItemId?: string }).plannedItemId,
       "invalid_planned_item_id",
-      "計画項目IDを確認してください。",
+      "予定IDを確認してください。",
     );
     if (plannedItemId === undefined) {
       return;
@@ -116,7 +116,7 @@ export function registerPlannedItemRoutes(app: FastifyInstance) {
       reply,
       (request.params as { plannedItemId?: string }).plannedItemId,
       "invalid_planned_item_id",
-      "計画項目IDを確認してください。",
+      "予定IDを確認してください。",
     );
     if (plannedItemId === undefined) {
       return;
@@ -139,7 +139,7 @@ export function registerPlannedItemRoutes(app: FastifyInstance) {
       reply,
       (request.params as { plannedItemId?: string }).plannedItemId,
       "invalid_planned_item_id",
-      "計画項目IDを確認してください。",
+      "予定IDを確認してください。",
     );
     if (plannedItemId === undefined) {
       return;

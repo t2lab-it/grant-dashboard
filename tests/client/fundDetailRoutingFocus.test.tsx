@@ -25,15 +25,15 @@ describe("Fund detail interactions", () => {
     const view = renderAppRoute("/funds/1");
     const fundPage = within(view.container);
 
-    expect(await fundPage.findByRole("heading", { name: "精算項目一覧" })).toBeInTheDocument();
-    const actualHistorySection = fundPage.getByRole("heading", { name: "精算項目一覧" }).closest("section");
+    expect(await fundPage.findByRole("heading", { name: "実績" })).toBeInTheDocument();
+    const actualHistorySection = fundPage.getByRole("heading", { name: "実績" }).closest("section");
     expect(actualHistorySection).not.toBeNull();
 
-    await user.click(within(actualHistorySection as HTMLElement).getByRole("link", { name: "実績作成" }));
+    await user.click(within(actualHistorySection as HTMLElement).getByRole("link", { name: "実績を追加" }));
 
-    const dialog = await screen.findByRole("dialog", { name: "実績作成" });
+    const dialog = await screen.findByRole("dialog", { name: "実績を追加" });
     expect(await within(dialog).findByRole("button", { name: "閉じる" })).toBeInTheDocument();
-    expect(fundPage.getByRole("heading", { name: "精算項目一覧" })).toBeInTheDocument();
+    expect(fundPage.getByRole("heading", { name: "実績" })).toBeInTheDocument();
   });
 
   it("marks planned and actual rows referenced by the focus query", async () => {

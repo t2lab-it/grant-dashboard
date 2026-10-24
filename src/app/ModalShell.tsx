@@ -3,6 +3,7 @@ import { BudgetModalPortal } from "./BudgetModalPortal";
 
 const FOCUSABLE_SELECTOR = [
   "a[href]",
+  "summary",
   "button:not([disabled])",
   "input:not([disabled])",
   "select:not([disabled])",
@@ -10,6 +11,20 @@ const FOCUSABLE_SELECTOR = [
   "[tabindex]:not([tabindex='-1'])",
   "[contenteditable='true']",
 ].join(",");
+
+function getFocusableElements(dialog: HTMLElement) {
+  return Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter((element) => {
+    if (element.tabIndex < 0 || element.matches("input[type=hidden]") || element.closest("[hidden], [aria-hidden='true']")) {
+      return false;
+    }
+    for (let ancestor = element.parentElement; ancestor && ancestor !== dialog; ancestor = ancestor.parentElement) {
+      if (ancestor instanceof HTMLDetailsElement && !ancestor.open && element !== ancestor.querySelector(":scope > summary")) {
+        return false;
+      }
+    }
+    return true;
+  });
+}
 
 const mountedModalStack: symbol[] = [];
 let originalBodyOverflow = "";
@@ -42,7 +57,7 @@ export function ModalShell({
   useEffect(() => {
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const dialog = dialogRef.current;
-    const firstFocusable = dialog?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    const firstFocusable = dialog ? getFocusableElements(dialog)[0] : undefined;
     (mountedInitialFocusRef.current?.current ?? firstFocusable ?? dialog)?.focus();
 
     if (mountedModalStack.length === 0) {
@@ -88,9 +103,7 @@ export function ModalShell({
         return;
       }
 
-      const focusableElements = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-        (element) => !element.closest("[hidden], [aria-hidden='true']"),
-      );
+      const focusableElements = getFocusableElements(dialog);
       if (focusableElements.length === 0) {
         event.preventDefault();
         dialog.focus();

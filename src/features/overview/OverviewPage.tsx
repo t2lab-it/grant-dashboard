@@ -1,3 +1,4 @@
+import { WorkbookImportControl } from "../imports/WorkbookImportControl";
 import { useState, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -93,7 +94,7 @@ export type OverviewResponse = FiscalYearOverviewFields & {
     source_filename: string;
     imported_at: string;
     warning_count: number;
-    reconciliation_ok: boolean;
+    reconciliation_ok: boolean | null;
   } | null;
   tutorial: {
     eligibleDemoData: boolean;
@@ -172,13 +173,13 @@ export function OverviewPage() {
     },
   } = useAppSettings();
   const [displayMode, setDisplayMode] = useState<"chart" | "numeric">(defaultOverviewDisplayMode);
-  const { data, isError } = useQuery({
+  const { data, isError, error, isFetching, refetch } = useQuery({
     queryKey: queryKeys.overview.detail(requestedFiscalYear),
     queryFn: () => apiGet<OverviewResponse>(buildOverviewApiPath(requestedFiscalYear)),
   });
 
   if (isError) {
-    return <PageStatusMessage kind="error">概要を読み込めませんでした。</PageStatusMessage>;
+    return <PageStatusMessage kind="error">概要を読み込めませんでした。<p>{error.message}</p><button type="button" disabled={isFetching} onClick={() => void refetch()}>再試行</button></PageStatusMessage>;
   }
 
   if (!data) {
@@ -314,54 +315,15 @@ export function OverviewPage() {
     <section className="overview-grid overview-grid-with-context">
       {shouldShowFirstRunGuide ? (
         <section className="first-run-card" aria-labelledby="first-run-card-title">
-          <div className="first-run-card-intro">
-            <p className="eyebrow">ローカル設定</p>
-            <h2 id="first-run-card-title">初回ローカル利用の準備</h2>
-            <p>
-              デモ用 seed で画面を試すか、テンプレートから自分の workbook を作って内容確認・インポートします。
-            </p>
-          </div>
+          <div className="first-run-card-intro"><h2 id="first-run-card-title">はじめに</h2></div>
           <div className="first-run-actions">
-            <div className="first-run-step">
-              <span className="first-run-step-number">1</span>
-              <div>
-                <h3>架空データで試す</h3>
-                <p>ターミナルで実行すると、公開用のデモデータをローカル DB に投入できます。</p>
-                <code>npm run seed:demo</code>
-              </div>
-            </div>
-            <div className="first-run-step">
-              <span className="first-run-step-number">2</span>
-              <div>
-                <h3>自分の workbook を作る</h3>
-                <p>空のテンプレートをダウンロードして、funds / categories / planned / actual シートを入力します。</p>
-                <a className="detail-action-button" href="/api/imports/workbook/template.xlsx">
-                  template.xlsx をダウンロード
-                </a>
-              </div>
-            </div>
-            <div className="first-run-step">
-              <span className="first-run-step-number">3</span>
-              <div>
-                <h3>内容を確認してからインポート</h3>
-                <p>ヘッダーの <strong>インポート</strong> で `.xlsx` を選び、件数と警告を確認して取り込みます。</p>
-              </div>
-            </div>
-            <div className="first-run-step">
-              <span className="first-run-step-number">4</span>
-              <div>
-                <h3>手順を確認する</h3>
-                <p>CLI の dry-run / import / backup コマンドを使う詳しい流れを確認できます。</p>
-                <div className="first-run-doc-links">
-                  <a href="https://github.com/t2lab-it/grant-dashboard#readme">README を読む</a>
-                  <a href="https://github.com/t2lab-it/grant-dashboard/blob/main/docs/workbook.md">Workbook 運用を読む</a>
-                </div>
-              </div>
-            </div>
+            <section className="first-run-choice"><h3>デモで試す</h3><a className="detail-action-button" href="https://t2lab-it.github.io/grant-dashboard/">架空データのデモを開く</a></section>
+            <section className="first-run-choice"><h3>自分のExcelを使う</h3><div className="first-run-choice-actions"><a className="detail-action-button" href="/api/imports/workbook/template.xlsx">テンプレートを取得</a><WorkbookImportControl /></div></section>
           </div>
+          <details><summary>ローカルの利用手順</summary><p>Excelのfunds / categories / planned_items / actual_entriesシートへ入力し、インポートで件数と警告を確認します。</p><p>ローカルでデモを投入する <code>npm run seed:demo</code> は、現在のDBを架空データで置換します。</p><div className="first-run-doc-links"><a href="https://github.com/t2lab-it/grant-dashboard#readme">README を読む</a><a href="https://github.com/t2lab-it/grant-dashboard/blob/main/docs/workbook.md">Workbook 運用を読む</a></div></details>
         </section>
       ) : null}
-      <div className="overview-hero-grid">
+      <div className="overview-hero-grid" role="group" aria-label="年度全体の指標" style={{ "--hero-card-min-width": `${Math.max(9, ...heroCards.map((card) => formatAmount(card.amount, amountDisplayMode).length * 0.65 + 3))}rem` } as CSSProperties}>
         {heroCards.map((card) => {
           const isActive = activeSummaryMetric === card.key;
 
@@ -383,20 +345,6 @@ export function OverviewPage() {
           );
         })}
       </div>
-      <OverviewSummaryPanel
-        id="overview-summary-context"
-        metric={activeSummaryMetric}
-        totals={data.totals}
-        funds={data.funds}
-        monthlyStatus={monthlyStatus}
-        onSelectMonth={openMonthlySummary}
-        linkedActualAmount={data.linkedActualAmount}
-        pendingPlannedCount={data.pendingPlannedCount}
-        crossAggregateCategories={data.crossAggregateCategories}
-        palette={palette}
-        balanceRateThresholds={balanceRateThresholds}
-        amountDisplayMode={amountDisplayMode}
-      />
       {visibleSummaryMonth !== null && data.selectedFiscalYear !== null && isOverviewSummaryMetric(requestedSummaryMetric) ? (
         <MonthlySummaryDialog
           onMonthChange={changeMonthlySummaryMonth}
@@ -407,9 +355,11 @@ export function OverviewPage() {
           onClose={closeMonthlySummary}
         />
       ) : null}
+      <section className="overview-funds" aria-labelledby="overview-funds-heading">
       <header className="overview-section-header">
         <div className="overview-section-title-actions">
-          <h2>予算別の状況</h2>
+          <h2 id="overview-funds-heading">予算</h2>
+          <Link className="detail-action-button" to={data.selectedFiscalYear === null ? "/funds/new" : `/funds/new${setFiscalYearInSearch("", data.selectedFiscalYear)}`}>＋ 予算を追加</Link>
         </div>
         <div className="overview-section-controls">
           <div className="overview-display-toggle" role="group" aria-label="表示切り替え">
@@ -469,6 +419,13 @@ export function OverviewPage() {
           )}
         </div>
       </header>
+      {displayMode === "chart" ? (
+        <div className="overview-shared-legend" aria-label="予算の共通凡例">
+          {([ ["執行済", palette.actual], ["執行予定", palette.committed], ["残高", palette.balance] ] as const).map(([label, color]) => (
+            <span key={label}><i className="fund-card-legend-chip" style={{ backgroundColor: color }} aria-hidden="true" />{label}</span>
+          ))}
+        </div>
+      ) : null}
       <div className={displayMode === "chart" ? "fund-grid overview-fund-grid-chart" : "fund-grid"}>
         {filteredFunds.map((fund) => {
           const rate = getRateMetric(
@@ -497,7 +454,7 @@ export function OverviewPage() {
               className="fund-card"
               data-tour-id={fund.id === filteredFunds[0]?.id ? "overview-fund-card" : undefined}
             >
-              <h2>{fund.name}</h2>
+              <h3>{fund.name}</h3>
               {fund.projectTags.length > 0 ? (
                 <div className="overview-fund-project-tags" aria-label={`${fund.name} の研究プロジェクトタグ`}>
                   {fund.projectTags.map((tag) => (
@@ -548,19 +505,22 @@ export function OverviewPage() {
             </Link>
           );
         })}
-        <Link
-          to={data.selectedFiscalYear === null
-            ? "/funds/new"
-            : `/funds/new${setFiscalYearInSearch("", data.selectedFiscalYear)}`}
-          className="fund-card fund-card-create"
-        >
-          <h2>新規予算の追加</h2>
-          <div className="fund-card-create-chart" aria-hidden="true">
-            <span className="fund-card-create-plus">+</span>
-          </div>
-          <p className="fund-card-create-copy">新しい予算を登録して一覧に追加</p>
-        </Link>
       </div>
+      </section>
+      <OverviewSummaryPanel
+        id="overview-summary-context"
+        metric={activeSummaryMetric}
+        totals={data.totals}
+        funds={data.funds}
+        monthlyStatus={monthlyStatus}
+        onSelectMonth={openMonthlySummary}
+        linkedActualAmount={data.linkedActualAmount}
+        pendingPlannedCount={data.pendingPlannedCount}
+        crossAggregateCategories={data.crossAggregateCategories}
+        palette={palette}
+        balanceRateThresholds={balanceRateThresholds}
+        amountDisplayMode={amountDisplayMode}
+      />
       <section className="overview-latest-import" aria-label="直近インポート">
         <div className="overview-latest-import-row">
           <span className="overview-latest-import-label">直近インポート</span>
@@ -581,7 +541,7 @@ export function OverviewPage() {
                     : "overview-latest-import-status warn"
                 }
               >
-                {data.latestImport.reconciliation_ok ? "照合OK" : "照合NG"}
+                {data.latestImport.reconciliation_ok === null ? "照合履歴は読込不可" : data.latestImport.reconciliation_ok ? "照合OK" : "照合NG"}
               </span>
             </>
           ) : (

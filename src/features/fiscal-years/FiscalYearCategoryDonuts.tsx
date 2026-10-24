@@ -48,7 +48,7 @@ export function FiscalYearCategoryDonuts({ amountDisplayMode, colors, years, act
   return (
     <section className="fiscal-year-comparison-section" aria-labelledby="fiscal-year-category-title">
       <div className="fiscal-year-comparison-section-heading">
-        <div><h2 id="fiscal-year-category-title">横断集計カテゴリの構成比</h2></div>
+        <div><h2 id="fiscal-year-category-title">大費目構成</h2></div>
         <div className="fiscal-year-comparison-legend" aria-label="横断集計カテゴリの凡例">
           {CROSS_AGGREGATE_CATEGORY_CODES.map((code) => <span key={code} data-legend-active={activeCategory === code} data-legend-muted={activeCategory !== null && activeCategory !== code} onMouseEnter={() => setActiveCategory(code)} onMouseLeave={() => setActiveCategory(null)}><i className="fiscal-year-swatch" style={{ backgroundColor: colors[code] }} aria-hidden="true" />{CROSS_AGGREGATE_CATEGORY_LABELS[code]}</span>)}
         </div>

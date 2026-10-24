@@ -309,9 +309,9 @@ describe("static demo API", () => {
   test.each([
     ["PUT", "/api/funds/not-an-id", "invalid_fund_id", "予算IDを確認してください。"],
     ["DELETE", "/api/funds/not-an-id", "invalid_fund_id", "予算IDを確認してください。"],
-    ["DELETE", "/api/planned-items/not-an-id", "invalid_planned_item_id", "計画項目IDを確認してください。"],
-    ["POST", "/api/planned-items/not-an-id/cancel", "invalid_planned_item_id", "計画項目IDを確認してください。"],
-    ["POST", "/api/actual-entries/not-an-id/cancel", "invalid_actual_entry_id", "精算項目IDを確認してください。"],
+    ["DELETE", "/api/planned-items/not-an-id", "invalid_planned_item_id", "予定IDを確認してください。"],
+    ["POST", "/api/planned-items/not-an-id/cancel", "invalid_planned_item_id", "予定IDを確認してください。"],
+    ["POST", "/api/actual-entries/not-an-id/cancel", "invalid_actual_entry_id", "実績IDを確認してください。"],
     ["PUT", "/api/classifications/not-an-id", "invalid_classification_id", "分類IDを確認してください。"],
   ])("matches the server invalid-ID contract for %s %s", async (method, path, code, message) => {
     const response = await handleStaticDemoRequest(path, { method });
@@ -333,7 +333,7 @@ describe("static demo API", () => {
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({
       code: "planned_item_not_found",
-      message: "対象の計画項目が見つかりません。",
+      message: "対象の予定が見つかりません。",
     });
   });
 
@@ -592,4 +592,17 @@ describe("static demo API", () => {
       ]),
     );
   });
+});
+
+test("static import history retains every fiscal year and its imported values after edits", async () => {
+  window.localStorage.clear();
+  const state = readStaticDemoState();
+  const before = await (await handleStaticDemoRequest("/api/imports/1")).json();
+  expect(before.reconciliation.funds).toHaveLength(state.funds.length);
+  expect(before.reconciliation.overall.expected).toEqual({assets: 8600000, planned: 2605000, actual: 2270000, free_balance: 3725000});
+  for (const fund of state.funds) {
+    expect(before.reconciliation.funds.find((row: {fund_code: string}) => row.fund_code === fund.fund_code)).toMatchObject({ fiscal_year: fund.fiscal_year, fund_name: fund.name, expected: {assets: fund.awarded_amount} });
+  }
+  await handleStaticDemoRequest("/api/planned-items/1", { method: "PUT", body: JSON.stringify({fundId: 1, categoryId: 1, plannedDate: "2026-04-01", scheduledMonth: "2026-08", description: "変更", amount: 1, notes: "", auxiliaryLabelIds: []}) });
+  expect(await (await handleStaticDemoRequest("/api/imports/1")).json()).toEqual(before);
 });

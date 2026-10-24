@@ -37,8 +37,8 @@ export function useEntryForm<TValues extends EntryFormValues>(initialValues: TVa
       setBlockingMessage(outcome.blockingMessage ?? "");
       setInfoMessage(outcome.infoMessage ?? "");
       setWarnings(outcome.warnings ?? []);
-    } catch {
-      setBlockingMessage(fallbackMessage);
+    } catch (error) {
+      setBlockingMessage(`${fallbackMessage}${error instanceof Error ? ` ${error.message}` : ""} 接続と保存先を確認して再試行してください。`);
     } finally {
       setIsSubmitting(false);
     }

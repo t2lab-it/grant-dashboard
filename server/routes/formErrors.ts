@@ -35,7 +35,7 @@ function sendEntryWorkflowError(reply: FastifyReply, code: EntryWorkflowErrorCod
     case "invalid_reference":
       sendFormError(reply, {
         code: "invalid_reference",
-        message: "選択した資金IDまたは費目IDを確認してください。",
+        message: "選択した予算または費目を確認してください。",
       });
       return true;
     case "category_fund_mismatch":
@@ -53,49 +53,49 @@ function sendEntryWorkflowError(reply: FastifyReply, code: EntryWorkflowErrorCod
     case "planned_item_not_found":
       sendApiError(reply, 404, {
         code: "planned_item_not_found",
-        message: "対象の計画項目が見つかりません。",
+        message: "対象の予定が見つかりません。",
       });
       return true;
     case "planned_item_has_actuals":
       sendApiError(reply, 409, {
         code: "planned_item_has_actuals",
-        message: "精算が紐づいている計画項目は取り消せません。",
+        message: "精算が紐づいている予定は取り消せません。",
       });
       return true;
     case "planned_item_delete_has_actuals":
       sendApiError(reply, 409, {
         code: "planned_item_delete_has_actuals",
-        message: "精算が紐づいている計画項目は削除できません。",
+        message: "精算が紐づいている予定は削除できません。",
       });
       return true;
     case "planned_item_not_deletable":
       sendApiError(reply, 409, {
         code: "planned_item_not_deletable",
-        message: "この計画項目は削除できません。",
+        message: "この予定は削除できません。",
       });
       return true;
     case "planned_item_complete_requires_actuals":
       sendApiError(reply, 409, {
         code: "planned_item_complete_requires_actuals",
-        message: "精算が紐づいている未精算の計画項目のみ完了にできます。",
+        message: "精算が紐づいている未精算の予定のみ完了にできます。",
       });
       return true;
     case "planned_item_complete_requires_remaining":
       sendApiError(reply, 409, {
         code: "planned_item_complete_requires_remaining",
-        message: "残予定額がある計画項目のみ完了にできます。",
+        message: "残予定額がある予定のみ完了にできます。",
       });
       return true;
     case "planned_item_not_cancelled_for_restore":
       sendApiError(reply, 409, {
         code: "planned_item_not_cancelled_for_restore",
-        message: "完了または取消済みの計画項目のみ計画に戻せます。",
+        message: "完了または取消済みの予定のみ計画に戻せます。",
       });
       return true;
     case "actual_entry_not_found":
       sendApiError(reply, 404, {
         code: "actual_entry_not_found",
-        message: "対象の精算項目が見つかりません。",
+        message: "対象の実績が見つかりません。",
       });
       return true;
   }
@@ -179,7 +179,7 @@ export function handleFundRouteError(reply: FastifyReply, error: unknown) {
   if (error instanceof Error && error.message === INVALID_CATEGORY_UPDATE_ERROR) {
     sendFormError(reply, {
       code: "invalid_category_reference",
-      message: "編集対象の費目IDを確認してください。",
+      message: "編集対象の費目を確認してください。",
     });
     return true;
   }
@@ -195,7 +195,7 @@ export function handleFundRouteError(reply: FastifyReply, error: unknown) {
   if (error instanceof Error && error.message === CATEGORY_HAS_LINKED_ENTRIES_ERROR) {
     sendApiError(reply, 409, {
       code: "category_has_entries",
-      message: "計画項目または精算項目がある費目は削除できません。",
+      message: "予定または実績がある費目は削除できません。",
     });
     return true;
   }

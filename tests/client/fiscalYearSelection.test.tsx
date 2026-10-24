@@ -128,7 +128,7 @@ describe("global fiscal year selection", () => {
       { initialEntries: ["/planned-items/new?year=2027"] },
     );
 
-    const fundSelect = await screen.findByRole("combobox", { name: "資金" });
+    const fundSelect = await screen.findByRole("combobox", { name: "予算" });
 
     expect(fetchMock).toHaveBeenCalledWith("/api/overview?year=2027", {});
     expect(await within(fundSelect).findByRole("option", { name: "翌年度基金" })).toBeInTheDocument();

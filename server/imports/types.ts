@@ -97,6 +97,7 @@ export type PersistWorkbookImportArgs = {
 };
 
 export type ReconciliationFundSnapshot = {
+  fiscal_year: number;
   fund_code: string;
   fund_name: string;
   assets: number;

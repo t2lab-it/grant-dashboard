@@ -243,9 +243,7 @@ function buildReconciliationCategory(latestImport: LatestImportRow | undefined) 
     return null;
   }
 
-  let status: boolean | null;
-  try { status = getStoredReconciliationStatus(latestImport.reconciliation_json); }
-  catch { status = null; }
+  const status = getStoredReconciliationStatus(latestImport.reconciliation_json);
   if (status === true) return null;
   return createCategory("reconciliation_mismatch", status === null ? "履歴読込不可" : "不整合", status === null ? "warning" : "danger", 1, [
     {

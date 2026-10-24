@@ -316,6 +316,35 @@ describe("API import routes", () => {
     expect(app.db.prepare("SELECT reconciliation_json FROM imports WHERE id = 1").get()).toEqual({ reconciliation_json: raw });
   });
 
+  it("keeps financial data and history navigation available when stored reconciliation JSON is corrupt", async () => {
+    const raw = "{broken reconciliation";
+    insertImportHistoryFixture(app.db, { reconciliationJson: raw });
+
+    const overview = await app.inject({ method: "GET", url: "/api/overview?year=2026" });
+    expect(overview.statusCode).toBe(200);
+    expect(overview.json()).toMatchObject({
+      selectedFiscalYear: 2026,
+      latestImport: { id: 1, reconciliation_ok: null },
+    });
+    expect(overview.json().funds.length).toBeGreaterThan(0);
+
+    const history = await app.inject({ method: "GET", url: "/api/imports" });
+    expect(history.statusCode).toBe(200);
+    expect(history.json()).toMatchObject([{ id: 1, reconciliation_ok: null }]);
+
+    const alerts = await app.inject({ method: "GET", url: "/api/header-alerts?year=2026" });
+    expect(alerts.statusCode).toBe(200);
+    expect(alerts.json().primary).toEqual(expect.arrayContaining([
+      expect.objectContaining({ label: "履歴読込不可" }),
+    ]));
+
+    const detail = await app.inject({ method: "GET", url: "/api/imports/1" });
+    expect(detail.statusCode).toBe(500);
+    expect(detail.json()).toMatchObject({ code: "import_history_read_failed" });
+    expect(app.db.prepare("SELECT reconciliation_json FROM imports WHERE id = 1").get())
+      .toEqual({ reconciliation_json: raw });
+  });
+
   it("returns 400 for an invalid import id", async () => {
     const response = await app.inject({ method: "GET", url: "/api/imports/not-a-number" });
 

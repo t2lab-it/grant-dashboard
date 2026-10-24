@@ -105,6 +105,11 @@ export function readStoredReconciliation(raw: string): ReconciliationReport {
 }
 
 export function getStoredReconciliationStatus(raw: string): boolean | null {
-  try { return readStoredReconciliation(raw).ok; }
-  catch (error) { if (error instanceof UnsupportedReconciliationFormatError) return null; throw error; }
+  try {
+    return readStoredReconciliation(raw).ok;
+  } catch {
+    // Unreadable history must not prevent reading current financial data.
+    // The detail endpoint still reports the original read/format error.
+    return null;
+  }
 }

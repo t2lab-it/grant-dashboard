@@ -137,6 +137,43 @@ GitHub Actions では pull request と `main` push で同じ確認を実行し�
 
 ## 主要ディレクトリ
 
+### 責務とデータの流れ
+
+| 境界 | 責務 |
+| --- | --- |
+| `src/app/` | 年度選択、ルーティング、共通ヘッダー、モーダルの操作 |
+| `src/features/` | 画面と入力状態、React Queryによる取得・更新後の再取得 |
+| `src/contracts/` | UI・サーバー・静的デモで共有する型、入力検証、共通の計算規則 |
+| `src/lib/api.ts` | ローカルAPIと静的デモの呼び分け、共通エラーの読取 |
+| `server/routes/` | HTTP入力の検証、サービスの呼出、API応答 |
+| `server/services/` | SQLiteからの集計・検索、予算・予定・実績の操作 |
+| `server/imports/`, `server/exports/` | workbookの解析・照合・保存、差分確認・出力 |
+| `src/demo/` | 架空データとブラウザ内保存によるAPI代替実装 |
+| `scripts/`, `tests/`, `.github/workflows/` | CLIと開発補助、契約・操作の検証、CI・デモ公開 |
+
+ローカルでは、workbookを解析して件数と警告を確認し、取込トランザクションでSQLiteへ保存します。
+画面は `src/lib/api.ts` → Fastify route → service → SQLiteの順にデータを取得します。
+UIでの更新後もSQLiteが正本で、React Queryの再取得で表示を更新します。
+Excelへの書戻しは差分確認後の明示的な操作です。
+レビュー用JSONや画面の集計結果を正本へ逆流させません。
+
+照合履歴は、取込前の解析値と取込直後のDB値を比較した `format_version: 2` の保存値です。
+予算の識別子は `fund_code`、表示には予算名と `fiscal_year` を使い、差額は登録値−取込値です。
+現在のDBを編集しても過去の照合値は再計算しません。
+旧形式や破損した照合履歴の一覧・概要では `reconciliation_ok: null` とし、警告から詳細を確認できます。
+詳細APIは対応外の形式に422、壊れたJSONに500を返し、保存値を推測補完・変換・削除しません。
+再取込は現在のデータを置換するため、復旧の自動処理には使いません。
+
+静的デモでは同じAPI境界を `src/demo/` が処理し、編集内容をブラウザ内に保存します。
+SQLiteや実ファイルの入出力は使いません。
+照合履歴は初期seedの取込時点を示し、デモでの編集から独立させます。
+
+概要のプロジェクト絞り込みは予算カードだけに作用し、指標と分析は年度全体を示します。
+比較表は表の枠内で横スクロールし、概要の共通凡例とカード別凡例の切替は配置側のCSSが担当します。
+設定の配色プレビューではカード別凡例を表示します。
+
+### ディレクトリ一覧
+
 - `src/`: React アプリ
 - `server/`: Fastify サーバー、DB、route、service、import/export 実装
 - `scripts/`: workbook import/export、backup/restore、seed、開発補助スクリプト

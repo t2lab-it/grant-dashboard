@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { seedDemoDatabase } from "../server/seeds/demoSeed";
 
 const controller = new AbortController();
-const dbDir = resolve(".e2e");
+const dbDir = resolve(process.env.BUDGET_E2E_DB_DIR ?? ".e2e");
 const dbPath = resolve(dbDir, "app.db");
 const serverPort = Number(process.env.BUDGET_E2E_SERVER_PORT ?? 3001);
 const clientPort = Number(process.env.BUDGET_E2E_CLIENT_PORT ?? 5173);

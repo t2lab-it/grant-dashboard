@@ -154,6 +154,7 @@ export function seedWorkbookBackedImport(db: Database.Database, workbookPath: st
     }),
     "[]",
     JSON.stringify({
+      format_version: 2,
       workbook_path: workbookPath,
       db_path: "/tmp/app.db",
       ok: true,

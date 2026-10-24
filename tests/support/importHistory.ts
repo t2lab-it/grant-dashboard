@@ -36,6 +36,7 @@ const defaultWarnings = [
 ];
 
 const defaultReconciliation = {
+  format_version: 2,
   workbook_path: "/tmp/budget2026.xlsx",
   db_path: "/tmp/app.db",
   ok: false,

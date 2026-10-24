@@ -11,6 +11,7 @@ describe("buildReconciliationReport", () => {
         funds: [
           {
             fund_code: "zulu-fund",
+            fiscal_year: 2026,
             fund_name: "Zulu Fund",
             assets: 10,
             planned: 7,
@@ -24,6 +25,7 @@ describe("buildReconciliationReport", () => {
         funds: [
           {
             fund_code: "alpha-fund",
+            fiscal_year: 2026,
             fund_name: "Alpha Fund",
             assets: 6,
             planned: 2,
@@ -69,12 +71,14 @@ describe("buildReconciliationReport", () => {
     expect(report.funds).toEqual([
       {
         fund_code: "alpha-fund",
+            fiscal_year: 2026,
         fund_name: "Alpha Fund",
         expected: { assets: 0, planned: 0, actual: 0, free_balance: 0 },
         actual: { assets: 6, planned: 2, actual: 4, free_balance: 0 },
       },
       {
         fund_code: "zulu-fund",
+            fiscal_year: 2026,
         fund_name: "Zulu Fund",
         expected: { assets: 10, planned: 7, actual: 1, free_balance: 2 },
         actual: { assets: 0, planned: 0, actual: 0, free_balance: 0 },
@@ -84,6 +88,7 @@ describe("buildReconciliationReport", () => {
       {
         scope: "fund",
         fund_code: "alpha-fund",
+            fiscal_year: 2026,
         fund_name: "Alpha Fund",
         metric: "assets",
         expected: 0,
@@ -93,6 +98,7 @@ describe("buildReconciliationReport", () => {
       {
         scope: "fund",
         fund_code: "alpha-fund",
+            fiscal_year: 2026,
         fund_name: "Alpha Fund",
         metric: "planned",
         expected: 0,
@@ -102,6 +108,7 @@ describe("buildReconciliationReport", () => {
       {
         scope: "fund",
         fund_code: "alpha-fund",
+            fiscal_year: 2026,
         fund_name: "Alpha Fund",
         metric: "actual",
         expected: 0,
@@ -111,6 +118,7 @@ describe("buildReconciliationReport", () => {
       {
         scope: "fund",
         fund_code: "zulu-fund",
+            fiscal_year: 2026,
         fund_name: "Zulu Fund",
         metric: "assets",
         expected: 10,
@@ -120,6 +128,7 @@ describe("buildReconciliationReport", () => {
       {
         scope: "fund",
         fund_code: "zulu-fund",
+            fiscal_year: 2026,
         fund_name: "Zulu Fund",
         metric: "planned",
         expected: 7,
@@ -129,6 +138,7 @@ describe("buildReconciliationReport", () => {
       {
         scope: "fund",
         fund_code: "zulu-fund",
+            fiscal_year: 2026,
         fund_name: "Zulu Fund",
         metric: "actual",
         expected: 1,
@@ -138,6 +148,7 @@ describe("buildReconciliationReport", () => {
       {
         scope: "fund",
         fund_code: "zulu-fund",
+            fiscal_year: 2026,
         fund_name: "Zulu Fund",
         metric: "free_balance",
         expected: 2,
@@ -156,6 +167,7 @@ describe("buildReconciliationReport", () => {
         funds: [
           {
             fund_code: "duplicate-a",
+            fiscal_year: 2026,
             fund_name: "Duplicate Fund",
             assets: 10,
             planned: 5,
@@ -164,6 +176,7 @@ describe("buildReconciliationReport", () => {
           },
           {
             fund_code: "duplicate-b",
+            fiscal_year: 2027,
             fund_name: "Duplicate Fund",
             assets: 10,
             planned: 5,
@@ -177,6 +190,7 @@ describe("buildReconciliationReport", () => {
         funds: [
           {
             fund_code: "duplicate-a",
+            fiscal_year: 2026,
             fund_name: "Duplicate Fund",
             assets: 10,
             planned: 5,
@@ -185,6 +199,7 @@ describe("buildReconciliationReport", () => {
           },
           {
             fund_code: "duplicate-b",
+            fiscal_year: 2027,
             fund_name: "Duplicate Fund",
             assets: 10,
             planned: 5,
@@ -200,6 +215,7 @@ describe("buildReconciliationReport", () => {
       funds: [
         {
           fund_code: "duplicate-a",
+            fiscal_year: 2026,
           fund_name: "Duplicate Fund",
           expected: {
             assets: 10,
@@ -216,6 +232,7 @@ describe("buildReconciliationReport", () => {
         },
         {
           fund_code: "duplicate-b",
+            fiscal_year: 2027,
           fund_name: "Duplicate Fund",
           expected: {
             assets: 10,

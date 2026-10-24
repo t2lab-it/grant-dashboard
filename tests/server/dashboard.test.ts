@@ -382,7 +382,8 @@ describe("dashboard calculations", () => {
       JSON.stringify([]),
       JSON.stringify({
         ok: false,
-        workbook_path: "/tmp/budget2026.xlsx",
+        format_version: 2,
+      workbook_path: "/tmp/budget2026.xlsx",
         db_path: "/tmp/app.db",
         overall: {
           expected: { assets: 100, planned: 20, actual: 10, free_balance: 70 },

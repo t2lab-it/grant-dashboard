@@ -7,7 +7,7 @@ import {
   WORKBOOK_UPLOAD_CONTENT_TYPES,
 } from "../imports/uploadWorkbook";
 import { createSimpleWorkbookTemplateBuffer } from "../imports/simpleWorkbookTemplate";
-import { getImportReview, listImportReviews } from "../services/importReviews";
+import { getImportReview, listImportReviews, UnsupportedReconciliationFormatError } from "../services/importReviews";
 
 const workbookFilenameSchema = z
   .string()
@@ -24,7 +24,10 @@ export function registerImportRoutes(app: FastifyInstance, { dbPath }: { dbPath:
     );
   }
 
-  app.get("/api/imports", () => listImportReviews(app.db));
+  app.get("/api/imports", (_request, reply) => {
+    try { return listImportReviews(app.db); }
+    catch { sendApiError(reply, 500, { code: "import_history_read_failed", message: "履歴を読み込めませんでした。保存先を確認して再試行してください。" }); }
+  });
 
   app.get("/api/imports/workbook/template.xlsx", (_request, reply) => {
     reply
@@ -97,7 +100,16 @@ export function registerImportRoutes(app: FastifyInstance, { dbPath }: { dbPath:
       return;
     }
 
-    const review = getImportReview(app.db, importId);
+    let review;
+    try { review = getImportReview(app.db, importId); }
+    catch (error) {
+      if (error instanceof UnsupportedReconciliationFormatError) {
+        sendApiError(reply, 422, { code: "unsupported_reconciliation_format", message: error.message });
+        return;
+      }
+      sendApiError(reply, 500, { code: "import_history_read_failed", message: "履歴の保存内容を読み込めませんでした。再試行し、解消しない場合は保存先と履歴ファイルを確認してください。" });
+      return;
+    }
     if (!review) {
       sendNotFound(reply, "import_not_found", "対象のインポート履歴が見つかりません。");
       return;

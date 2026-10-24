@@ -68,6 +68,7 @@ describe("financial aggregate read models", () => {
     expect(listFundAggregateRows(db)).toEqual([
       {
         id: 1,
+        fiscal_year: 2026,
         fund_code: "SCI",
         name: "Science",
         awarded_amount: 1000000,
@@ -76,6 +77,7 @@ describe("financial aggregate read models", () => {
       },
       {
         id: 2,
+        fiscal_year: 2026,
         fund_code: "OPS",
         name: "Operations",
         awarded_amount: 500000,

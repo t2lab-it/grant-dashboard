@@ -1,4 +1,4 @@
-import type { StaticDemoState } from "./staticDemoData";
+import { cloneStaticDemoSeedState, type StaticDemoState } from "./staticDemoData";
 import { CROSS_AGGREGATE_CATEGORY_CODES } from "../contracts/crossAggregateCategory";
 import type { CrossAggregateCategory } from "../contracts/crossAggregateCategory";
 import type { FiscalYearComparisonResponse } from "../contracts/fiscalYearComparison";
@@ -476,15 +476,17 @@ function getStaticImportMappingSummary(state: StaticDemoState) {
 }
 
 function getStaticReconciliationReport(state: StaticDemoState) {
-  const overview = getStaticOverviewSnapshot();
-  const overall = {
-    assets: overview.totals.assets,
-    planned: overview.totals.committed,
-    actual: overview.totals.actual,
-    free_balance: overview.totals.freeBalance,
-  };
+  const funds = sortFunds(state.funds).map((fund) => {
+    const planned = getFundCommittedAmount(state, fund.id);
+    const actual = getFundActualAmount(state, fund.id);
+    return { fund_code: fund.fund_code, fund_name: fund.name, fiscal_year: fund.fiscal_year,
+      expected: { assets: fund.awarded_amount, planned, actual, free_balance: toFreeBalance(fund.awarded_amount, planned, actual) },
+      actual: { assets: fund.awarded_amount, planned, actual, free_balance: toFreeBalance(fund.awarded_amount, planned, actual) } };
+  });
+  const overall = funds.reduce((sum, fund) => ({ assets: sum.assets + fund.expected.assets, planned: sum.planned + fund.expected.planned, actual: sum.actual + fund.expected.actual, free_balance: sum.free_balance + fund.expected.free_balance }), { assets: 0, planned: 0, actual: 0, free_balance: 0 });
 
   return {
+    format_version: 2 as const,
     workbook_path: "static-demo://demo-budget.xlsx",
     db_path: "static-demo://browser-local",
     ok: true,
@@ -492,27 +494,13 @@ function getStaticReconciliationReport(state: StaticDemoState) {
       expected: overall,
       actual: overall,
     },
-    funds: overview.funds.map((fund) => {
-      const fundSummary = {
-        assets: fund.awarded_amount,
-        planned: fund.committed_amount,
-        actual: fund.actual_amount,
-        free_balance: fund.freeBalance,
-      };
-
-      return {
-        fund_code: state.funds.find((row) => row.id === fund.id)?.fund_code ?? `fund-${fund.id}`,
-        fund_name: fund.name,
-        expected: fundSummary,
-        actual: fundSummary,
-      };
-    }),
+    funds,
     mismatches: [],
   };
 }
 
 export function getStaticImportHistory() {
-  const state = readStaticDemoState();
+  const state = cloneStaticDemoSeedState();
 
   return [
     {
@@ -531,7 +519,7 @@ export function getStaticImportDetail(importId: number) {
     return undefined;
   }
 
-  const state = readStaticDemoState();
+  const state = cloneStaticDemoSeedState();
 
   return {
     id: 1,

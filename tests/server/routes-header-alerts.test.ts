@@ -78,7 +78,7 @@ describe("header alerts route", () => {
           3,
           '{"mode":"replace","counts":{"funds":1,"categories":2,"budget_lines":2,"planned_items":1,"actual_entries":2,"warnings":3},"warning_count_by_code":{"unlinked_actual_entry":3}}',
           '[]',
-          '{"ok":false,"workbook_path":"/tmp/budget2026.xlsx","db_path":"/tmp/app.db","overall":{"expected":{"assets":100000,"planned":70000,"actual":40000,"free_balance":-10000},"actual":{"assets":100000,"planned":70000,"actual":40000,"free_balance":-10000}},"funds":[],"mismatches":[{"scope":"overall","metric":"actual","expected":30000,"actual":40000,"delta":10000}]}'
+          '{"format_version":2,"ok":false,"workbook_path":"/tmp/budget2026.xlsx","db_path":"/tmp/app.db","overall":{"expected":{"assets":100000,"planned":70000,"actual":40000,"free_balance":-10000},"actual":{"assets":100000,"planned":70000,"actual":40000,"free_balance":-10000}},"funds":[],"mismatches":[{"scope":"overall","metric":"actual","expected":30000,"actual":40000,"delta":10000}]}'
         );
     `);
 

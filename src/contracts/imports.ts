@@ -11,7 +11,7 @@ export type ImportWarningCode =
   | "unlinked_actual_entry";
 
 export type ImportWarning = {
-  code: ImportWarningCode;
+  code: string;
   sheet_name: string;
   row_number: number;
   message: string;
@@ -31,7 +31,7 @@ export type PersistImportMode = "initial" | "replace";
 export type StoredImportMappingSummary = {
   mode: PersistImportMode;
   counts: ImportCounts;
-  warning_count_by_code: Partial<Record<ImportWarningCode, number>>;
+  warning_count_by_code: Record<string, number>;
 };
 
 export type ReconciliationMetric = "assets" | "planned" | "actual" | "free_balance";
@@ -51,6 +51,7 @@ export type ReconciliationComparison = {
 export type ReconciliationFundComparison = {
   fund_code: string;
   fund_name: string;
+  fiscal_year: number;
   expected: ReconciliationMetricSet;
   actual: ReconciliationMetricSet;
 };
@@ -68,6 +69,7 @@ export type ReconciliationFundMismatch = {
   scope: "fund";
   fund_code: string;
   fund_name: string;
+  fiscal_year: number;
   metric: ReconciliationMetric;
   expected: number;
   actual: number;
@@ -77,6 +79,7 @@ export type ReconciliationFundMismatch = {
 export type ReconciliationMismatch = ReconciliationOverallMismatch | ReconciliationFundMismatch;
 
 export type ReconciliationReport = {
+  format_version: 2;
   workbook_path: string;
   db_path: string;
   ok: boolean;
@@ -101,7 +104,7 @@ export type WorkbookImportResult = {
   import_id: number;
   mode: PersistImportMode;
   counts: ImportCounts;
-  warning_count_by_code: Partial<Record<ImportWarningCode, number>>;
+  warning_count_by_code: Record<string, number>;
   demoImport: {
     eligible: boolean;
   };
@@ -112,7 +115,7 @@ export type ImportHistoryItem = {
   source_filename: string;
   imported_at: string;
   warning_count: number;
-  reconciliation_ok: boolean;
+  reconciliation_ok: boolean | null;
   mapping_summary: StoredImportMappingSummary;
 };
 

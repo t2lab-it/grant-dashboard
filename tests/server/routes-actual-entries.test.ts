@@ -166,7 +166,7 @@ describe("API actual-entry routes", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "invalid_actual_entry_id",
-      message: "精算項目IDを確認してください。",
+      message: "実績IDを確認してください。",
     });
   });
 

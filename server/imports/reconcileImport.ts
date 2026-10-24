@@ -65,6 +65,7 @@ export function buildExpectedReconciliationSnapshot(
       return {
         fund_code: fund.fund_code,
         fund_name: fund.name,
+        fiscal_year: fund.fiscal_year,
         ...metricSetFromValues(fund.awarded_amount, planned, actual),
       };
     }),
@@ -86,6 +87,7 @@ export function buildActualReconciliationSnapshot(
     listFundAggregateRows(db).map((row) => ({
       fund_code: row.fund_code,
       fund_name: row.name,
+      fiscal_year: row.fiscal_year,
       ...metricSetFromValues(row.awarded_amount, row.committed_amount, row.actual_amount),
     })),
   );
@@ -101,37 +103,14 @@ export function buildActualReconciliationSnapshot(
 
 function pushMetricMismatches(
   mismatches: ReconciliationMismatch[],
-  scope: "overall" | "fund",
+  identity: { scope: "overall" } | { scope: "fund"; fund_code: string; fund_name: string; fiscal_year: number },
   expected: ReconciliationMetricSet,
   actual: ReconciliationMetricSet,
-  fund_code?: string,
-  fund_name?: string,
 ) {
   for (const metric of METRICS) {
-    if (expected[metric] === actual[metric]) {
-      continue;
+    if (expected[metric] !== actual[metric]) {
+      mismatches.push({ ...identity, metric, expected: expected[metric], actual: actual[metric], delta: actual[metric] - expected[metric] });
     }
-
-    if (scope === "overall") {
-      mismatches.push({
-        scope,
-        metric,
-        expected: expected[metric],
-        actual: actual[metric],
-        delta: actual[metric] - expected[metric],
-      });
-      continue;
-    }
-
-    mismatches.push({
-      scope,
-      fund_code: fund_code ?? "",
-      fund_name: fund_name ?? "",
-      metric,
-      expected: expected[metric],
-      actual: actual[metric],
-      delta: actual[metric] - expected[metric],
-    });
   }
 }
 
@@ -152,29 +131,27 @@ export function buildReconciliationReport({
 }): ReconciliationReport {
   const mismatches: ReconciliationMismatch[] = [];
 
-  pushMetricMismatches(mismatches, "overall", expected.overall, actual.overall);
+  pushMetricMismatches(mismatches, { scope: "overall" }, expected.overall, actual.overall);
 
   const expectedFunds = fundMap(expected);
   const actualFunds = fundMap(actual);
   const fundCodes = [...new Set([...expectedFunds.keys(), ...actualFunds.keys()])].sort();
 
   const funds = fundCodes.map((fund_code) => {
-    const expectedFund = expectedFunds.get(fund_code) ?? {
-      fund_code,
-      fund_name: "",
-      ...zeroMetricSet(),
-    };
-    const actualFund = actualFunds.get(fund_code) ?? {
-      fund_code,
-      fund_name: "",
-      ...zeroMetricSet(),
-    };
-    const fund_name = expectedFund.fund_name || actualFund.fund_name;
-    pushMetricMismatches(mismatches, "fund", expectedFund, actualFund, fund_code, fund_name);
+    const source = expectedFunds.get(fund_code) ?? actualFunds.get(fund_code)!;
+    const expectedFund = expectedFunds.get(fund_code) ?? zeroMetricSet();
+    const actualFund = actualFunds.get(fund_code) ?? zeroMetricSet();
+    const fund_name = source.fund_name;
+    const fiscal_year = source.fiscal_year;
+    if (expectedFunds.has(fund_code) && actualFunds.has(fund_code) && expectedFunds.get(fund_code)!.fiscal_year !== actualFunds.get(fund_code)!.fiscal_year) {
+      throw new Error(`Fiscal year mismatch for ${fund_code}`);
+    }
+    pushMetricMismatches(mismatches, { scope: "fund", fund_code, fund_name, fiscal_year }, expectedFund, actualFund);
 
     return {
       fund_code,
       fund_name,
+      fiscal_year,
       expected: {
         assets: expectedFund.assets,
         planned: expectedFund.planned,
@@ -191,6 +168,7 @@ export function buildReconciliationReport({
   });
 
   return {
+    format_version: 2,
     workbook_path: workbookPath,
     db_path: dbPath,
     ok: mismatches.length === 0,

@@ -188,7 +188,7 @@ describe("API planned-item routes", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "invalid_reference",
-      message: "選択した資金IDまたは費目IDを確認してください。",
+      message: "選択した予算または費目を確認してください。",
     });
   });
 
@@ -285,7 +285,7 @@ describe("API planned-item routes", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "planned_item_delete_has_actuals",
-      message: "精算が紐づいている計画項目は削除できません。",
+      message: "精算が紐づいている予定は削除できません。",
     });
   });
 
@@ -303,7 +303,7 @@ describe("API planned-item routes", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "planned_item_complete_requires_actuals",
-      message: "精算が紐づいている未精算の計画項目のみ完了にできます。",
+      message: "精算が紐づいている未精算の予定のみ完了にできます。",
     });
   });
 
@@ -321,7 +321,7 @@ describe("API planned-item routes", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "planned_item_not_cancelled_for_restore",
-      message: "完了または取消済みの計画項目のみ計画に戻せます。",
+      message: "完了または取消済みの予定のみ計画に戻せます。",
     });
   });
 
@@ -390,7 +390,7 @@ describe("API planned-item routes", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "planned_item_has_actuals",
-      message: "精算が紐づいている計画項目は取り消せません。",
+      message: "精算が紐づいている予定は取り消せません。",
     });
   });
 

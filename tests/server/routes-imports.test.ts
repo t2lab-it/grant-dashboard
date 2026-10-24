@@ -283,6 +283,39 @@ describe("API import routes", () => {
     });
   });
 
+  it("preserves real fiscal years and amounts through upload, stored history and the API", async () => {
+    const payload = readFileSync(resolve("seeds/demo/demo-budget.xlsx"));
+    const result = await app.inject({ method: "POST", url: "/api/imports/workbook", payload,
+      headers: { "content-type": "application/octet-stream", "x-workbook-filename": "demo-budget.xlsx" } });
+    expect(result.statusCode).toBe(201);
+    const id = result.json().import_id;
+    const stored = JSON.parse((app.db.prepare("SELECT reconciliation_json FROM imports WHERE id = ?").get(id) as {reconciliation_json: string}).reconciliation_json);
+    const detail = (await app.inject({ method: "GET", url: `/api/imports/${id}` })).json();
+    expect(detail.reconciliation).toEqual(stored);
+    const funds = app.db.prepare("SELECT fund_code, name, fiscal_year, awarded_amount FROM funds ORDER BY fund_code").all() as Array<{fund_code: string; name: string; fiscal_year: number; awarded_amount: number}>;
+    expect(new Set(funds.map((fund) => fund.fiscal_year)).size).toBeGreaterThan(1);
+    expect(new Set(funds.map((fund) => fund.name)).size).toBeLessThan(funds.length);
+    for (const fund of funds) {
+      expect(detail.reconciliation.funds.find((row: {fund_code: string}) => row.fund_code === fund.fund_code)).toMatchObject({ fiscal_year: fund.fiscal_year, fund_name: fund.name, expected: { assets: fund.awarded_amount }, actual: { assets: fund.awarded_amount } });
+    }
+    app.db.prepare("UPDATE funds SET fiscal_year = 2099, awarded_amount = 1").run();
+    expect((await app.inject({method: "GET", url: `/api/imports/${id}`})).json().reconciliation).toEqual(stored);
+  });
+
+  it("reports unsupported stored reconciliation without changing it or showing an empty history", async () => {
+    const raw = JSON.stringify({ ok: true, funds: [{ fund_code: "old", fund_name: "旧予算" }], mismatches: [] });
+    insertImportHistoryFixture(app.db, { reconciliationJson: raw });
+    const detail = await app.inject({ method: "GET", url: "/api/imports/1" });
+    expect(detail.statusCode).toBe(422);
+    expect(detail.json()).toMatchObject({ code: "unsupported_reconciliation_format", message: expect.stringContaining("再取込") });
+    const list = await app.inject({ method: "GET", url: "/api/imports" });
+    expect(list.statusCode).toBe(200);
+    expect(list.json()).toMatchObject([{ id: 1, reconciliation_ok: null }]);
+    const alerts = await app.inject({method: "GET", url: "/api/header-alerts?year=2026"});
+    expect(alerts.json().primary).toEqual(expect.arrayContaining([expect.objectContaining({label: "履歴読込不可"})]));
+    expect(app.db.prepare("SELECT reconciliation_json FROM imports WHERE id = 1").get()).toEqual({ reconciliation_json: raw });
+  });
+
   it("returns 400 for an invalid import id", async () => {
     const response = await app.inject({ method: "GET", url: "/api/imports/not-a-number" });
 

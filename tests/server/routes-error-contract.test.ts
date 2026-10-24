@@ -81,7 +81,7 @@ describe("API error response contract", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "category_has_entries",
-      message: "計画項目または精算項目がある費目は削除できません。",
+      message: "予定または実績がある費目は削除できません。",
     });
   });
 

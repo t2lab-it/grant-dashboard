@@ -1,3 +1,4 @@
+import { getStoredReconciliationStatus } from "./importReviews";
 import type Database from "better-sqlite3";
 import { formatTokyoMonthKey, inferJapaneseFiscalYear } from "../../src/lib/calendar";
 import type {
@@ -213,13 +214,6 @@ function getLatestImport(db: Database.Database) {
     .get() as LatestImportRow | undefined;
 }
 
-function isReconciliationOk(row: LatestImportRow) {
-  try {
-    return (JSON.parse(row.reconciliation_json) as { ok?: unknown }).ok === true;
-  } catch {
-    return false;
-  }
-}
 
 function buildBudgetOverrunCategory(db: Database.Database, fiscalYear: number) {
   const rows = listBudgetOverrunCategories(db, fiscalYear);
@@ -245,15 +239,19 @@ function buildBudgetOverrunCategory(db: Database.Database, fiscalYear: number) {
 }
 
 function buildReconciliationCategory(latestImport: LatestImportRow | undefined) {
-  if (latestImport === undefined || isReconciliationOk(latestImport)) {
+  if (latestImport === undefined) {
     return null;
   }
 
-  return createCategory("reconciliation_mismatch", "不整合", "danger", 1, [
+  let status: boolean | null;
+  try { status = getStoredReconciliationStatus(latestImport.reconciliation_json); }
+  catch { status = null; }
+  if (status === true) return null;
+  return createCategory("reconciliation_mismatch", status === null ? "履歴読込不可" : "不整合", status === null ? "warning" : "danger", 1, [
     {
       id: `import-${latestImport.id}`,
       title: latestImport.source_filename,
-      description: "最新インポートの照合に不整合があります。",
+      description: status === null ? "最新インポートの照合履歴を読み込めません。履歴の詳細を確認してください。" : "最新インポートの照合に不整合があります。",
       href: `/imports/${latestImport.id}`,
     },
   ]);

@@ -1,3 +1,4 @@
+import { getStoredReconciliationStatus } from "./importReviews";
 import type Database from "better-sqlite3";
 import {
   getLinkedActualAmount,
@@ -81,10 +82,6 @@ type OverviewSnapshotOptions = {
   today?: Date;
 };
 
-function parseLatestImportReconciliationOk(reconciliationJson: string) {
-  const parsed = JSON.parse(reconciliationJson) as { ok?: unknown };
-  return parsed.ok === true;
-}
 
 function listAvailableFiscalYears(db: Database.Database) {
   return (
@@ -211,7 +208,7 @@ export function getOverviewSnapshot(db: Database.Database, options: OverviewSnap
           source_filename: latestImportRow.source_filename,
           imported_at: latestImportRow.imported_at,
           warning_count: latestImportRow.warning_count,
-          reconciliation_ok: parseLatestImportReconciliationOk(latestImportRow.reconciliation_json),
+          reconciliation_ok: getStoredReconciliationStatus(latestImportRow.reconciliation_json),
         }
       : null,
     tutorial: {

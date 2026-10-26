@@ -130,26 +130,6 @@ describe("Demo tutorial", () => {
     expect(await screen.findByRole("dialog", { name: "チュートリアルを始めますか？" })).toBeInTheDocument();
   });
 
-  it("uses back, complete, and advanced actions on the final workbook preview step", async () => {
-    const user = userEvent.setup();
-    mockDemoOverviewAndFundDetail();
-
-    renderAppRoute("/");
-
-    const prompt = await screen.findByRole("dialog", { name: "チュートリアルを始めますか？" });
-    await user.click(within(prompt).getByRole("button", { name: "チュートリアルを始める" }));
-
-    for (let index = 0; index < 4; index += 1) {
-      await user.click(screen.getByRole("button", { name: "次へ" }));
-    }
-
-    const tutorial = await screen.findByRole("dialog", { name: "チュートリアル" });
-    expect(within(tutorial).getByText("workbook 差分を確認する")).toBeInTheDocument();
-    expect(within(tutorial).getByRole("button", { name: "戻る" })).toBeInTheDocument();
-    expect(within(tutorial).getByRole("button", { name: "完了" })).toBeInTheDocument();
-    expect(within(tutorial).getByRole("button", { name: "発展" })).toBeInTheDocument();
-  });
-
   it("continues from the advanced action into creation and budget edit guidance", async () => {
     const user = userEvent.setup();
     mockDemoOverviewAndFundDetail();
@@ -163,7 +143,11 @@ describe("Demo tutorial", () => {
       await user.click(screen.getByRole("button", { name: "次へ" }));
     }
 
-    await user.click(screen.getByRole("button", { name: "発展" }));
+    const previewTutorial = screen.getByRole("dialog", { name: "チュートリアル" });
+    expect(within(previewTutorial).getByText("workbook 差分を確認する")).toBeInTheDocument();
+    expect(within(previewTutorial).getByRole("button", { name: "戻る" })).toBeInTheDocument();
+    expect(within(previewTutorial).getByRole("button", { name: "完了" })).toBeInTheDocument();
+    await user.click(within(previewTutorial).getByRole("button", { name: "発展" }));
 
     await waitFor(() => {
       expect(view.router.state.location.pathname).toBe("/planned-items/new");

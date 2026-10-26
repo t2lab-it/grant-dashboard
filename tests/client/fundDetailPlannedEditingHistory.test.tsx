@@ -2,7 +2,9 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { handleStaticDemoRequest, resetStaticDemoStore } from "../../src/demo/staticDemoApi";
+import { readStaticDemoState } from "../../src/demo/staticDemoState";
 import type { FundDetailResponse } from "../../src/features/funds/fundDetailTypes";
+import { queryKeys } from "../../src/lib/queryKeys";
 import { fetchMock, renderAppRoute, setupFundDetailTests } from "./fundDetailTestUtils";
 
 describe("Fund detail interactions", () => {
@@ -16,17 +18,36 @@ describe("Fund detail interactions", () => {
     });
     const user = userEvent.setup();
     const view = renderAppRoute("/funds/1");
+    let description = "GPUサーバ更新";
     for (const month of ["2026-08", "2026-09"]) {
       const table = await within(view.container).findByRole("table", { name: "予定" });
-      const row = within(table).getByText("GPUサーバ更新").closest('[role="row"]')!;
+      const row = within(table).getByText(description).closest('[role="row"]')!;
       await user.click(within(row as HTMLElement).getByRole("button", { name: "編集" }));
       const dialog = await screen.findByRole("dialog", { name: "予定を編集" });
       expect(within(dialog).getByText("金額（未精算残額）")).toBeInTheDocument();
       expect(within(dialog).getByLabelText("金額")).toHaveValue("400000");
+      description = `GPUサーバ更新 ${month}`;
+      fireEvent.change(within(dialog).getByLabelText("内容"), { target: { value: description } });
       fireEvent.change(within(dialog).getByLabelText("執行予定月"), { target: { value: month } });
       fireEvent.change(within(dialog).getByLabelText("メモ"), { target: { value: "残額を維持" } });
       await user.click(within(dialog).getByRole("button", { name: "更新を保存" }));
       await waitFor(() => expect(screen.queryByRole("dialog", { name: "予定を編集" })).not.toBeInTheDocument());
+      expect(readStaticDemoState().planned_items.find((item) => item.id === 1)).toMatchObject({
+        fund_id: 1,
+        category_id: 1,
+        planned_date: "2026-05-15",
+        scheduled_month: month,
+        description,
+        amount: 700000,
+        notes: "残額を維持",
+      });
+      const detail = await (await handleStaticDemoRequest("/api/funds/1")).json() as FundDetailResponse;
+      expect(detail.plannedItems.find((item) => item.id === 1)).toMatchObject({
+        categoryId: 1,
+        amount: 400000,
+        description,
+        scheduledMonth: month,
+      });
     }
   });
 
@@ -158,6 +179,7 @@ describe("Fund detail interactions", () => {
       target: { value: "2" },
     });
     await screen.findByRole("option", { name: "旅費" });
+    expect(view.queryClient.getQueryData(queryKeys.fund.detail(2))).toBeUndefined();
     fireEvent.change(within(dialog).getByLabelText("費目"), {
       target: { value: "2" },
     });
@@ -206,90 +228,6 @@ describe("Fund detail interactions", () => {
     });
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "予定を編集" })).not.toBeInTheDocument();
-    });
-  });
-
-  it("preserves the planned item category when editing non-ID fields", async () => {
-    const user = userEvent.setup();
-    let submittedPayload: unknown;
-    const currentFundDetail = {
-      fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
-      categories: [
-        {
-          id: 1,
-          categoryName: "物品費",
-          budgetAmount: 1000000,
-          plannedAmount: 280000,
-          actualAmount: 0,
-        },
-      ],
-      monthlyStatus: [],
-      actualEntries: [],
-      plannedItems: [
-        {
-          id: 10,
-          plannedDate: "2026-07-10",
-          scheduledMonth: "2026-07",
-          categoryId: 1,
-          categoryName: "物品費",
-          description: "GPU サーバ保守更新",
-          amount: 280000,
-          notes: "未精算",
-        },
-      ],
-      plannedItemHistory: [],
-      crossAggregateCategories: [],
-    };
-
-    fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
-      const method = init?.method ?? "GET";
-
-      if (url === "/api/funds/1" && method === "GET") {
-        return {
-          ok: true,
-          json: async () => currentFundDetail,
-        };
-      }
-
-      if (url === "/api/overview" && method === "GET") {
-        return {
-          ok: true,
-          json: async () => ({ funds: [{ id: 1, name: "基盤研究費" }] }),
-        };
-      }
-
-      if (url === "/api/planned-items/10" && method === "PUT") {
-        submittedPayload = JSON.parse(String(init?.body));
-        return {
-          ok: true,
-          json: async () => ({ warnings: [] }),
-        };
-      }
-
-      throw new Error(`Unexpected fetch: ${method} ${url}`);
-    });
-
-    const view = renderAppRoute("/funds/1");
-    const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "予定" });
-
-    await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
-
-    const dialog = await screen.findByRole("dialog", { name: "予定を編集" });
-    fireEvent.change(within(dialog).getByLabelText("内容"), {
-      target: { value: "GPU サーバ保守更新 改" },
-    });
-    await user.click(within(dialog).getByRole("button", { name: "更新を保存" }));
-
-    expect(submittedPayload).toMatchObject({
-      fundId: 1,
-      categoryId: 1,
-      scheduledMonth: "2026-07",
-      description: "GPU サーバ保守更新 改",
-      amount: 280000,
-      notes: "未精算",
-      auxiliaryLabelIds: [],
     });
   });
 
@@ -363,79 +301,6 @@ describe("Fund detail interactions", () => {
       method: "DELETE",
     });
     expect(await fundPage.findByText("未精算の予定はまだありません。")).toBeInTheDocument();
-  });
-
-  it("keeps destination fund options out of the fund detail query cache", async () => {
-    const user = userEvent.setup();
-    const overviewResponse = {
-      funds: [
-        { id: 1, name: "基盤研究費" },
-        { id: 2, name: "ACT-X" },
-      ],
-    };
-
-    fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
-      const method = init?.method ?? "GET";
-
-      if (url === "/api/funds/1" && method === "GET") {
-        return {
-          ok: true,
-          json: async () => ({
-            fund: { id: 1, name: "基盤研究費", awarded_amount: 5080000 },
-            categories: [],
-            monthlyStatus: [],
-            actualEntries: [],
-            plannedItems: [
-              {
-                id: 10,
-                plannedDate: "2026-07-10",
-                scheduledMonth: "2026-07",
-                categoryId: 1,
-                categoryName: "物品費",
-                description: "GPU サーバ保守更新",
-                amount: 280000,
-                notes: "未精算",
-              },
-            ],
-            plannedItemHistory: [],
-            crossAggregateCategories: [],
-          }),
-        };
-      }
-
-      if (url === "/api/funds/2" && method === "GET") {
-        return {
-          ok: true,
-          json: async () => ({
-            categories: [{ id: 2, categoryName: "旅費" }],
-          }),
-        };
-      }
-
-      if (url === "/api/overview" && method === "GET") {
-        return {
-          ok: true,
-          json: async () => overviewResponse,
-        };
-      }
-
-      throw new Error(`Unexpected fetch: ${method} ${url}`);
-    });
-
-    const view = renderAppRoute("/funds/1");
-    const fundPage = within(view.container);
-    const plannedTable = await fundPage.findByRole("table", { name: "予定" });
-
-    await user.click(within(plannedTable).getByRole("button", { name: "編集" }));
-
-    const dialog = await screen.findByRole("dialog", { name: "予定を編集" });
-    fireEvent.change(within(dialog).getByLabelText("予算"), {
-      target: { value: "2" },
-    });
-    await screen.findByRole("option", { name: "旅費" });
-
-    expect(view.queryClient.getQueryData(["fund", 2])).toBeUndefined();
   });
 
   it("keeps the planned item edit modal open when the server returns warnings", async () => {

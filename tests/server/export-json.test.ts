@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import Database from "better-sqlite3";
@@ -27,28 +27,6 @@ describe("JSON export workflow", () => {
     tempDirs.length = 0;
   });
 
-  it("writes exports/current.json and reports the exported record counts", () => {
-    const rootDir = mkdtempSync(join(tmpdir(), "budget-export-cli-"));
-    const dbPath = join(rootDir, "app.db");
-    tempDirs.push(rootDir);
-    const summary = seedTestDatabase(dbPath);
-
-    const stdout = runExportJsonScript(rootDir, dbPath);
-
-    const result = JSON.parse(stdout) as {
-      db_path: string;
-      output_path: string;
-      record_counts: Record<string, number>;
-    };
-
-    expect(result).toEqual({
-      db_path: dbPath,
-      output_path: join(rootDir, "exports", "current.json"),
-      record_counts: summary.counts,
-    });
-    expect(existsSync(result.output_path)).toBe(true);
-  });
-
   it("writes a deterministic pretty-printed snapshot for git review", () => {
     const rootDir = mkdtempSync(join(tmpdir(), "budget-export-deterministic-"));
     const dbPath = join(rootDir, "app.db");
@@ -66,9 +44,19 @@ describe("JSON export workflow", () => {
       db.close();
     }
 
-    runExportJsonScript(rootDir, dbPath);
+    const stdout = runExportJsonScript(rootDir, dbPath);
+    const result = JSON.parse(stdout) as {
+      db_path: string;
+      output_path: string;
+      record_counts: Record<string, number>;
+    };
 
     const outputPath = join(rootDir, "exports", "current.json");
+    expect(result).toEqual({
+      db_path: dbPath,
+      output_path: outputPath,
+      record_counts: { funds: 1, categories: 1, budget_lines: 1, planned_items: 3, actual_entries: 1 },
+    });
     const fileText = readFileSync(outputPath, "utf8");
     const payload = JSON.parse(fileText) as {
       planned_items: Array<{ id: number }>;

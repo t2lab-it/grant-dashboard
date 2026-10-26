@@ -5,7 +5,6 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 import { buildWorkbookExportPreview } from "../../server/exports/workbookExport";
-import { createEmptyWorkbookDiffSummary } from "../../server/exports/workbookDiff";
 import { seedDemoDatabase } from "../../server/seeds/demoSeed";
 
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -78,7 +77,13 @@ describe("seedDemoDatabase", () => {
       const preview = buildWorkbookExportPreview(db);
 
       expect(preview.available).toBe(true);
-      expect(preview.changes).toEqual(createEmptyWorkbookDiffSummary());
+      expect(preview.changes).toEqual({
+        funds: { added: 0, updated: 0, removed: 0, rows: [], more_count: 0 },
+        categories: { added: 0, updated: 0, removed: 0, rows: [], more_count: 0 },
+        budget_lines: { added: 0, updated: 0, removed: 0, rows: [], more_count: 0 },
+        planned_items: { added: 0, updated: 0, removed: 0, rows: [], more_count: 0 },
+        actual_entries: { added: 0, updated: 0, removed: 0, rows: [], more_count: 0 },
+      });
     } finally {
       db.close();
     }

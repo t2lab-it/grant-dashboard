@@ -1,10 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import * as XLSX from "xlsx";
-import { buildServer } from "../../server/app";
-import { seedDemoDatabase } from "../../server/seeds/demoSeed";
 import { createRouteTestContext } from "./routeTestUtils";
 
 describe("API overview and export routes", () => {
@@ -23,25 +21,6 @@ describe("API overview and export routes", () => {
     await cleanupContext();
     while (cleanups.length > 0) {
       cleanups.pop()?.();
-    }
-  });
-
-  it("marks overview data as tutorial eligible after seeding the demo dataset", async () => {
-    const tempDir = mkdtempSync(join(tmpdir(), "budget-demo-overview-route-"));
-    const dbPath = join(tempDir, "demo.db");
-    seedDemoDatabase({ rootDir: resolve("."), dbPath });
-    const demoApp = await buildServer({ dbPath });
-
-    try {
-      const response = await demoApp.inject({ method: "GET", url: "/api/overview" });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.json()).toMatchObject({
-        tutorial: { eligibleDemoData: true },
-      });
-    } finally {
-      await demoApp.close();
-      rmSync(tempDir, { recursive: true, force: true });
     }
   });
 

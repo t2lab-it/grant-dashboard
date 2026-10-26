@@ -70,11 +70,6 @@ describe("dashboard calculations", () => {
       { month: "2027-03", committed: 0, actual: 0, balance: 2607260 },
     );
     expect(snapshot.latestImport).toBeNull();
-  });
-
-  it("summarizes overview totals by cross aggregate category", () => {
-    const snapshot = getOverviewSnapshot(db);
-
     expect(snapshot.crossAggregateCategories).toEqual([
       {
         crossAggregateCategory: "equipment",

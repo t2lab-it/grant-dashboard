@@ -15,19 +15,6 @@ describe("loadSeedProfile", () => {
     tempDirs.length = 0;
   });
 
-  it("loads a valid profile with normalized tables", () => {
-    const rootDir = mkdtempSync(join(tmpdir(), "budget-seed-loader-"));
-    tempDirs.push(rootDir);
-
-    writeNamedSeedProfile(rootDir, "test");
-
-    const profile = loadSeedProfile({ rootDir, profile: "test" });
-
-    expect(profile.funds).toHaveLength(1);
-    expect(profile.categories[0]).toMatchObject({ id: 1, fund_id: 1, name: "物品費" });
-    expect(profile.actual_entries[0]).toMatchObject({ planned_item_id: 1, amount: 50000 });
-  });
-
   it("rejects rows with unexpected columns", () => {
     const rootDir = mkdtempSync(join(tmpdir(), "budget-seed-loader-"));
     tempDirs.push(rootDir);

@@ -7,20 +7,13 @@ export async function createRouteTestContext(dbPath: string) {
   seedTestDatabase(dbPath);
 
   const app = await buildServer({ dbPath, seedDefaultClassifications: false });
-  const cleanups: Array<() => void> = [];
 
   return {
     app,
-    addCleanup(cleanup: () => void) {
-      cleanups.push(cleanup);
-    },
     async cleanup() {
       await app.close();
       rmSync(dbPath, { force: true });
       rmSync(`${dbPath}.uploads`, { recursive: true, force: true });
-      while (cleanups.length > 0) {
-        cleanups.pop()?.();
-      }
     },
   };
 }

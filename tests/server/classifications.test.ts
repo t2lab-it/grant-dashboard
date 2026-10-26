@@ -9,20 +9,27 @@ describe("default classification initialization", () => {
   it("initializes default auxiliary labels without default project tags", async () => {
     const tempDir = mkdtempSync(join(tmpdir(), "budget-classifications-"));
     const dbPath = join(tempDir, "app.db");
-    const defaultApp = await buildServer({ dbPath });
+    let defaultApp = await buildServer({ dbPath });
 
     try {
       const listResponse = await defaultApp.inject({ method: "GET", url: "/api/classifications" });
 
       expect(listResponse.statusCode).toBe(200);
-      expect(listResponse.json()).toEqual({
+      const expectedClassifications = {
         projectTags: [],
         auxiliaryLabels: [
           { id: 1, kind: "auxiliary", name: "学生支援", color: "#16a34a" },
           { id: 2, kind: "auxiliary", name: "出張", color: "#f59e0b" },
           { id: 3, kind: "auxiliary", name: "要確認", color: "#7c3aed" },
         ],
-      });
+      };
+      expect(listResponse.json()).toEqual(expectedClassifications);
+
+      await defaultApp.close();
+      defaultApp = await buildServer({ dbPath });
+      const restartedResponse = await defaultApp.inject({ method: "GET", url: "/api/classifications" });
+      expect(restartedResponse.statusCode).toBe(200);
+      expect(restartedResponse.json()).toEqual(expectedClassifications);
     } finally {
       await defaultApp.close();
       rmSync(tempDir, { recursive: true, force: true });

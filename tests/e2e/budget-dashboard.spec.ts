@@ -60,6 +60,7 @@ test("demo tutorial starts on overview and moves to fund detail", async ({ page 
   const overviewResponse = await overviewResponsePromise;
 
   expect(overviewResponse.status()).toBe(200);
+  expect(await overviewResponse.json()).toMatchObject({ tutorial: { eligibleDemoData: true } });
 
   const prompt = page.getByRole("dialog", { name: "チュートリアルを始めますか？" });
   await expect(prompt).toBeVisible();
@@ -162,7 +163,11 @@ test("preserves form input on failure, saves and reloads it, then settles only t
   const settlement = page.getByRole("dialog", { name: "予定を精算" });
   await settlement.getByLabel("金額", { exact: true }).fill("4000");
   await settlement.getByRole("checkbox", { name: "残額を予定として残す" }).check();
+  const settled = page.waitForResponse((response) => response.url().endsWith("/api/actual-entries") && response.request().method() === "POST");
   await settlement.getByRole("button", { name: "精算を登録" }).click();
+  const settlementResponse = await settled;
+  expect(settlementResponse.status()).toBe(201);
+  expect(settlementResponse.request().postDataJSON()).toMatchObject({ amount: 4000, keepRemainingPlanned: true });
   await expect(settlement).not.toBeVisible();
   const planned = page.getByRole("region", { name: "予定", exact: true }).locator(".detail-history-entry").filter({ hasText: "回帰確認の購入予定" });
   await expect(planned).toContainText("6,000円");

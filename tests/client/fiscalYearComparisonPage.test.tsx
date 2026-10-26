@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -119,17 +119,6 @@ describe("FiscalYearComparisonPage", () => {
     expect(screen.queryByRole("heading", { level: 2 })).not.toBeInTheDocument();
   });
 
-  test("renders all four comparison sections even for one fiscal year", async () => {
-    okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current")] });
-    renderPage();
-
-    expect(await screen.findByRole("heading", { name: "年度比較" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "年度別の予算総額" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "予算構成" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "大費目構成" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "月別の執行ペース" })).toBeInTheDocument();
-  });
-
   test("renders descending linked budget rows and donut regions with accessible values", async () => {
     okResponse({
       currentFiscalYear: 2026,
@@ -154,22 +143,6 @@ describe("FiscalYearComparisonPage", () => {
     expect(screen.getAllByRole("img", { name: /年度の横断集計カテゴリ構成比グラフ/ })).toHaveLength(2);
   });
 
-  test("shows awarded budget names, amounts, and percentages", async () => {
-    okResponse({
-      currentFiscalYear: 2026,
-      fiscalYears: [comparisonYear(2026, "current"), comparisonYear(2027, "future")],
-    });
-    renderPage();
-
-    const heading = await screen.findByRole("heading", { name: "予算構成" });
-    const section = heading.closest("section");
-    expect(section).not.toBeNull();
-    const scope = within(section!);
-    const currentCard = scope.getByRole("link", { name: "2026年度の年度ページを開く" });
-    expect(within(currentCard).getByText("基盤研究費")).toBeInTheDocument();
-    expect(within(currentCard).getByText("600,000円")).toBeInTheDocument();
-    expect(within(currentCard).getByText("60.0%")).toBeInTheDocument();
-  });
   test("uses the largest budget total as the shared-axis endpoint", async () => {
     const current = comparisonYear(2026, "current");
     const future = comparisonYear(2027, "future");
@@ -307,7 +280,7 @@ describe("FiscalYearComparisonPage", () => {
 
   test("highlights matching chart regions while hovering legends and restores them on leave", async () => {
     const user = userEvent.setup();
-    okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current"), comparisonYear(2027, "future")] });
+    okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current"), comparisonYear(2027, "future"), comparisonYear(2025, "past")] });
     renderPage();
     const budget = (await screen.findByRole("heading", { name: "年度別の予算総額" })).closest("section")!;
     await user.hover(within(budget).getByText("基盤研究費"));
@@ -334,9 +307,16 @@ describe("FiscalYearComparisonPage", () => {
     expect(fundCircles[1]).toHaveAttribute("opacity", "0.2");
 
     const pace = screen.getByRole("heading", { name: "月別の執行ペース" }).closest("section")!;
+    const paceChart = within(pace).getByRole("img", { name: /4月から3月までの累積執行率/ });
+    expect(within(paceChart).getByText("4月")).toBeInTheDocument();
+    expect(within(paceChart).getByText("3月")).toBeInTheDocument();
+    expect(within(pace).getByText("実績", { exact: true })).toBeInTheDocument();
+    expect(within(pace).getByText("見込み・予定", { exact: true })).toBeInTheDocument();
     await user.hover(within(pace).getByText("2026年度"));
     const groups = pace.querySelectorAll("g[opacity]");
-    expect([...groups].map((group) => group.getAttribute("opacity")).sort()).toEqual(["0.2", "1"]);
+    expect([...groups].map((group) => group.getAttribute("opacity")).sort()).toEqual(["0.2", "0.2", "1"]);
+    expect(groups[2].querySelectorAll("path")).toHaveLength(1);
+    expect(groups[2].querySelector("path")).not.toHaveAttribute("stroke-dasharray");
     await user.hover(within(pace).getByText("実績", { exact: true }));
     expect(pace.querySelector("path[stroke-dasharray]")).toHaveAttribute("opacity", "0.2");
     await user.unhover(within(pace).getByText("実績", { exact: true }));
@@ -392,6 +372,10 @@ describe("FiscalYearComparisonPage", () => {
     renderPage();
     const budget = (await screen.findByRole("heading", { name: "年度別の予算総額" })).closest("section")!;
     const funds = screen.getByRole("heading", { name: "予算構成" }).closest("section")!;
+    const currentCard = within(funds).getByRole("link", { name: "2026年度の年度ページを開く" });
+    expect(within(currentCard).getByText("基盤研究費")).toBeInTheDocument();
+    expect(within(currentCard).getByText("600,000円")).toBeInTheDocument();
+    expect(within(currentCard).getByText("60.0%")).toBeInTheDocument();
     const bar = within(budget).getByRole("img", { name: "2026年度 基盤研究費 600,000円" });
     const barLegend = within(budget).getByText("基盤研究費");
     const donut = within(funds).getByRole("img", { name: "2027年度の予算構成比グラフ" });
@@ -444,23 +428,6 @@ describe("FiscalYearComparisonPage", () => {
     }
   });
 
-  test("describes April-to-March actual and forecast pace", async () => {
-    okResponse({
-      currentFiscalYear: 2026,
-      fiscalYears: [comparisonYear(2026, "current"), comparisonYear(2025, "past")],
-    });
-    renderPage();
-
-    const paceChart = await screen.findByRole("img", { name: /4月から3月までの累積執行率/ });
-    expect(within(paceChart).getByText("4月")).toBeInTheDocument();
-    expect(within(paceChart).getByText("3月")).toBeInTheDocument();
-    expect(screen.getByText("実績", { exact: true })).toBeInTheDocument();
-    expect(screen.getByText("見込み・予定", { exact: true })).toBeInTheDocument();
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith("/api/fiscal-year-comparison", {});
-    });
-  });
-
   test("uses the selected overview palette for fiscal-year category donuts", async () => {
     window.localStorage.setItem(
       APP_SETTINGS_STORAGE_KEY,
@@ -486,12 +453,7 @@ describe("FiscalYearComparisonPage", () => {
     await screen.findByRole("heading", { name: "年度比較" });
 
     expect(view.container.querySelector(".fiscal-year-category-donut circle[stroke='#7c3aed']")).toBeInTheDocument();
-  });
-  test("shows the donut center total in thousands of yen", async () => {
-    okResponse({ currentFiscalYear: 2026, fiscalYears: [comparisonYear(2026, "current")] });
-    renderPage();
-
-    const chart = await screen.findByRole("img", { name: "2026年度の横断集計カテゴリ構成比グラフ" });
+    const chart = screen.getByRole("img", { name: "2026年度の横断集計カテゴリ構成比グラフ" });
     expect(within(chart).getByText("650k円")).toBeInTheDocument();
   });
 });

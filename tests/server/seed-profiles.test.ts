@@ -343,6 +343,9 @@ describe("seed profiles", () => {
     expect(db.prepare("SELECT COUNT(*) AS count FROM budget_lines").get()).toEqual({ count: 1 });
     expect(db.prepare("SELECT COUNT(*) AS count FROM planned_items").get()).toEqual({ count: 1 });
     expect(db.prepare("SELECT COUNT(*) AS count FROM actual_entries").get()).toEqual({ count: 1 });
+    expect(db.prepare("SELECT planned_item_id, amount FROM actual_entries").all()).toEqual([
+      { planned_item_id: 1, amount: 50000 },
+    ]);
 
     db.close();
   });

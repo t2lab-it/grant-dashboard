@@ -18,7 +18,3 @@ export function setupFundDetailTests() {
     cleanup();
   });
 }
-
-export function renderFundDetailRoute(path: `/funds/${string}`) {
-  return renderAppRoute(path);
-}

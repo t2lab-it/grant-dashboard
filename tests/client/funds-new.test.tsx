@@ -27,24 +27,13 @@ describe("NewFundForm", () => {
     fireEvent.change(screen.getByLabelText("予算額"), { target: { value: "700000" } });
   }
 
-  it("lets the user add and remove category rows before saving", async () => {
-    const user = userEvent.setup();
-
-    renderAppRoute("/funds/new");
-
-    expect(await screen.findAllByLabelText("費目名")).toHaveLength(1);
-    await user.click(screen.getByRole("button", { name: "費目を追加" }));
-    expect(screen.getAllByLabelText("費目名")).toHaveLength(2);
-    await user.click(screen.getAllByRole("button", { name: "削除" })[1]);
-    expect(screen.getAllByLabelText("費目名")).toHaveLength(1);
-  });
-
   it("updates the cross-aggregate budget chart while editing category rows", async () => {
     const user = userEvent.setup();
 
     renderAppRoute("/funds/new");
 
     await fillRequiredFields();
+    expect(screen.getAllByLabelText("費目名")).toHaveLength(1);
     fireEvent.change(screen.getByLabelText("横断集計カテゴリ"), { target: { value: "travel" } });
 
     const chart = screen.getByRole("region", { name: "横断カテゴリ別の予算配分" });
@@ -54,6 +43,7 @@ describe("NewFundForm", () => {
     expect(chart).toHaveTextContent("1,100,000円");
 
     await user.click(screen.getByRole("button", { name: "費目を追加" }));
+    expect(screen.getAllByLabelText("費目名")).toHaveLength(2);
     fireEvent.change(screen.getAllByLabelText("費目名")[1], { target: { value: "物品" } });
     fireEvent.change(screen.getAllByLabelText("予算額")[1], { target: { value: "300000" } });
     fireEvent.change(screen.getAllByLabelText("横断集計カテゴリ")[1], { target: { value: "equipment" } });
@@ -64,6 +54,7 @@ describe("NewFundForm", () => {
 
     await user.click(screen.getAllByRole("button", { name: "削除" })[1]);
 
+    expect(screen.getAllByLabelText("費目名")).toHaveLength(1);
     expect(chart).not.toHaveTextContent("物品系");
     expect(chart).toHaveTextContent("旅費系");
     expect(chart).toHaveTextContent("1,100,000円");

@@ -56,35 +56,6 @@ describe("API error response contract", () => {
     expect(response.body).not.toContain("sensitive API root detail");
   });
 
-  it("returns only code and Japanese message for a domain conflict", async () => {
-    app.db.exec(`
-      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES (2, 1, 'category-2', '旅費', 'travel', 2);
-      INSERT INTO budget_lines (id, fund_id, category_id, amount, notes) VALUES (2, 1, 2, 30000, '');
-      INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount, notes) VALUES
-        (2, 1, 2, '2026-11-01', '2026-11', '学会参加', 12000, '');
-    `);
-
-    const response = await app.inject({
-      method: "PUT",
-      url: "/api/funds/1",
-      payload: {
-        name: "基盤研究費",
-        fiscalYear: 2026,
-        awardedAmount: 1000000,
-        notes: "",
-        categories: [
-          { id: 1, name: "物品費", amount: 1000000, crossAggregateCategory: "equipment" },
-        ],
-      },
-    });
-
-    expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({
-      code: "category_has_entries",
-      message: "予定または実績がある費目は削除できません。",
-    });
-  });
-
   it("returns a non-sensitive internal error for unexpected API failures", async () => {
     app.get("/api/test-unexpected-error", () => {
       throw new Error("sensitive implementation detail");

@@ -161,20 +161,6 @@ describe("PlannedItemForm", () => {
     expect(screen.getByLabelText("金額")).toHaveAttribute("data-direct-number-input", "true");
   });
 
-  it("renders the scheduled month as text beside a calendar button", async () => {
-    mockPlannedItemFetches();
-
-    renderPlannedItemForm();
-
-    expect(await screen.findByRole("option", { name: "基盤研究費" })).toBeInTheDocument();
-    const scheduledMonthInput = screen.getByLabelText("執行予定月");
-
-    expect(scheduledMonthInput).toHaveAttribute("type", "text");
-    expect(
-      screen.getByRole("button", { name: "執行予定月カレンダーを開く" }),
-    ).toBeInTheDocument();
-  });
-
   it("moves the month calendar by year and selects a YYYY/MM month", async () => {
     mockPlannedItemFetches();
 
@@ -182,6 +168,7 @@ describe("PlannedItemForm", () => {
 
     expect(await screen.findByRole("option", { name: "基盤研究費" })).toBeInTheDocument();
     const scheduledMonthInput = screen.getByLabelText("執行予定月");
+    expect(scheduledMonthInput).toHaveAttribute("type", "text");
     fireEvent.change(scheduledMonthInput, { target: { value: "2026/08" } });
     fireEvent.click(screen.getByRole("button", { name: "執行予定月カレンダーを開く" }));
 
@@ -517,14 +504,12 @@ describe("ActualEntryForm", () => {
     fireEvent.change(screen.getByLabelText("費目"), { target: { value: categoryId } });
   }
 
-  function fillActualEntryDetails({ withPlannedItemId = true }: { withPlannedItemId?: boolean } = {}) {
+  function fillActualEntryDetails() {
     fireEvent.change(screen.getByLabelText("実績日"), { target: { value: "2026/09/12" } });
     fireEvent.change(screen.getByLabelText("内容"), { target: { value: "試薬購入" } });
     fireEvent.change(screen.getByLabelText("金額"), { target: { value: "60,000 / 2" } });
     fireEvent.change(screen.getByLabelText("メモ"), { target: { value: "第2便" } });
-    if (withPlannedItemId) {
-      fireEvent.change(screen.getByLabelText("予定項目"), { target: { value: "31" } });
-    }
+    fireEvent.change(screen.getByLabelText("予定項目"), { target: { value: "31" } });
   }
 
   it("renders named fund/category selects, keeps slash-formatted actual dates, and filters planned-item choices", async () => {
@@ -661,7 +646,8 @@ describe("ActualEntryForm", () => {
     renderActualEntryForm();
 
     await selectActualEntryCategory();
-    fillActualEntryDetails({ withPlannedItemId: false });
+    fillActualEntryDetails();
+    fireEvent.change(screen.getByLabelText("金額"), { target: { value: "45000" } });
     fireEvent.click(screen.getByRole("button", { name: "保存" }));
 
     expect(await screen.findByText("残り予定額がマイナスです: -5000")).toBeInTheDocument();

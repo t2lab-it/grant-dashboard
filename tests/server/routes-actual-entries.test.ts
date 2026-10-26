@@ -4,10 +4,8 @@ import { createRouteTestContext } from "./routeTestUtils";
 describe("API actual-entry routes", () => {
   let app: Awaited<ReturnType<typeof createRouteTestContext>>["app"];
   let cleanupContext: () => Promise<void>;
-  const cleanups: Array<() => void> = [];
 
   beforeEach(async () => {
-    cleanups.length = 0;
     const context = await createRouteTestContext("test-routes-actual-entries.db");
     app = context.app;
     cleanupContext = context.cleanup;
@@ -15,9 +13,6 @@ describe("API actual-entry routes", () => {
 
   afterEach(async () => {
     await cleanupContext();
-    while (cleanups.length > 0) {
-      cleanups.pop()?.();
-    }
   });
 
   it("creates an unlinked actual entry", async () => {

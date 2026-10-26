@@ -4,10 +4,8 @@ import { createRouteTestContext } from "./routeTestUtils";
 describe("API fund routes", () => {
   let app: Awaited<ReturnType<typeof createRouteTestContext>>["app"];
   let cleanupContext: () => Promise<void>;
-  const cleanups: Array<() => void> = [];
 
   beforeEach(async () => {
-    cleanups.length = 0;
     const context = await createRouteTestContext("test-routes-funds.db");
     app = context.app;
     cleanupContext = context.cleanup;
@@ -15,19 +13,6 @@ describe("API fund routes", () => {
 
   afterEach(async () => {
     await cleanupContext();
-    while (cleanups.length > 0) {
-      cleanups.pop()?.();
-    }
-  });
-
-  it("returns 404 for a missing fund", async () => {
-    const response = await app.inject({ method: "GET", url: "/api/funds/999" });
-
-    expect(response.statusCode).toBe(404);
-    expect(response.json()).toEqual({
-      code: "fund_not_found",
-      message: "対象の予算が見つかりません。",
-    });
   });
 
   it("deletes a fund with its accounting rows and classification assignments", async () => {

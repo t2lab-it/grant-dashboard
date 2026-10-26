@@ -98,31 +98,6 @@ describe("API import routes", () => {
     expect(response.json().warnings).toHaveLength(2);
   });
 
-  it("returns workbook import preview data when the browser omits the xlsx MIME type", async () => {
-    const fixture = createSimpleWorkbookFixture();
-    cleanups.push(fixture.cleanup);
-
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/imports/workbook/preview",
-      payload: readFileSync(fixture.workbookPath),
-      headers: {
-        "content-type": "application/octet-stream",
-        "x-workbook-filename": basename(fixture.workbookPath),
-      },
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toMatchObject({
-      source_filename: "simple-budget.xlsx",
-      replace: true,
-      counts: {
-        funds: 2,
-        warnings: 2,
-      },
-    });
-  });
-
   it("accepts an uppercase XLSX filename extension", async () => {
     const fixture = createSimpleWorkbookFixture();
     cleanups.push(fixture.cleanup);
@@ -141,6 +116,7 @@ describe("API import routes", () => {
     expect(response.json()).toMatchObject({
       source_filename: "simple-budget.XLSX",
       replace: true,
+      counts: { funds: 2, warnings: 2 },
     });
   });
 
@@ -226,26 +202,6 @@ describe("API import routes", () => {
     );
   });
 
-  it("returns demo import metadata after importing the repository demo workbook", async () => {
-    const workbookPath = resolve("seeds/demo/demo-budget.xlsx");
-
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/imports/workbook",
-      payload: readFileSync(workbookPath),
-      headers: {
-        "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "x-workbook-filename": basename(workbookPath),
-      },
-    });
-
-    expect(response.statusCode).toBe(201);
-    expect(response.json()).toMatchObject({
-      source_filename: "demo-budget.xlsx",
-      demoImport: { eligible: true },
-    });
-  });
-
   it("returns import history summaries and detail payloads", async () => {
     insertImportHistoryFixture(app.db);
 
@@ -288,6 +244,10 @@ describe("API import routes", () => {
     const result = await app.inject({ method: "POST", url: "/api/imports/workbook", payload,
       headers: { "content-type": "application/octet-stream", "x-workbook-filename": "demo-budget.xlsx" } });
     expect(result.statusCode).toBe(201);
+    expect(result.json()).toMatchObject({
+      source_filename: "demo-budget.xlsx",
+      demoImport: { eligible: true },
+    });
     const id = result.json().import_id;
     const stored = JSON.parse((app.db.prepare("SELECT reconciliation_json FROM imports WHERE id = ?").get(id) as {reconciliation_json: string}).reconciliation_json);
     const detail = (await app.inject({ method: "GET", url: `/api/imports/${id}` })).json();

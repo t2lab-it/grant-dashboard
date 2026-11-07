@@ -44,6 +44,8 @@ export function OverviewFundChart({
   const categoryLabel = categoryMetric === null ? "" : metricCopy[categoryMetric].label;
   const categoryAmount = categoryMetric === null ? 0 : getFundMetricValue(categoryMetric, { ...fund, crossAggregateCategories });
   const categoryAmountLabel = categoryAmount === null ? "—" : formatAmount(categoryAmount, amountDisplayMode);
+  const grantShareLabel = categoryAmount === null || fund.awarded_amount <= 0
+    ? "—" : formatPercentage(categoryAmount, fund.awarded_amount);
   const categoryRows = categoryMetric === null ? [] : (crossAggregateCategories ?? []).map((row) => ({
     label: CROSS_AGGREGATE_CATEGORY_LABELS[row.crossAggregateCategory],
     value: getCrossAggregateMetricValue(categoryMetric, row),
@@ -96,6 +98,7 @@ export function OverviewFundChart({
     ...categoryRows.filter((row) => row.value !== 0)
       .map((row) => `${row.label} ${formatAmount(row.value, amountDisplayMode)} ${formatPercentage(row.value, categoryAmount ?? 0)}`),
     ...(categoryStatus ? [categoryStatus] : []),
+    ...(overBudgetAmount > 0 ? [`予算超過 ${formatAmount(overBudgetAmount, amountDisplayMode)}`] : []),
   ].join("、");
 
   return (
@@ -237,18 +240,12 @@ export function OverviewFundChart({
       </div> : null}
       {categoryStatus ? <p className="fund-card-chart-empty">{categoryStatus}</p> : null}
 
-      {categoryMetric === null || overBudgetAmount > 0 ? (
-        <div className="fund-card-chart-metrics">
-          {categoryMetric === null ? (
-            <p className="fund-card-row">
-              <span>{metricLabel}</span>
-              <strong>{formatAmount(metricAmount, amountDisplayMode)}</strong>
-            </p>
-          ) : (
-            <p><strong className="detail-rate-alert">{`予算超過 ${formatAmount(overBudgetAmount, amountDisplayMode)}`}</strong></p>
-          )}
-        </div>
-      ) : null}
+      <div className="fund-card-chart-metrics">
+        <p className="fund-card-row">
+          <span>{categoryMetric === null ? metricLabel : "/交付額"}</span>
+          <strong>{categoryMetric === null ? formatAmount(metricAmount, amountDisplayMode) : grantShareLabel}</strong>
+        </p>
+      </div>
     </div>
   );
 }

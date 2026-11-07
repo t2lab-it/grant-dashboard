@@ -89,10 +89,11 @@ describe("Overview display", () => {
     const second = within(screen.getByRole("link", { name: /超過予算/ }));
     expect(first.getByRole("img", { name: "部分精算 の予算内訳" })).toBeInTheDocument();
     await user.click(within(screen.getByRole("group", { name: "率表示" })).getByRole("button", { name: "残高率" }));
-    for (const [label, amount] of [["費目予算", "800,000円"], ["消化額", "500,000円"], ["執行済額", "200,000円"], ["執行予定額", "300,000円"]]) {
+    for (const [label, amount, share] of [["費目予算", "800,000円", "80.0%"], ["消化額", "500,000円", "50.0%"], ["執行済額", "200,000円", "20.0%"], ["執行予定額", "300,000円", "30.0%"]]) {
       await user.click(hero.getByRole("button", { name: new RegExp(`^${label} `) }));
       expect(first.getByRole("img", { name: `部分精算 の${label}の大費目別内訳グラフ` })).toHaveTextContent(new RegExp(`^${amount}$`));
       expect(first.getByRole("img")).toHaveAccessibleDescription(new RegExp(`${label} ${amount}`));
+      expect(first.getByText("/交付額").parentElement).toHaveTextContent(share);
       expect(screen.getByRole("heading", { name: `${label}の内訳` })).toBeInTheDocument();
       if (label === "費目予算") {
         const panel = within(screen.getByRole("complementary", { name: "予算概要の分析" }));
@@ -159,6 +160,7 @@ describe("Overview display", () => {
     expect(screen.getByText("大費目データなし")).toBeInTheDocument();
     expect(screen.getByText("費目別予算が未設定")).toBeInTheDocument();
     expect(within(screen.getByRole("link", { name: /欠落/ })).getByRole("img")).toHaveTextContent("—");
+    expect(within(screen.getByRole("link", { name: /欠落/ })).getByText("/交付額").parentElement).toHaveTextContent("—");
     const panel = within(screen.getByRole("complementary", { name: "予算概要の分析" }));
     expect(panel.getByText("欠落").closest("li")).toHaveTextContent("内訳取得不可");
     await user.click(hero.getByRole("button", { name: /^執行済額 / }));
@@ -166,7 +168,11 @@ describe("Overview display", () => {
     expect(negative.getByText("正の金額がないため円弧を表示しません。")).toBeInTheDocument();
     expect(negative.getByRole("img")).toHaveAccessibleDescription(/旅費系 -50円 0.0%/);
     const missingFund = within(screen.getByRole("link", { name: /欠落/ }));
-    expect(missingFund.getByText("予算超過 100,000円")).toBeInTheDocument();
+    expect(missingFund.getByText("/交付額").parentElement).toHaveTextContent("40.0%");
+    expect(missingFund.getByRole("img")).toHaveAccessibleDescription(/予算超過 100,000円/);
+    expect(negative.getByText("/交付額").parentElement).toHaveTextContent("—");
+    await user.click(hero.getByRole("button", { name: /^消化額 / }));
+    expect(missingFund.getByText("/交付額").parentElement).toHaveTextContent("110.0%");
     await user.click(screen.getByRole("button", { name: "数値" }));
     expect(missingFund.getByText("予算消化率 [%]")).toBeInTheDocument();
     expect(missingFund.getByText("110.0%")).toBeInTheDocument();
@@ -177,10 +183,10 @@ describe("Overview display", () => {
 
   it("uses zero percentages for a zero consumed total while keeping signed amounts", async () => {
     const user = userEvent.setup();
-    mockOverviewResponse({ totals: { assets: 0, actual: 0, committed: 0, freeBalance: 0 },
-      funds: [buildOverviewFund({ name: "支出", awarded_amount: 0, actual_amount: 50, committed_amount: 0, freeBalance: -50,
+    mockOverviewResponse({ totals: { assets: 200, actual: 0, committed: 0, freeBalance: 200 },
+      funds: [buildOverviewFund({ name: "支出", awarded_amount: 100, actual_amount: 50, committed_amount: 0, freeBalance: 50,
         crossAggregateCategories: [{ crossAggregateCategory: "equipment", budgetAmount: null, actualAmount: 50, plannedAmount: 0 }] }),
-        buildOverviewFund({ id: 2, name: "返金", awarded_amount: 0, actual_amount: -50, committed_amount: 0, freeBalance: 50,
+        buildOverviewFund({ id: 2, name: "返金", awarded_amount: 100, actual_amount: -50, committed_amount: 0, freeBalance: 150,
           crossAggregateCategories: [{ crossAggregateCategory: "travel", budgetAmount: null, actualAmount: -50, plannedAmount: 0 }] })],
       crossAggregateCategories: [
         { crossAggregateCategory: "equipment", budgetAmount: null, actualAmount: 50, plannedAmount: 0 },
@@ -189,6 +195,8 @@ describe("Overview display", () => {
     });
     renderOverviewPage();
     await user.click(await screen.findByRole("button", { name: /^消化額 / }));
+    expect(within(screen.getByRole("link", { name: /支出/ })).getByText("/交付額").parentElement).toHaveTextContent("50.0%");
+    expect(within(screen.getByRole("link", { name: /返金/ })).getByText("/交付額").parentElement).toHaveTextContent("-50.0%");
     const panel = within(screen.getByRole("complementary", { name: "予算概要の分析" }));
     for (const name of ["支出", "返金", "物品系", "旅費系"]) {
       const row = panel.getByText(name).closest("li");

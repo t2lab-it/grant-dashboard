@@ -165,6 +165,28 @@ for (const width of [390, 768, 1440]) {
         expect(add).not.toBeNull();
         expect(ledger).not.toBeNull();
         expect(ledger!.y + ledger!.height / 2).toBeCloseTo(add!.y + add!.height / 2, 0);
+        const displayToggle = page.getByRole("group", { name: "表示切り替え" });
+        const standardPosition = await displayToggle.boundingBox();
+        const headingPosition = await page.getByRole("heading", { name: "予算", exact: true }).boundingBox();
+        const tagSelect = page.getByRole("combobox", { name: "研究プロジェクトタグ" });
+        const tagPosition = await tagSelect.boundingBox();
+        const controlsPosition = await page.locator(".overview-section-controls").boundingBox();
+        expect(standardPosition).not.toBeNull();
+        expect(headingPosition).not.toBeNull();
+        expect(standardPosition!.x).toBeCloseTo(headingPosition!.x, 0);
+        expect(tagPosition).not.toBeNull();
+        expect(controlsPosition).not.toBeNull();
+        expect(tagPosition!.x + tagPosition!.width).toBeCloseTo(controlsPosition!.x + controlsPosition!.width, 0);
+        const consumed = page.getByRole("button", { name: /^消化額 / });
+        await consumed.click();
+        await expect(page.getByRole("group", { name: "率表示" })).toHaveCount(0);
+        const categoryPosition = await displayToggle.boundingBox();
+        expect(categoryPosition?.x).toBeCloseTo(standardPosition!.x, 0);
+        expect(categoryPosition?.y).toBeCloseTo(standardPosition!.y, 0);
+        const categoryTagPosition = await tagSelect.boundingBox();
+        expect(categoryTagPosition?.x).toBeCloseTo(tagPosition!.x, 0);
+        expect(categoryTagPosition?.y).toBeCloseTo(tagPosition!.y, 0);
+        await consumed.click();
       }
       if (path === "/settings?year=2026") {
         await expect(page.locator(".overview-fund-card-legend").first()).toBeVisible();

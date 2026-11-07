@@ -186,6 +186,7 @@ export function OverviewPage() {
   const selectedFiscalYear = data.selectedFiscalYear;
 
   const rateMetric = getRateMetricKey(searchParams.get("rate") ?? defaultRateMetric);
+  const showRateToggle = displayMode === "numeric" || activeSummaryMetric === null;
   const projectTagFilterOptions = getProjectTagFilterOptions(data.funds);
   const requestedProjectTagFilter = searchParams.get("projectTag");
   const projectTagFilter = isProjectTagFilterKey(requestedProjectTagFilter)
@@ -384,9 +385,10 @@ export function OverviewPage() {
               数値
             </button>
           </div>
-          {displayMode === "numeric" || activeSummaryMetric === null ? (
+          <div className="overview-rate-toggle-slot" aria-hidden={!showRateToggle}
+            style={showRateToggle ? undefined : { visibility: "hidden" }}>
             <RateMetricToggle rateMetric={rateMetric} onRateMetricChange={updateOverviewRateMetric} />
-          ) : null}
+          </div>
           {projectTagFilterOptions.projectTags.length > 0 ? (
             <label className="overview-project-tag-select-field">
               <span>研究プロジェクトタグ</span>

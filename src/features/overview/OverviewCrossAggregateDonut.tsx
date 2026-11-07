@@ -20,6 +20,7 @@ export function OverviewCrossAggregateDonut({
 }) {
   const chartSummaryId = useId();
   const copy = metricCopy[metric];
+  const percentageBase = metric === "assets" || metric === "consumed" ? totalValue : totalValue || 1;
   const displayRows = rows
     .map((row) => ({
       ...row,
@@ -34,7 +35,7 @@ export function OverviewCrossAggregateDonut({
   const chartCircumference = 2 * Math.PI * chartRadius;
   let accumulatedPercentage = 0;
   const accessibleSummary = displayRows
-    .map((row) => `${row.label} ${formatAmount(row.value, amountDisplayMode)} ${formatPercentage(row.value, totalValue || 1)}`)
+    .map((row) => `${row.label} ${formatAmount(row.value, amountDisplayMode)} ${formatPercentage(row.value, percentageBase)}`)
     .join("、");
 
   if (displayRows.length === 0) {
@@ -83,6 +84,7 @@ export function OverviewCrossAggregateDonut({
                 );
               })
             : null}
+
         </svg>
         <figcaption id={chartSummaryId} className="sr-only">
           {accessibleSummary}
@@ -97,7 +99,7 @@ export function OverviewCrossAggregateDonut({
             />
             <span className="overview-cross-aggregate-label">{row.label}</span>
             <span className="overview-cross-aggregate-value">{formatAmount(row.value, amountDisplayMode)}</span>
-            <span className="overview-cross-aggregate-share">{`(${formatPercentage(row.value, totalValue || 1)})`}</span>
+            <span className="overview-cross-aggregate-share">{`(${formatPercentage(row.value, percentageBase)})`}</span>
           </li>
         ))}
       </ol>

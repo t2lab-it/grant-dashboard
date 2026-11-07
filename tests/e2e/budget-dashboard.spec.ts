@@ -54,6 +54,55 @@ test("overview to fund detail to form flow works", async ({ page }) => {
   );
 });
 
+test("overview category selection uses the real API and toggles back with keyboard controls", async ({ page }) => {
+  await page.goto("/?year=2026");
+  const dismiss = page.getByRole("button", { name: "今回は始めない" });
+  await dismiss.click();
+  const hero = page.getByRole("group", { name: "年度全体の指標" });
+  await expect(hero.getByRole("button", { pressed: true })).toHaveCount(0);
+  const standardChart = page.getByRole("img", { name: "デモ研究費A の予算内訳" });
+  const standardSize = await standardChart.boundingBox();
+  const standardRing = await standardChart.locator("circle:not([stroke-dasharray])").boundingBox();
+  expect(standardSize).not.toBeNull();
+  expect(standardRing).not.toBeNull();
+  const requests: string[] = [];
+  page.on("request", (request) => { if (/\/api\/(overview|funds\/)/.test(request.url())) requests.push(request.url()); });
+  for (const label of ["費目予算", "消化額"]) {
+    const button = hero.getByRole("button", { name: new RegExp(`^${label} `) });
+    await button.focus();
+    await page.keyboard.press("Enter");
+    await expect(button).toHaveAttribute("aria-pressed", "true");
+    await expect(hero.getByRole("button", { pressed: true })).toHaveCount(1);
+    const chart = page.getByRole("img", { name: `デモ研究費A の${label}の大費目別内訳グラフ` });
+    await expect(chart).toBeVisible();
+    if (label === "費目予算") {
+      const size = await chart.boundingBox();
+      const ring = await chart.locator("circle:not([stroke-dasharray])").boundingBox();
+      expect(size?.width).toBeCloseTo(standardSize!.width, 0);
+      expect(size?.height).toBeCloseTo(standardSize!.height, 0);
+      expect(ring?.width).toBeCloseTo(standardRing!.width, 0);
+      expect(ring?.height).toBeCloseTo(standardRing!.height, 0);
+    }
+    await expect(page.getByLabel("予算の共通凡例")).toBeVisible();
+    await expect(page.getByRole("heading", { name: `${label}の内訳` })).toBeVisible();
+  }
+  await page.keyboard.press("Space");
+  await expect(hero.getByRole("button", { pressed: true })).toHaveCount(0);
+  await expect(page.getByRole("img", { name: "デモ研究費A の予算内訳" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "費目予算の内訳" })).toBeVisible();
+  expect(requests).toEqual([]);
+  await hero.getByRole("button", { name: /^消化額 / }).click();
+  await expect(hero.getByRole("button", { name: /^消化額 [\d,]+円$/ })).toBeVisible();
+  await page.getByRole("button", { name: "2026年6月の月ラベルから消化額サマリを開く" }).click();
+  await expect(page).toHaveURL(/summaryMetric=consumed/);
+  const dialog = page.getByRole("dialog", { name: "2026年6月の予算横断サマリ" });
+  await expect(dialog.getByRole("table", { name: "予算別一覧" }).getByRole("columnheader", { name: "執行＋予定の累計" })).toHaveAttribute("data-highlighted", "true");
+  await dialog.getByRole("button", { name: "翌月" }).click();
+  await expect(page.getByRole("dialog", { name: "2026年7月の予算横断サマリ" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
 test("demo tutorial starts on overview and moves to fund detail", async ({ page }) => {
   const overviewResponsePromise = page.waitForResponse("**/api/overview");
   await page.goto("/");
@@ -67,8 +116,8 @@ test("demo tutorial starts on overview and moves to fund detail", async ({ page 
   await prompt.getByRole("button", { name: "チュートリアルを始める" }).click();
 
   const tutorial = page.getByRole("dialog", { name: "チュートリアル" });
-  await expect(tutorial.getByText("予算総額の内訳")).toBeVisible();
-  await expect(page.getByTestId("tour-target-overview-summary").getByRole("heading", { name: "予算総額の内訳" })).toBeVisible();
+  await expect(tutorial.getByText("費目予算の内訳")).toBeVisible();
+  await expect(page.getByTestId("tour-target-overview-summary").getByRole("heading", { name: "費目予算の内訳" })).toBeVisible();
 
   await tutorial.getByRole("button", { name: "次へ" }).click();
   const fundResponsePromise = page.waitForResponse("**/api/funds/1");
@@ -111,13 +160,42 @@ for (const width of [390, 768, 1440]) {
       if (path === "/?year=2026") {
         const sharedLegend = page.getByLabel("予算の共通凡例");
         const cardLegend = page.locator(".overview-fund-card-legend").first();
-        if (width >= 860) {
-          await expect(sharedLegend).toBeVisible();
-          await expect(cardLegend).not.toBeVisible();
-        } else {
-          await expect(sharedLegend).not.toBeVisible();
-          await expect(cardLegend).toBeVisible();
-        }
+        await expect(sharedLegend).toBeVisible();
+        await expect(cardLegend).not.toBeVisible();
+        const add = await page.getByRole("link", { name: "＋ 予算を追加" }).boundingBox();
+        const ledger = await page.getByRole("link", { name: "収支簿出力" }).boundingBox();
+        expect(add).not.toBeNull();
+        expect(ledger).not.toBeNull();
+        expect(ledger!.y + ledger!.height / 2).toBeCloseTo(add!.y + add!.height / 2, 0);
+        const displayToggle = page.getByRole("group", { name: "表示切り替え" });
+        const standardPosition = await displayToggle.boundingBox();
+        const headingPosition = await page.getByRole("heading", { name: "予算", exact: true }).boundingBox();
+        const tagSelect = page.getByRole("combobox", { name: "研究プロジェクトタグ" });
+        const tagPosition = await tagSelect.boundingBox();
+        const controlsPosition = await page.locator(".overview-section-controls").boundingBox();
+        expect(standardPosition).not.toBeNull();
+        expect(headingPosition).not.toBeNull();
+        expect(standardPosition!.x).toBeCloseTo(headingPosition!.x, 0);
+        expect(tagPosition).not.toBeNull();
+        expect(controlsPosition).not.toBeNull();
+        expect(tagPosition!.x + tagPosition!.width).toBeCloseTo(controlsPosition!.x + controlsPosition!.width, 0);
+        const consumed = page.getByRole("button", { name: /^消化額 / });
+        await consumed.click();
+        await expect(page.getByRole("group", { name: "率表示" })).toHaveCount(0);
+        const categoryPosition = await displayToggle.boundingBox();
+        expect(categoryPosition?.x).toBeCloseTo(standardPosition!.x, 0);
+        expect(categoryPosition?.y).toBeCloseTo(standardPosition!.y, 0);
+        const categoryTagPosition = await tagSelect.boundingBox();
+        expect(categoryTagPosition?.x).toBeCloseTo(tagPosition!.x, 0);
+        expect(categoryTagPosition?.y).toBeCloseTo(tagPosition!.y, 0);
+        const numericButton = displayToggle.getByRole("button", { name: "数値", exact: true });
+        await numericButton.focus();
+        await page.keyboard.press("Tab");
+        await expect(tagSelect).toBeFocused();
+        await consumed.click();
+        await numericButton.focus();
+        await page.keyboard.press("Tab");
+        await expect(page.getByRole("button", { name: "予算消化率", exact: true })).toBeFocused();
       }
       if (path === "/settings?year=2026") {
         await expect(page.locator(".overview-fund-card-legend").first()).toBeVisible();
@@ -185,7 +263,7 @@ test("preserves form input on failure, saves and reloads it, then settles only t
   await expect(page.locator('[data-search-focus="true"]')).toContainText("回帰確認の購入予定");
 });
 
-test("keeps a directly opened monthly summary above the startup prompt and follows year links", async ({ page }) => {
+test("keeps a directly opened balance monthly summary above the startup prompt and follows year links", async ({ page }) => {
   await page.goto("/?year=2026&month=2026-06&summaryMetric=balance");
   const summary = page.getByRole("dialog", { name: "2026年6月の予算横断サマリ" });
   await expect(summary).toBeVisible();
@@ -259,10 +337,11 @@ test("keeps long budget names, classification tags and large amounts within the 
       fund.name += "研究プロジェクト".repeat(20) + "UnbrokenIdentifier".repeat(20);
       for (const tag of fund.projectTags) tag.name += "UnbrokenClassification".repeat(20);
     }
-    data.totals.assets = 4200000000000;
+    data.crossAggregateCategories[0].budgetAmount = 4200000000000;
+    for (const row of data.crossAggregateCategories.slice(1)) row.budgetAmount = null;
     await route.fulfill({response, json: data});
   });
   await page.goto("/?year=2026");
-  await expect(page.getByRole("button", {name: /^予算総額 /})).toContainText("4,200,000,000,000円");
+  await expect(page.getByRole("button", {name: /^費目予算 /})).toContainText("4,200,000,000,000円");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });

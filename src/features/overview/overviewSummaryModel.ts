@@ -4,7 +4,11 @@ import type { OverviewCrossAggregateCategory, OverviewMonthlyStatus, OverviewSum
 
 export const metricCopy = {
   assets: {
-    label: "予算総額",
+    label: "費目予算",
+    trendLabel: "執行＋予定の累計",
+  },
+  consumed: {
+    label: "消化額",
     trendLabel: "執行＋予定の累計",
   },
   actual: {
@@ -23,10 +27,16 @@ export const metricCopy = {
   },
 } as const;
 
-export function getTotalMetricValue(metric: OverviewSummaryMetricKey, totals: OverviewTotals) {
+export function getCategoryBudgetTotal(rows: OverviewCrossAggregateCategory[]) {
+  return rows.reduce((sum, row) => sum + (row.budgetAmount ?? 0), 0);
+}
+
+export function getTotalMetricValue(metric: OverviewSummaryMetricKey, totals: OverviewTotals, categories: OverviewCrossAggregateCategory[]) {
   switch (metric) {
     case "assets":
-      return totals.assets;
+      return getCategoryBudgetTotal(categories);
+    case "consumed":
+      return totals.actual + totals.committed;
     case "actual":
       return totals.actual;
     case "committed":
@@ -35,10 +45,12 @@ export function getTotalMetricValue(metric: OverviewSummaryMetricKey, totals: Ov
       return totals.freeBalance;
   }
 }
-export function getFundMetricValue(metric: OverviewSummaryMetricKey, fund: OverviewSummaryFund) {
+export function getFundMetricValue(metric: OverviewSummaryMetricKey, fund: Omit<OverviewSummaryFund, "id">) {
   switch (metric) {
     case "assets":
-      return fund.awarded_amount;
+      return fund.crossAggregateCategories === undefined ? null : getCategoryBudgetTotal(fund.crossAggregateCategories);
+    case "consumed":
+      return fund.actual_amount + fund.committed_amount;
     case "actual":
       return fund.actual_amount;
     case "committed":
@@ -55,6 +67,8 @@ export function getCrossAggregateMetricValue(
   switch (metric) {
     case "assets":
       return row.budgetAmount ?? 0;
+    case "consumed":
+      return row.actualAmount + row.plannedAmount;
     case "actual":
       return row.actualAmount;
     case "committed":
@@ -67,6 +81,7 @@ export function getCrossAggregateMetricValue(
 export function getMonthlyMetricValue(metric: OverviewSummaryMetricKey, month: OverviewMonthlyStatus, totalAssets: number) {
   switch (metric) {
     case "assets":
+    case "consumed":
       return totalAssets - month.balance;
     case "actual":
       return month.actual;
@@ -119,6 +134,7 @@ export function getMonthlyMetricSeries(
 export function getTrendTargetValue(metric: OverviewSummaryMetricKey, totals: OverviewTotals) {
   switch (metric) {
     case "assets":
+    case "consumed":
     case "actual":
       return totals.assets;
     case "committed":
@@ -312,7 +328,7 @@ export function getTodayProgressLabelPlacement({
 }
 
 export function getIdealLineStartValue(metric: OverviewSummaryMetricKey, points: OverviewTrendPoint[]) {
-  if (metric === "assets" || metric === "actual") {
+  if (metric === "assets" || metric === "consumed" || metric === "actual") {
     return 0;
   }
 

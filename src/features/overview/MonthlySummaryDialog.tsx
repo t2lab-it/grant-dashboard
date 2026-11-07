@@ -25,6 +25,7 @@ type MonthlySummaryValueKey =
 
 const metricValueKeys: Record<OverviewSummaryMetricKey, MonthlySummaryValueKey> = {
   assets: "spendAndPlannedCumulativeAmount",
+  consumed: "spendAndPlannedCumulativeAmount",
   actual: "actualCumulativeAmount",
   committed: "plannedRemainingAmount",
   balance: "calculatedBalance",
@@ -40,7 +41,7 @@ const coreTableColumns: MonthlySummaryColumn[] = [
 ];
 
 function getTableColumns(metric: OverviewSummaryMetricKey) {
-  const extraColumn: MonthlySummaryColumn | null = metric === "assets"
+  const extraColumn: MonthlySummaryColumn | null = (metric === "assets" || metric === "consumed")
     ? { key: "spendAndPlannedCumulativeAmount", label: "執行＋予定の累計" }
     : metric === "committed"
       ? { key: "plannedRemainingAmount", label: "当月以降の未実行予定残高" }
@@ -168,7 +169,7 @@ export function MonthlySummaryDialog({
                   <strong>{formatAmount(data.summary.plannedRemainingAmount, amountDisplayMode)}</strong>
                 </article>
               ) : null}
-              {metric === "assets" ? (
+              {metric === "assets" || metric === "consumed" ? (
                 <article {...highlightedAttributes(true)}>
                   <span>執行＋予定の累計</span>
                   <strong>{formatAmount(data.summary.spendAndPlannedCumulativeAmount, amountDisplayMode)}</strong>

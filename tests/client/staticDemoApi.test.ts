@@ -3,7 +3,7 @@ import {
   handleStaticDemoRequest,
   resetStaticDemoStore,
 } from "../../src/demo/staticDemoApi";
-import { readStaticDemoState } from "../../src/demo/staticDemoState";
+import { mutateStaticDemoState, readStaticDemoState } from "../../src/demo/staticDemoState";
 
 async function readJson(response: Response) {
   return (await response.json()) as Record<string, unknown>;
@@ -132,6 +132,18 @@ describe("static demo API", () => {
     });
   });
 
+  test("preserves null category budgets in overview while keeping partial settlements", async () => {
+    mutateStaticDemoState((state) => {
+      state.budget_lines = state.budget_lines.filter((line) => line.fund_id !== 1);
+      state.budget_lines.push({ id: 999, fund_id: 1, category_id: 1, amount: null, notes: "未設定" });
+    });
+    const overview = await readJson(await handleStaticDemoRequest("/api/overview?year=2026", { method: "GET" })) as unknown as import("../../src/features/overview/OverviewPage").OverviewResponse;
+    const fund = overview.funds.find((row) => row.id === 1)!;
+    expect(fund.crossAggregateCategories.every((row) => row.budgetAmount === null)).toBe(true);
+    expect(fund.crossAggregateCategories.find((row) => row.crossAggregateCategory === "equipment"))
+      .toMatchObject({ budgetAmount: null, actualAmount: 345000, plannedAmount: 475000 });
+  });
+
   test("builds overview from demo seed data", async () => {
     const response = await handleStaticDemoRequest("/api/overview", { method: "GET" });
     const data = await readJson(response);
@@ -161,6 +173,10 @@ describe("static demo API", () => {
       expect.arrayContaining([
         expect.objectContaining({
           name: "デモ研究費A",
+          crossAggregateCategories: [
+            { crossAggregateCategory: "equipment", budgetAmount: 1200000, actualAmount: 345000, plannedAmount: 475000 },
+            { crossAggregateCategory: "travel", budgetAmount: 400000, actualAmount: 185000, plannedAmount: 180000 },
+          ],
         }),
       ]),
     );

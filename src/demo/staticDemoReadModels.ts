@@ -1,6 +1,5 @@
 import { cloneStaticDemoSeedState, type StaticDemoState } from "./staticDemoData";
 import { CROSS_AGGREGATE_CATEGORY_CODES } from "../contracts/crossAggregateCategory";
-import type { CrossAggregateCategory } from "../contracts/crossAggregateCategory";
 import type { FiscalYearComparisonResponse } from "../contracts/fiscalYearComparison";
 import { buildMonthlySummaryAmounts, type MonthlySummaryResponse } from "../contracts/monthlySummary";
 import type { HeaderAlertCategory, HeaderAlertDetail, HeaderAlertItem } from "../contracts/headerAlerts";
@@ -82,6 +81,7 @@ export function getStaticOverviewSnapshot(requestedFiscalYear?: number) {
       committed_amount,
       actual_amount,
       freeBalance: toFreeBalance(fund.awarded_amount, committed_amount, actual_amount),
+      crossAggregateCategories: getStaticOverviewCrossAggregateCategories(state, fund.fiscal_year, fund.id),
       projectTags: assignedStaticTags(state, "fund", fund.id).filter((tag) => tag.kind === "project"),
     };
   });
@@ -568,35 +568,7 @@ export function getStaticFundSnapshot(fundId: number) {
       actualAmount,
     };
   });
-  const crossAggregateCategories = Array.from(
-    categorySnapshots.reduce(
-      (rowsByCategory, category) => {
-        const current = rowsByCategory.get(category.crossAggregateCategory) ?? {
-          crossAggregateCategory: category.crossAggregateCategory,
-          budgetAmount: null,
-          plannedAmount: 0,
-          actualAmount: 0,
-        };
-        current.budgetAmount =
-          current.budgetAmount === null && category.budgetAmount === null
-            ? null
-            : (current.budgetAmount ?? 0) + (category.budgetAmount ?? 0);
-        current.plannedAmount += category.plannedAmount;
-        current.actualAmount += category.actualAmount;
-        rowsByCategory.set(category.crossAggregateCategory, current);
-        return rowsByCategory;
-      },
-      new Map<
-        CrossAggregateCategory,
-        {
-          crossAggregateCategory: CrossAggregateCategory;
-          budgetAmount: number | null;
-          plannedAmount: number;
-          actualAmount: number;
-        }
-      >(),
-    ).values(),
-  );
+  const crossAggregateCategories = getStaticOverviewCrossAggregateCategories(state, fund.fiscal_year, fundId);
   const monthlyStatus = getFundMonthlyStatus(state, fundId);
   const plannedItemHistory = state.planned_items
     .filter((item) => item.fund_id === fundId && (item.status === "cancelled" || item.status === "completed"))

@@ -35,6 +35,37 @@ describe("dashboard calculations", () => {
     `);
   });
 
+  it("keeps fund category budgets and remaining commitments scoped to each fund and year", () => {
+    db.exec(`
+      INSERT INTO funds (id, name, fiscal_year, awarded_amount, display_order) VALUES
+        (2, '部分精算', 2026, 1000000, 2), (3, '翌年度', 2027, 9000000, 3);
+      INSERT INTO categories (id, fund_id, category_code, name, cross_aggregate_category, display_order) VALUES
+        (4, 2, 'partial', '未配分物品', 'equipment', 1),
+        (5, 2, 'unset', '分類なし', 'unset', 2),
+        (6, 3, 'next', '翌年', 'equipment', 1);
+      INSERT INTO planned_items (id, fund_id, category_id, planned_date, scheduled_month, description, amount, status) VALUES
+        (7, 2, 4, '2026-06-01', '2026-06', '部分', 500000, 'planned'),
+        (8, 2, 5, '2026-06-01', '2026-06', '完了', 80000, 'completed'),
+        (9, 2, 5, '2026-06-01', '2026-06', '取消', 90000, 'cancelled'),
+        (10, 3, 6, '2027-06-01', '2027-06', '翌年', 900000, 'planned');
+      INSERT INTO actual_entries (id, fund_id, category_id, planned_item_id, actual_date, description, amount) VALUES
+        (4, 2, 4, 7, '2026-06-15', '精算', 200000);
+    `);
+    const snapshot = getOverviewSnapshot(db, { fiscalYear: 2026 });
+    expect(snapshot.funds.find((fund) => fund.id === 2)).toMatchObject({ actual_amount: 200000, committed_amount: 300000,
+      crossAggregateCategories: [
+        { crossAggregateCategory: "equipment", budgetAmount: null, plannedAmount: 300000, actualAmount: 200000 },
+        { crossAggregateCategory: "unset", budgetAmount: null, plannedAmount: 0, actualAmount: 0 },
+      ],
+    });
+    for (const row of snapshot.crossAggregateCategories) {
+      const rows = snapshot.funds.flatMap((fund) => fund.crossAggregateCategories)
+        .filter((item) => item.crossAggregateCategory === row.crossAggregateCategory);
+      expect(rows.reduce((sum, item) => sum + item.actualAmount, 0)).toBe(row.actualAmount);
+      expect(rows.reduce((sum, item) => sum + item.plannedAmount, 0)).toBe(row.plannedAmount);
+    }
+  });
+
   it("computes overview totals from normalized records", () => {
     const snapshot = getOverviewSnapshot(db);
 

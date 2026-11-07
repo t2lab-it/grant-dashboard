@@ -1,3 +1,4 @@
+import type { CrossAggregateCategoryAmounts } from "../../src/contracts/crossAggregateCategory";
 import type Database from "better-sqlite3";
 import type { CrossAggregateCategory } from "../../src/contracts/crossAggregateCategory";
 
@@ -21,12 +22,7 @@ export type FundCategoryAggregateRow = {
   actualAmount: number;
 };
 
-export type FundCrossAggregateCategoryRow = {
-  crossAggregateCategory: CrossAggregateCategory;
-  budgetAmount: number | null;
-  plannedAmount: number;
-  actualAmount: number;
-};
+export type FundCrossAggregateCategoryRow = CrossAggregateCategoryAmounts;
 
 export type OverviewCrossAggregateCategoryRow = FundCrossAggregateCategoryRow;
 

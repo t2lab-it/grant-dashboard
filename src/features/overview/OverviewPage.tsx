@@ -24,9 +24,12 @@ import { MonthlySummaryDialog } from "./MonthlySummaryDialog";
 import { OverviewSummaryPanel, type OverviewSummaryMetricKey } from "./OverviewSummaryPanel";
 import {
   getOverviewChartPalette,
+  getCrossAggregateChartColors,
   type OverviewChartFund,
 } from "./overviewChart";
-import type { CrossAggregateCategory } from "../../contracts/crossAggregateCategory";
+import { CROSS_AGGREGATE_CATEGORY_CODES, CROSS_AGGREGATE_CATEGORY_LABELS, type CrossAggregateCategoryAmounts } from "../../contracts/crossAggregateCategory";
+import type { OverviewSelectableMetricKey } from "./overviewSummaryTypes";
+import { getCategoryBudgetTotal, metricCopy } from "./overviewSummaryModel";
 import { RateMetricToggle } from "../funds/RateMetricToggle";
 import { setRateSearchParam } from "../funds/rateQueryParams";
 import type { RateMetricKey } from "../../lib/executionRate";
@@ -82,12 +85,7 @@ export type OverviewResponse = FiscalYearOverviewFields & {
   }>;
   linkedActualAmount: number;
   pendingPlannedCount: number;
-  crossAggregateCategories: Array<{
-    crossAggregateCategory: CrossAggregateCategory;
-    budgetAmount: number | null;
-    plannedAmount: number;
-    actualAmount: number;
-  }>;
+  crossAggregateCategories: CrossAggregateCategoryAmounts[];
   yearEndRisk: YearEndRiskSummary;
   latestImport: {
     id: number;
@@ -99,7 +97,7 @@ export type OverviewResponse = FiscalYearOverviewFields & {
   tutorial: {
     eligibleDemoData: boolean;
   };
-  funds: Array<{ id: number; projectTags: ClassificationTag[] } & OverviewChartFund>;
+  funds: Array<{ id: number; projectTags: ClassificationTag[]; crossAggregateCategories: CrossAggregateCategoryAmounts[] } & OverviewChartFund>;
 };
 
 type ProjectTagFilterKey = "all" | "unassigned" | `tag-${number}`;
@@ -113,7 +111,7 @@ function isProjectTagFilterKey(value: string | null): value is ProjectTagFilterK
 }
 
 function isOverviewSummaryMetric(value: string | null): value is OverviewSummaryMetricKey {
-  return value === "assets" || value === "actual" || value === "committed" || value === "balance";
+  return value === "assets" || value === "consumed" || value === "actual" || value === "committed" || value === "balance";
 }
 
 function projectTagFilterMatchesFund(
@@ -160,7 +158,7 @@ export function OverviewPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const requestedFiscalYear = getFiscalYearFromSearch(`?${searchParams.toString()}`);
-  const [activeSummaryMetric, setActiveSummaryMetric] = useState<OverviewSummaryMetricKey>("assets");
+  const [activeSummaryMetric, setActiveSummaryMetric] = useState<OverviewSelectableMetricKey | null>(null);
   const {
     settings: {
       themePreset,
@@ -188,6 +186,7 @@ export function OverviewPage() {
   const selectedFiscalYear = data.selectedFiscalYear;
 
   const rateMetric = getRateMetricKey(searchParams.get("rate") ?? defaultRateMetric);
+  const showRateToggle = displayMode === "numeric" || activeSummaryMetric === null;
   const projectTagFilterOptions = getProjectTagFilterOptions(data.funds);
   const requestedProjectTagFilter = searchParams.get("projectTag");
   const projectTagFilter = isProjectTagFilterKey(requestedProjectTagFilter)
@@ -204,6 +203,13 @@ export function OverviewPage() {
   const filteredFunds = data.funds.filter((fund) => projectTagFilterMatchesFund(activeProjectTagFilter, fund));
   const palette = getOverviewChartPalette(themePreset, customChartPresets);
   const monthlyStatus = data.monthlyStatus;
+  const crossAggregateOrder = new Map(data.crossAggregateCategories.map((row, index) => [row.crossAggregateCategory, index]));
+  const categoryColors = getCrossAggregateChartColors(palette);
+  const sharedLegend = activeSummaryMetric === null
+    ? [["執行済", palette.actual], ["執行予定", palette.committed], ["残高", palette.balance]]
+    : [...CROSS_AGGREGATE_CATEGORY_CODES]
+      .sort((left, right) => (crossAggregateOrder.get(left) ?? crossAggregateOrder.size) - (crossAggregateOrder.get(right) ?? crossAggregateOrder.size))
+      .map((code) => [CROSS_AGGREGATE_CATEGORY_LABELS[code], categoryColors[code]]);
   const assetsHeroStyle: HeroCardStyle = {
     "--hero-card-accent-start": "rgba(255, 255, 255, 0.96)",
     "--hero-card-accent-end": "rgba(148, 163, 184, 0.16)",
@@ -217,17 +223,7 @@ export function OverviewPage() {
   };
   const actualHeroStyle = createTintedHeroStyle(palette.actual);
   const committedHeroStyle = createTintedHeroStyle(palette.committed);
-  const balanceHeroStyle: HeroCardStyle = {
-    "--hero-card-accent-start": "rgba(255, 255, 255, 0.96)",
-    "--hero-card-accent-end": palette.balance,
-    "--hero-card-base": palette.balance,
-    "--hero-card-border": palette.balanceBorder,
-    "--hero-card-dark-top": "rgba(25, 38, 57, 0.98)",
-    "--hero-card-dark-bottom": "rgba(18, 28, 43, 0.98)",
-    "--hero-card-dark-glow": hexToRgba(palette.balance, 0.28),
-    "--hero-card-dark-border": hexToRgba(palette.balanceBorder, 0.38),
-    "--hero-card-dark-active-border": hexToRgba(palette.balanceBorder, 0.54),
-  };
+  const consumedHeroStyle = createTintedHeroStyle(palette.actual);
 
   function updateOverviewRateMetric(value: RateMetricKey) {
     const nextParams = new URLSearchParams(searchParams);
@@ -255,7 +251,7 @@ export function OverviewPage() {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set("year", String(selectedFiscalYear));
     nextParams.set("month", month);
-    nextParams.set("summaryMetric", activeSummaryMetric);
+    nextParams.set("summaryMetric", activeSummaryMetric ?? "assets");
     setSearchParams(nextParams, {
       state: { monthlySummaryBackgroundSearch: searchParams.toString() },
     });
@@ -299,15 +295,15 @@ export function OverviewPage() {
       ? requestedSummaryMonth
       : null;
   const heroCards: Array<{
-    key: OverviewSummaryMetricKey;
+    key: OverviewSelectableMetricKey;
     label: string;
     amount: number;
     style?: CSSProperties;
   }> = [
-    { key: "assets", label: "予算総額", amount: data.totals.assets, style: assetsHeroStyle as CSSProperties },
+    { key: "assets", label: metricCopy.assets.label, amount: getCategoryBudgetTotal(data.crossAggregateCategories), style: assetsHeroStyle as CSSProperties },
+    { key: "consumed", label: "消化額", amount: data.totals.actual + data.totals.committed, style: consumedHeroStyle },
     { key: "actual", label: "執行済額", amount: data.totals.actual, style: actualHeroStyle as CSSProperties },
     { key: "committed", label: "執行予定額", amount: data.totals.committed, style: committedHeroStyle as CSSProperties },
-    { key: "balance", label: "残高", amount: data.totals.freeBalance, style: balanceHeroStyle as CSSProperties },
   ];
   const shouldShowFirstRunGuide = !staticDemoMode && (data.funds.length === 0 || data.latestImport === null);
 
@@ -335,9 +331,8 @@ export function OverviewPage() {
               style={card.style}
               data-tour-id={`overview-summary-card-${card.key}`}
               aria-controls="overview-summary-context"
-              aria-expanded={isActive}
               aria-pressed={isActive}
-              onClick={() => setActiveSummaryMetric(card.key)}
+              onClick={() => setActiveSummaryMetric(isActive ? null : card.key)}
             >
               <p>{card.label}</p>
               <strong className="hero-card-amount">{formatAmount(card.amount, amountDisplayMode)}</strong>
@@ -360,6 +355,16 @@ export function OverviewPage() {
         <div className="overview-section-title-actions">
           <h2 id="overview-funds-heading">予算</h2>
           <Link className="detail-action-button" to={data.selectedFiscalYear === null ? "/funds/new" : `/funds/new${setFiscalYearInSearch("", data.selectedFiscalYear)}`}>＋ 予算を追加</Link>
+          {staticDemoMode ? null : (
+            <a
+              className="detail-action-button"
+              href={requestedFiscalYear === undefined
+                ? "/api/exports/ledger.xlsx"
+                : `/api/exports/ledger.xlsx?year=${requestedFiscalYear}`}
+            >
+              収支簿出力
+            </a>
+          )}
         </div>
         <div className="overview-section-controls">
           <div className="overview-display-toggle" role="group" aria-label="表示切り替え">
@@ -380,7 +385,10 @@ export function OverviewPage() {
               数値
             </button>
           </div>
-          <RateMetricToggle rateMetric={rateMetric} onRateMetricChange={updateOverviewRateMetric} />
+          <div className="overview-rate-toggle-slot" aria-hidden={!showRateToggle}
+            style={showRateToggle ? undefined : { visibility: "hidden" }}>
+            <RateMetricToggle rateMetric={rateMetric} onRateMetricChange={updateOverviewRateMetric} />
+          </div>
           {projectTagFilterOptions.projectTags.length > 0 ? (
             <label className="overview-project-tag-select-field">
               <span>研究プロジェクトタグ</span>
@@ -407,21 +415,11 @@ export function OverviewPage() {
               </select>
             </label>
           ) : null}
-          {staticDemoMode ? null : (
-            <a
-              className="detail-action-button"
-              href={requestedFiscalYear === undefined
-                ? "/api/exports/ledger.xlsx"
-                : `/api/exports/ledger.xlsx?year=${requestedFiscalYear}`}
-            >
-              収支簿出力
-            </a>
-          )}
         </div>
       </header>
       {displayMode === "chart" ? (
         <div className="overview-shared-legend" aria-label="予算の共通凡例">
-          {([ ["執行済", palette.actual], ["執行予定", palette.committed], ["残高", palette.balance] ] as const).map(([label, color]) => (
+          {sharedLegend.map(([label, color]) => (
             <span key={label}><i className="fund-card-legend-chip" style={{ backgroundColor: color }} aria-hidden="true" />{label}</span>
           ))}
         </div>
@@ -472,6 +470,11 @@ export function OverviewPage() {
               {displayMode === "chart" ? (
                 <OverviewFundChart
                   fund={fund}
+                  categoryMetric={activeSummaryMetric}
+                  crossAggregateCategories={fund.crossAggregateCategories?.slice().sort((left, right) =>
+                    (crossAggregateOrder.get(left.crossAggregateCategory) ?? crossAggregateOrder.size)
+                    - (crossAggregateOrder.get(right.crossAggregateCategory) ?? crossAggregateOrder.size),
+                  )}
                   palette={palette}
                   rateMetric={rateMetric}
                   amountDisplayMode={amountDisplayMode}
@@ -509,7 +512,7 @@ export function OverviewPage() {
       </section>
       <OverviewSummaryPanel
         id="overview-summary-context"
-        metric={activeSummaryMetric}
+        metric={activeSummaryMetric ?? "assets"}
         totals={data.totals}
         funds={data.funds}
         monthlyStatus={monthlyStatus}

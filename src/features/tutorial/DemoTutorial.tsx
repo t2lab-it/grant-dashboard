@@ -85,7 +85,7 @@ export function DemoTutorial({ eligible, firstFundId, selectedFiscalYear }: Demo
   const summaryMetric = params.get("summaryMetric");
   const isMonthlySummaryOpen = location.pathname === "/" && selectedFiscalYear !== null
     && summaryMonth !== null && isMonthKey(summaryMonth) && isFiscalYearMonth(selectedFiscalYear, summaryMonth)
-    && ["assets", "actual", "committed", "balance"].includes(summaryMetric ?? "");
+    && ["assets", "consumed", "actual", "committed", "balance"].includes(summaryMetric ?? "");
 
   useEffect(() => {
     if (isMonthlySummaryOpen || !eligible || location.pathname !== "/" || activeStepIndex !== null || hasPromptedThisStartup) {

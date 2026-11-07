@@ -19,3 +19,10 @@ export const CROSS_AGGREGATE_CATEGORY_LABELS: Record<CrossAggregateCategory, str
 export function isCrossAggregateCategory(value: string): value is CrossAggregateCategory {
   return CROSS_AGGREGATE_CATEGORY_CODES.includes(value as CrossAggregateCategory);
 }
+
+export type CrossAggregateCategoryAmounts = {
+  crossAggregateCategory: CrossAggregateCategory;
+  budgetAmount: number | null;
+  plannedAmount: number;
+  actualAmount: number;
+};

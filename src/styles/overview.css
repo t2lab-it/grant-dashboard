@@ -68,10 +68,10 @@
 }
 
 .overview-section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
 }
 
 .overview-section-header h2 {
@@ -89,9 +89,19 @@
 .overview-section-controls {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
   gap: 12px;
+}
+
+.overview-rate-toggle-slot {
+  display: flex;
+}
+
+@media (max-width: 720px) {
+  .overview-rate-toggle-slot {
+    width: 100%;
+  }
 }
 
 .overview-display-toggle {
@@ -130,6 +140,7 @@
 
 .overview-project-tag-select-field {
   display: inline-flex;
+  margin-inline-start: auto;
   align-items: center;
   gap: 8px;
   color: var(--app-text-muted);
@@ -1009,9 +1020,10 @@
 }
 
 .overview-funds { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-content: start; }
-.overview-section-header { flex-wrap: wrap; align-items: center; }
 .overview-section-controls { flex-wrap: wrap; }
-.overview-shared-legend { display: none; }
+.overview-shared-legend { display: flex; flex-wrap: wrap; gap: 10px 16px; font-size: .85rem; }
+.overview-shared-legend > span { display: flex; align-items: center; gap: 6px; }
+.overview-funds .overview-fund-card-legend { display: none; }
 .fund-card > h3 { margin: 0; font-size: 1.1rem; }
 .overview-hero-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--hero-card-min-width, 9rem)), 1fr)); }
 .hero-card-amount { overflow-wrap: anywhere; white-space: normal; }
@@ -1020,9 +1032,6 @@
   .overview-hero-grid, .first-run-card { grid-column: 1 / -1; }
   .overview-context-panel { grid-column: 2; grid-row: auto / span 2; }
   .overview-funds, .overview-latest-import { grid-column: 1; }
-  .overview-shared-legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: .85rem; }
-  .overview-shared-legend > span { display: flex; align-items: center; gap: 6px; }
-  .overview-funds .overview-fund-card-legend { display: none; }
 }
 
 .first-run-choice { display: grid; align-content: start; gap: 12px; padding-block: 8px; }
@@ -1059,3 +1068,15 @@
 @media (max-width: 640px) {
   .hero-card { padding: 16px; }
 }
+
+/* A persistent inset border distinguishes selection from hover and keyboard focus. */
+.hero-card-button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--hero-card-base) 65%, #dbeafe);
+  box-shadow: inset 0 0 0 2px #1d4ed8, var(--shadow-card-hover);
+}
+:root[data-theme="dark"] .hero-card-button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--hero-card-dark-bottom) 70%, #1d4ed8);
+  box-shadow: inset 0 0 0 2px #93c5fd, 0 18px 36px rgba(2, 6, 23, 0.42);
+}
+.fund-card-donut-value.fund-card-donut-metric-amount { font-size: 12px; }
+.fund-card-chart-empty { font-size: .8rem; line-height: 1.5; }

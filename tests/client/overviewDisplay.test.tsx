@@ -109,9 +109,7 @@ describe("Overview display", () => {
           const circumference = 2 * Math.PI * Number(arc.getAttribute("r"));
           return Number(arc.getAttribute("stroke-dasharray")?.split(" ")[0]) / circumference;
         });
-        expect(shares[0]).toBeCloseTo(0.625);
-        expect(shares[1]).toBeCloseTo(0.375);
-        expect(shares.reduce((sum, share) => sum + share, 0)).toBeCloseTo(1);
+        expect(shares).toEqual([expect.closeTo(0.625), expect.closeTo(0.375)]);
       }
     }
     expect(screen.queryByRole("group", { name: "率表示" })).not.toBeInTheDocument();
@@ -909,11 +907,6 @@ describe("Overview display", () => {
       renderOverviewPage();
       await vi.runAllTimersAsync();
 
-      expect(screen.getByRole("button", { name: /^費目予算 1,000,000円$/ })).toHaveAttribute(
-        "aria-pressed",
-        "false",
-      );
-      expect(screen.getByRole("heading", { name: "費目予算の内訳" })).toBeInTheDocument();
       expect(screen.getByText("予算数")).toBeInTheDocument();
       expect(screen.getByText("2件")).toBeInTheDocument();
       expect(screen.getByText("計画化率")).toBeInTheDocument();

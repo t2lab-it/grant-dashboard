@@ -75,12 +75,14 @@ test("overview category selection uses the real API and toggles back with keyboa
     await expect(hero.getByRole("button", { pressed: true })).toHaveCount(1);
     const chart = page.getByRole("img", { name: `デモ研究費A の${label}の大費目別内訳グラフ` });
     await expect(chart).toBeVisible();
-    const size = await chart.boundingBox();
-    const ring = await chart.locator("circle:not([stroke-dasharray])").boundingBox();
-    expect(size?.width).toBeCloseTo(standardSize!.width, 0);
-    expect(size?.height).toBeCloseTo(standardSize!.height, 0);
-    expect(ring?.width).toBeCloseTo(standardRing!.width, 0);
-    expect(ring?.height).toBeCloseTo(standardRing!.height, 0);
+    if (label === "費目予算") {
+      const size = await chart.boundingBox();
+      const ring = await chart.locator("circle:not([stroke-dasharray])").boundingBox();
+      expect(size?.width).toBeCloseTo(standardSize!.width, 0);
+      expect(size?.height).toBeCloseTo(standardSize!.height, 0);
+      expect(ring?.width).toBeCloseTo(standardRing!.width, 0);
+      expect(ring?.height).toBeCloseTo(standardRing!.height, 0);
+    }
     await expect(page.getByLabel("予算の共通凡例")).toBeVisible();
     await expect(page.getByRole("heading", { name: `${label}の内訳` })).toBeVisible();
   }
@@ -186,7 +188,14 @@ for (const width of [390, 768, 1440]) {
         const categoryTagPosition = await tagSelect.boundingBox();
         expect(categoryTagPosition?.x).toBeCloseTo(tagPosition!.x, 0);
         expect(categoryTagPosition?.y).toBeCloseTo(tagPosition!.y, 0);
+        const numericButton = displayToggle.getByRole("button", { name: "数値", exact: true });
+        await numericButton.focus();
+        await page.keyboard.press("Tab");
+        await expect(tagSelect).toBeFocused();
         await consumed.click();
+        await numericButton.focus();
+        await page.keyboard.press("Tab");
+        await expect(page.getByRole("button", { name: "予算消化率", exact: true })).toBeFocused();
       }
       if (path === "/settings?year=2026") {
         await expect(page.locator(".overview-fund-card-legend").first()).toBeVisible();

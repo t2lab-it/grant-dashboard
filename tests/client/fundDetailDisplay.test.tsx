@@ -374,7 +374,7 @@ describe("Fund detail display", () => {
     expect(within(chart).getByText("超過")).toBeInTheDocument();
     expect(within(chart).getByText("-100,000円")).toBeInTheDocument();
     const totals = within(fundPage.getByRole("table", { name: "費目別の状況" })).getByRole("row", { name: /^合計/ });
-    expect(within(totals).getByRole("cell", { name: "残高 -100,000円" })).toBeInTheDocument();
+    expect(within(totals).getByRole("cell", { name: "残高 -100,000円" })).toHaveClass("detail-rate-alert");
   });
 
   it("renders an explicit error when the fund id route param is invalid", async () => {

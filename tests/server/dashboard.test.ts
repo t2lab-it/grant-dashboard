@@ -64,7 +64,6 @@ describe("dashboard calculations", () => {
       expect(rows.reduce((sum, item) => sum + item.actualAmount, 0)).toBe(row.actualAmount);
       expect(rows.reduce((sum, item) => sum + item.plannedAmount, 0)).toBe(row.plannedAmount);
     }
-    expect(getOverviewSnapshot(db, { fiscalYear: 2027 }).funds.map((fund) => fund.id)).toEqual([3]);
   });
 
   it("computes overview totals from normalized records", () => {

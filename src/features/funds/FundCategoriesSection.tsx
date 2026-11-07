@@ -55,6 +55,7 @@ export function FundCategoriesSection({
   themePreset,
 }: FundCategoriesSectionProps) {
   const [isCrossAggregateExpanded, setIsCrossAggregateExpanded] = useState(false);
+  const freeBalance = awardedAmount - plannedAmount - actualAmount;
 
   return (
     <section className="detail-panel" aria-labelledby="fund-categories-heading">
@@ -80,7 +81,15 @@ export function FundCategoriesSection({
                   (row.budgetAmount ?? 0) - row.plannedAmount - row.actualAmount, executionRateThresholds, balanceRateThresholds);
                 return <tr key={row.id}><th scope="row">{row.categoryName}</th><td>{formatBudgetAmount(row.budgetAmount, amountDisplayMode)}</td><td>{formatAmount(row.plannedAmount, amountDisplayMode)}</td><td>{formatAmount(row.actualAmount, amountDisplayMode)}</td><td className={rate.className}>{rate.label}</td></tr>;
               })}</tbody>
-              <tfoot><tr><th scope="row">合計</th><td></td><td>{formatAmount(plannedAmount, amountDisplayMode)}</td><td>{formatAmount(actualAmount, amountDisplayMode)}</td><td></td></tr></tfoot>
+              <tfoot>
+                <tr>
+                  <th scope="row">合計</th>
+                  <td title="交付額">{formatAmount(awardedAmount, amountDisplayMode)}</td>
+                  <td>{formatAmount(plannedAmount, amountDisplayMode)}</td>
+                  <td>{formatAmount(actualAmount, amountDisplayMode)}</td>
+                  <td className={freeBalance < 0 ? "detail-rate-alert" : undefined}>{`残高 ${formatAmount(freeBalance, amountDisplayMode)}`}</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
           {crossAggregateCategories.length > 0 ? (

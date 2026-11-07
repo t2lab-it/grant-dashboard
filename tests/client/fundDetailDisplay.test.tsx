@@ -165,8 +165,10 @@ describe("Fund detail display", () => {
     expect(categoryScope.getByText("執行済額")).toBeInTheDocument();
     expect(categoryScope.getByText("予算消化率")).toBeInTheDocument();
     expect(fundPage.getByText("150.0%")).toBeInTheDocument();
-    expect(categoryScope.getByText("2,600,000円")).toBeInTheDocument();
-    expect(categoryScope.getByText("558,336円")).toBeInTheDocument();
+    const totals = categoryScope.getByRole("row", { name: /^合計/ });
+    expect(within(totals).getAllByRole("cell").map((cell) => cell.textContent)).toEqual([
+      "5,080,000円", "2,600,000円", "558,336円", "残高 1,921,664円",
+    ]);
     const chart = fundPage.getByLabelText("基盤研究費 の費目別執行内訳");
     expect(chart).toBeInTheDocument();
     expect(chart).toHaveAttribute("aria-describedby");
@@ -198,6 +200,7 @@ describe("Fund detail display", () => {
     expect(crossAggregateScope.getByText("-500,000円")).toBeInTheDocument();
     expect(crossAggregateScope.getByText("-58,336円")).toBeInTheDocument();
     expect(categoryScope.getByText("残高率")).toBeInTheDocument();
+    expect(within(totals).getByRole("cell", { name: "残高 1,921,664円" })).toBeInTheDocument();
     expect(categoryScope.getByText("-50.0%")).toBeInTheDocument();
 
     expect(timelineScope.getByText("執行予定額")).toBeInTheDocument();
@@ -335,6 +338,10 @@ describe("Fund detail display", () => {
     expect(chartSummary).toHaveTextContent("執行済 558千円");
     expect(chartSummary).toHaveTextContent("残高 2222千円");
     expect(chartSummary).toHaveTextContent("消耗品費 執行済 58千円");
+    const totals = within(fundPage.getByRole("table", { name: "費目別の状況" })).getByRole("row", { name: /^合計/ });
+    expect(within(totals).getAllByRole("cell").map((cell) => cell.textContent)).toEqual([
+      "5080千円", "2300千円", "558千円", "残高 2222千円",
+    ]);
   });
 
   it("shows an over-budget ring and warning center label when the balance is negative", async () => {
@@ -366,6 +373,8 @@ describe("Fund detail display", () => {
     const chart = fundPage.getByLabelText("基盤研究費 の費目別執行内訳");
     expect(within(chart).getByText("超過")).toBeInTheDocument();
     expect(within(chart).getByText("-100,000円")).toBeInTheDocument();
+    const totals = within(fundPage.getByRole("table", { name: "費目別の状況" })).getByRole("row", { name: /^合計/ });
+    expect(within(totals).getByRole("cell", { name: "残高 -100,000円" })).toBeInTheDocument();
   });
 
   it("renders an explicit error when the fund id route param is invalid", async () => {

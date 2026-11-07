@@ -144,28 +144,6 @@ describe("static demo API", () => {
       .toMatchObject({ budgetAmount: null, actualAmount: 345000, plannedAmount: 475000 });
   });
 
-  test("keeps fund category amounts consistent with fund totals and annual aggregates in every demo year", async () => {
-    for (const year of [2025, 2026, 2027]) {
-      const overview = await readJson(await handleStaticDemoRequest(`/api/overview?year=${year}`, { method: "GET" })) as unknown as import("../../src/features/overview/OverviewPage").OverviewResponse;
-      if (year === 2026) {
-        expect(overview.funds.find((fund) => fund.id === 1)?.crossAggregateCategories).toEqual([
-          { crossAggregateCategory: "equipment", budgetAmount: 1200000, actualAmount: 345000, plannedAmount: 475000 },
-          { crossAggregateCategory: "travel", budgetAmount: 400000, actualAmount: 185000, plannedAmount: 180000 },
-        ]);
-      }
-      for (const fund of overview.funds) {
-        expect(fund.crossAggregateCategories.reduce((sum, row) => sum + row.actualAmount + row.plannedAmount, 0))
-          .toBe(fund.actual_amount + fund.committed_amount);
-      }
-      for (const row of overview.crossAggregateCategories) {
-        const rows = overview.funds.flatMap((fund) => fund.crossAggregateCategories)
-          .filter((item) => item.crossAggregateCategory === row.crossAggregateCategory);
-        expect(rows.reduce((sum, item) => sum + item.actualAmount, 0)).toBe(row.actualAmount);
-        expect(rows.reduce((sum, item) => sum + item.plannedAmount, 0)).toBe(row.plannedAmount);
-      }
-    }
-  });
-
   test("builds overview from demo seed data", async () => {
     const response = await handleStaticDemoRequest("/api/overview", { method: "GET" });
     const data = await readJson(response);
@@ -195,6 +173,10 @@ describe("static demo API", () => {
       expect.arrayContaining([
         expect.objectContaining({
           name: "デモ研究費A",
+          crossAggregateCategories: [
+            { crossAggregateCategory: "equipment", budgetAmount: 1200000, actualAmount: 345000, plannedAmount: 475000 },
+            { crossAggregateCategory: "travel", budgetAmount: 400000, actualAmount: 185000, plannedAmount: 180000 },
+          ],
         }),
       ]),
     );

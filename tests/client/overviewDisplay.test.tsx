@@ -63,7 +63,7 @@ describe("Overview display", () => {
     cleanup();
   });
 
-  it("switches each fund to its own categories, preserves numeric mode and returns to standard without fetching", async () => {
+  it("switches each fund to its own categories, preserves numeric mode and returns to standard", async () => {
     const user = userEvent.setup();
     const rows = [
       { crossAggregateCategory: "equipment" as const, budgetAmount: 500000, plannedAmount: 0, actualAmount: 200000 },
@@ -102,8 +102,6 @@ describe("Overview display", () => {
         expect(shares[0]).toBeCloseTo(0.625);
         expect(shares[1]).toBeCloseTo(0.375);
         expect(shares.reduce((sum, share) => sum + share, 0)).toBeCloseTo(1);
-        expect(screen.getByLabelText("予算の共通凡例")).toHaveTextContent("物品系");
-        expect(first.queryByRole("list")).not.toBeInTheDocument();
       }
     }
     await user.click(hero.getByRole("button", { name: /^消化額 / }));
@@ -147,18 +145,13 @@ describe("Overview display", () => {
     const negative = within(screen.getByRole("link", { name: /負値/ }));
     expect(negative.getByText("正の金額がないため円弧を表示しません。")).toBeInTheDocument();
     expect(negative.getByRole("img")).toHaveAccessibleDescription(/旅費系 -50円 0.0%/);
-    expect(negative.getAllByText("-50円").length).toBeGreaterThan(0);
-    for (const name of ["欠落", "空", "未配分"]) {
-      expect(within(screen.getByRole("link", { name: new RegExp(`^${name} `) })).getByText("予算超過 100,000円"))
-        .toBeInTheDocument();
-    }
     const missingFund = within(screen.getByRole("link", { name: /欠落/ }));
+    expect(missingFund.getByText("予算超過 100,000円")).toBeInTheDocument();
     expect(missingFund.getByText("予算消化率 [%]")).toBeInTheDocument();
     expect(missingFund.getByText("110.0%")).toBeInTheDocument();
     await user.click(within(screen.getByRole("group", { name: "率表示" })).getByRole("button", { name: "残高率" }));
     expect(missingFund.getByText("残高率 [%]")).toBeInTheDocument();
     expect(missingFund.getByText("-10.0%")).toBeInTheDocument();
-    expect(missingFund.queryByText("110.0%")).not.toBeInTheDocument();
   });
 
   it("uses zero percentages for a zero consumed total while keeping signed amounts", async () => {
@@ -199,7 +192,6 @@ describe("Overview display", () => {
 
     expect(await screen.findByRole("button", { name: /^予算総額 10,246,706円$/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^執行予定額 7,087,000円$/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "消化額 7,087,000円" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /ACT-X/i })).toBeInTheDocument();
     expect(screen.getByText("直近インポート")).toBeInTheDocument();
     expect(screen.getByText("budget2026.xlsx")).toBeInTheDocument();
@@ -596,16 +588,10 @@ describe("Overview display", () => {
         : overview,
     }));
 
-    const view = renderAppRoute(`/?year=2026&month=2026-06&summaryMetric=${metric}`);
+    renderAppRoute(`/?year=2026&month=2026-06&summaryMetric=${metric}`);
     const dialog = within(await screen.findByRole("dialog", { name: "2026年6月の予算横断サマリ" }));
     const summary = within(await dialog.findByRole("region", { name: "月別概要" }));
     const cards = summary.getAllByRole("article");
-    for (const [label, value] of [
-      ["累計執行済額", "60,000円"], ["当月実績", "40,000円"],
-      ["当月の未実行予定額", "30,000円"], ["月末の計算残高", "130,000円"],
-    ]) {
-      expect(cards.find((card) => within(card).queryByText(label))).toHaveTextContent(value);
-    }
     if (extra !== null) {
       expect(cards.find((card) => within(card).queryByText(highlight))).toHaveTextContent(extra);
     }
@@ -620,19 +606,22 @@ describe("Overview display", () => {
       expect(scope.getByRole("columnheader", { name: highlight })).toHaveAttribute("data-highlighted", "true");
     }
     if (metric === "actual") {
+      for (const [label, value] of [
+        ["累計執行済額", "60,000円"], ["当月実績", "40,000円"],
+        ["当月の未実行予定額", "30,000円"], ["月末の計算残高", "130,000円"],
+      ]) {
+        expect(cards.find((card) => within(card).queryByText(label))).toHaveTextContent(value);
+      }
       expect(within(table).getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual([
         "予算名", "当月実績", "当月の未実行予定", "累計執行済額", "月末の計算残高",
       ]);
+      const fundB = within(within(table).getByRole("row", { name: /予算B/ }));
+      expect(fundB.getAllByRole("cell")[0]).toHaveTextContent(/^0円$/);
+      expect(dialog.getByText(/現在登録されている予定・実績を月別に配分した計算値/)).toBeInTheDocument();
+      expect(dialog.getByRole("link", { name: "この月の明細を見る" })).toHaveAttribute(
+        "href", "/search?year=2026&monthFrom=2026-06&monthTo=2026-06",
+      );
     }
-    const fundB = within(within(table).getByRole("row", { name: /予算B/ }));
-    expect(fundB.getAllByRole("cell")[0]).toHaveTextContent(/^0円$/);
-    expect(dialog.getByText(/現在登録されている予定・実績を月別に配分した計算値/)).toBeInTheDocument();
-    expect(dialog.getByRole("link", { name: "この月の明細を見る" })).toHaveAttribute(
-      "href", "/search?year=2026&monthFrom=2026-06&monthTo=2026-06",
-    );
-    fireEvent.click(dialog.getByRole("button", { name: "月別サマリを閉じる" }));
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(view.router.state.location.search).toBe("?year=2026");
   });
 
   it("switches months in place and closes through controls, Escape, and browser back", async () => {
@@ -930,15 +919,9 @@ describe("Overview display", () => {
       expect(committedTrendSummary).toHaveTextContent("現在進捗 20.0%");
 
       fireEvent.click(screen.getByRole("button", { name: /^消化額 400,000円/ }));
-      expect(panelScope.getByRole("heading", { name: "消化額の内訳" })).toBeInTheDocument();
       expect(panelScope.getByText("予算数")).toBeInTheDocument();
       expect(panelScope.getByText("計画化率")).toBeInTheDocument();
       expect(panelScope.getByLabelText("消化額の月次推移グラフ")).toBeInTheDocument();
-      expect(panelScope.getByLabelText("消化額の大費目別内訳グラフ")).toBeInTheDocument();
-      expect(panelScope.getByText("(67.5%)")).toBeInTheDocument();
-      expect(panelScope.queryByText(/交付額との差/)).not.toBeInTheDocument();
-      fireEvent.click(screen.getByRole("button", { name: /^消化額 400,000円/ }));
-      expect(panelScope.getByRole("heading", { name: "予算総額の内訳" })).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }

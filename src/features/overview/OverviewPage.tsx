@@ -384,7 +384,9 @@ export function OverviewPage() {
               数値
             </button>
           </div>
-          <RateMetricToggle rateMetric={rateMetric} onRateMetricChange={updateOverviewRateMetric} />
+          {displayMode === "numeric" || activeSummaryMetric === null ? (
+            <RateMetricToggle rateMetric={rateMetric} onRateMetricChange={updateOverviewRateMetric} />
+          ) : null}
           {projectTagFilterOptions.projectTags.length > 0 ? (
             <label className="overview-project-tag-select-field">
               <span>研究プロジェクトタグ</span>

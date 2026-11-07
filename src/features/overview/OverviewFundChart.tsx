@@ -6,7 +6,6 @@ import type { CSSProperties } from "react";
 import { formatAmount, type AmountDisplayMode } from "../../lib/format";
 import {
   getRateMetric,
-  getRateMetricLabel,
   type BalanceRateThresholds,
   type ExecutionRateThresholds,
   type RateMetricKey,
@@ -239,15 +238,18 @@ export function OverviewFundChart({
       </div> : null}
       {categoryStatus ? <p className="fund-card-chart-empty">{categoryStatus}</p> : null}
 
-      <div className="fund-card-chart-metrics">
-        <p className="fund-card-row">
-          <span>{categoryMetric === null ? metricLabel : getRateMetricLabel(rateMetric)}</span>
-          <strong className={categoryMetric === null ? undefined : rate.className}>
-            {categoryMetric === null ? formatAmount(metricAmount, amountDisplayMode) : rate.label}
-          </strong>
-        </p>
-        {categoryMetric !== null && overBudgetAmount > 0 ? <p><strong className="detail-rate-alert">{`予算超過 ${formatAmount(overBudgetAmount, amountDisplayMode)}`}</strong></p> : null}
-      </div>
+      {categoryMetric === null || overBudgetAmount > 0 ? (
+        <div className="fund-card-chart-metrics">
+          {categoryMetric === null ? (
+            <p className="fund-card-row">
+              <span>{metricLabel}</span>
+              <strong>{formatAmount(metricAmount, amountDisplayMode)}</strong>
+            </p>
+          ) : (
+            <p><strong className="detail-rate-alert">{`予算超過 ${formatAmount(overBudgetAmount, amountDisplayMode)}`}</strong></p>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

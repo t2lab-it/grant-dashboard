@@ -88,6 +88,7 @@ describe("Overview display", () => {
     const first = within(screen.getByRole("link", { name: /部分精算/ }));
     const second = within(screen.getByRole("link", { name: /超過予算/ }));
     expect(first.getByRole("img", { name: "部分精算 の予算内訳" })).toBeInTheDocument();
+    await user.click(within(screen.getByRole("group", { name: "率表示" })).getByRole("button", { name: "残高率" }));
     for (const [label, amount] of [["費目予算", "800,000円"], ["消化額", "500,000円"], ["執行済額", "200,000円"], ["執行予定額", "300,000円"]]) {
       await user.click(hero.getByRole("button", { name: new RegExp(`^${label} `) }));
       expect(first.getByRole("img", { name: `部分精算 の${label}の大費目別内訳グラフ` })).toHaveTextContent(amount);
@@ -112,6 +113,8 @@ describe("Overview display", () => {
         expect(shares.reduce((sum, share) => sum + share, 0)).toBeCloseTo(1);
       }
     }
+    expect(screen.queryByRole("group", { name: "率表示" })).not.toBeInTheDocument();
+    expect(first.queryByText(/予算消化率 \[%\]|残高率 \[%\]/)).not.toBeInTheDocument();
     await user.click(hero.getByRole("button", { name: /^消化額 / }));
     const panel = within(screen.getByRole("complementary", { name: "予算概要の分析" }));
     expect(panel.getByText("700,000円")).toBeInTheDocument();
@@ -121,12 +124,18 @@ describe("Overview display", () => {
     expect(second.getByRole("img")).toHaveAccessibleDescription(/その他 200,000円 100.0%/);
     await user.click(screen.getByRole("button", { name: "数値" }));
     expect(first.getByText("交付額")).toBeInTheDocument();
+    expect(within(screen.getByRole("group", { name: "率表示" })).getByRole("button", { name: "残高率" }))
+      .toHaveAttribute("aria-pressed", "true");
+    expect(second.getByText("90.0%")).toBeInTheDocument();
     await user.click(hero.getByRole("button", { name: /^執行済額 / }));
     expect(first.queryByRole("img")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "円グラフ" }));
     expect(first.getByRole("img", { name: /執行済額の大費目/ })).toBeInTheDocument();
     await user.click(hero.getByRole("button", { name: /^執行済額 / }));
     expect(first.getByRole("img", { name: "部分精算 の予算内訳" })).toBeInTheDocument();
+    expect(second.getByRole("img")).toHaveTextContent("90.0%");
+    expect(within(screen.getByRole("group", { name: "率表示" })).getByRole("button", { name: "残高率" }))
+      .toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("heading", { name: "費目予算の内訳" })).toBeInTheDocument();
   });
 
@@ -158,6 +167,7 @@ describe("Overview display", () => {
     expect(negative.getByRole("img")).toHaveAccessibleDescription(/旅費系 -50円 0.0%/);
     const missingFund = within(screen.getByRole("link", { name: /欠落/ }));
     expect(missingFund.getByText("予算超過 100,000円")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "数値" }));
     expect(missingFund.getByText("予算消化率 [%]")).toBeInTheDocument();
     expect(missingFund.getByText("110.0%")).toBeInTheDocument();
     await user.click(within(screen.getByRole("group", { name: "率表示" })).getByRole("button", { name: "残高率" }));

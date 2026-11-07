@@ -60,6 +60,11 @@ test("overview category selection uses the real API and toggles back with keyboa
   await dismiss.click();
   const hero = page.getByRole("group", { name: "年度全体の指標" });
   await expect(hero.getByRole("button", { pressed: true })).toHaveCount(0);
+  const standardChart = page.getByRole("img", { name: "デモ研究費A の予算内訳" });
+  const standardSize = await standardChart.boundingBox();
+  const standardRing = await standardChart.locator("circle:not([stroke-dasharray])").boundingBox();
+  expect(standardSize).not.toBeNull();
+  expect(standardRing).not.toBeNull();
   const requests: string[] = [];
   page.on("request", (request) => { if (/\/api\/(overview|funds\/)/.test(request.url())) requests.push(request.url()); });
   for (const label of ["予算総額", "消化額"]) {
@@ -68,7 +73,15 @@ test("overview category selection uses the real API and toggles back with keyboa
     await page.keyboard.press("Enter");
     await expect(button).toHaveAttribute("aria-pressed", "true");
     await expect(hero.getByRole("button", { pressed: true })).toHaveCount(1);
-    await expect(page.getByRole("img", { name: `デモ研究費A の${label}の大費目別内訳グラフ` })).toBeVisible();
+    const chart = page.getByRole("img", { name: `デモ研究費A の${label}の大費目別内訳グラフ` });
+    await expect(chart).toBeVisible();
+    const size = await chart.boundingBox();
+    const ring = await chart.locator("circle:not([stroke-dasharray])").boundingBox();
+    expect(size?.width).toBeCloseTo(standardSize!.width, 0);
+    expect(size?.height).toBeCloseTo(standardSize!.height, 0);
+    expect(ring?.width).toBeCloseTo(standardRing!.width, 0);
+    expect(ring?.height).toBeCloseTo(standardRing!.height, 0);
+    await expect(page.getByLabel("予算の共通凡例")).toBeVisible();
     await expect(page.getByRole("heading", { name: `${label}の内訳` })).toBeVisible();
   }
   await page.keyboard.press("Space");
@@ -77,7 +90,7 @@ test("overview category selection uses the real API and toggles back with keyboa
   await expect(page.getByRole("heading", { name: "予算総額の内訳" })).toBeVisible();
   expect(requests).toEqual([]);
   await hero.getByRole("button", { name: /^消化額 / }).click();
-  await expect(hero.getByText(/残高 [\d,]+円/)).toBeVisible();
+  await expect(hero.getByRole("button", { name: /^消化額 [\d,]+円$/ })).toBeVisible();
   await page.getByRole("button", { name: "2026年6月の月ラベルから消化額サマリを開く" }).click();
   await expect(page).toHaveURL(/summaryMetric=consumed/);
   const dialog = page.getByRole("dialog", { name: "2026年6月の予算横断サマリ" });
@@ -145,13 +158,13 @@ for (const width of [390, 768, 1440]) {
       if (path === "/?year=2026") {
         const sharedLegend = page.getByLabel("予算の共通凡例");
         const cardLegend = page.locator(".overview-fund-card-legend").first();
-        if (width >= 860) {
-          await expect(sharedLegend).toBeVisible();
-          await expect(cardLegend).not.toBeVisible();
-        } else {
-          await expect(sharedLegend).not.toBeVisible();
-          await expect(cardLegend).toBeVisible();
-        }
+        await expect(sharedLegend).toBeVisible();
+        await expect(cardLegend).not.toBeVisible();
+        const add = await page.getByRole("link", { name: "＋ 予算を追加" }).boundingBox();
+        const ledger = await page.getByRole("link", { name: "収支簿出力" }).boundingBox();
+        expect(add).not.toBeNull();
+        expect(ledger).not.toBeNull();
+        expect(ledger!.y + ledger!.height / 2).toBeCloseTo(add!.y + add!.height / 2, 0);
       }
       if (path === "/settings?year=2026") {
         await expect(page.locator(".overview-fund-card-legend").first()).toBeVisible();

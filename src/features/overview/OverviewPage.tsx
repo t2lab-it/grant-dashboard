@@ -24,9 +24,10 @@ import { MonthlySummaryDialog } from "./MonthlySummaryDialog";
 import { OverviewSummaryPanel, type OverviewSummaryMetricKey } from "./OverviewSummaryPanel";
 import {
   getOverviewChartPalette,
+  getCrossAggregateChartColors,
   type OverviewChartFund,
 } from "./overviewChart";
-import type { CrossAggregateCategoryAmounts } from "../../contracts/crossAggregateCategory";
+import { CROSS_AGGREGATE_CATEGORY_CODES, CROSS_AGGREGATE_CATEGORY_LABELS, type CrossAggregateCategoryAmounts } from "../../contracts/crossAggregateCategory";
 import type { OverviewSelectableMetricKey } from "./overviewSummaryTypes";
 import { RateMetricToggle } from "../funds/RateMetricToggle";
 import { setRateSearchParam } from "../funds/rateQueryParams";
@@ -201,6 +202,12 @@ export function OverviewPage() {
   const palette = getOverviewChartPalette(themePreset, customChartPresets);
   const monthlyStatus = data.monthlyStatus;
   const crossAggregateOrder = new Map(data.crossAggregateCategories.map((row, index) => [row.crossAggregateCategory, index]));
+  const categoryColors = getCrossAggregateChartColors(palette);
+  const sharedLegend = activeSummaryMetric === null
+    ? [["執行済", palette.actual], ["執行予定", palette.committed], ["残高", palette.balance]]
+    : [...CROSS_AGGREGATE_CATEGORY_CODES]
+      .sort((left, right) => (crossAggregateOrder.get(left) ?? crossAggregateOrder.size) - (crossAggregateOrder.get(right) ?? crossAggregateOrder.size))
+      .map((code) => [CROSS_AGGREGATE_CATEGORY_LABELS[code], categoryColors[code]]);
   const assetsHeroStyle: HeroCardStyle = {
     "--hero-card-accent-start": "rgba(255, 255, 255, 0.96)",
     "--hero-card-accent-end": "rgba(148, 163, 184, 0.16)",
@@ -327,13 +334,6 @@ export function OverviewPage() {
             >
               <p>{card.label}</p>
               <strong className="hero-card-amount">{formatAmount(card.amount, amountDisplayMode)}</strong>
-              {card.key === "consumed" ? <>
-                <span className="hero-card-help">執行済額＋未実行の執行予定残額</span>
-                <span className={data.totals.freeBalance < 0 ? "hero-card-balance detail-rate-alert" : "hero-card-balance"}>
-                  {`残高 ${formatAmount(data.totals.freeBalance, amountDisplayMode)}`}
-                  {data.totals.freeBalance < 0 ? "（予算超過）" : ""}
-                </span>
-              </> : null}
             </button>
           );
         })}
@@ -353,6 +353,16 @@ export function OverviewPage() {
         <div className="overview-section-title-actions">
           <h2 id="overview-funds-heading">予算</h2>
           <Link className="detail-action-button" to={data.selectedFiscalYear === null ? "/funds/new" : `/funds/new${setFiscalYearInSearch("", data.selectedFiscalYear)}`}>＋ 予算を追加</Link>
+          {staticDemoMode ? null : (
+            <a
+              className="detail-action-button"
+              href={requestedFiscalYear === undefined
+                ? "/api/exports/ledger.xlsx"
+                : `/api/exports/ledger.xlsx?year=${requestedFiscalYear}`}
+            >
+              収支簿出力
+            </a>
+          )}
         </div>
         <div className="overview-section-controls">
           <div className="overview-display-toggle" role="group" aria-label="表示切り替え">
@@ -400,21 +410,11 @@ export function OverviewPage() {
               </select>
             </label>
           ) : null}
-          {staticDemoMode ? null : (
-            <a
-              className="detail-action-button"
-              href={requestedFiscalYear === undefined
-                ? "/api/exports/ledger.xlsx"
-                : `/api/exports/ledger.xlsx?year=${requestedFiscalYear}`}
-            >
-              収支簿出力
-            </a>
-          )}
         </div>
       </header>
-      {displayMode === "chart" && activeSummaryMetric === null ? (
+      {displayMode === "chart" ? (
         <div className="overview-shared-legend" aria-label="予算の共通凡例">
-          {([ ["執行済", palette.actual], ["執行予定", palette.committed], ["残高", palette.balance] ] as const).map(([label, color]) => (
+          {sharedLegend.map(([label, color]) => (
             <span key={label}><i className="fund-card-legend-chip" style={{ backgroundColor: color }} aria-hidden="true" />{label}</span>
           ))}
         </div>

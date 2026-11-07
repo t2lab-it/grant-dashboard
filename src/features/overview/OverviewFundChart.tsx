@@ -1,5 +1,5 @@
-import { OverviewCrossAggregateDonut } from "./OverviewCrossAggregateDonut";
-import { getFundMetricValue, metricCopy } from "./overviewSummaryModel";
+import { CROSS_AGGREGATE_CATEGORY_LABELS } from "../../contracts/crossAggregateCategory";
+import { formatPercentage, getCrossAggregateMetricValue, getFundMetricValue, metricCopy } from "./overviewSummaryModel";
 import type { OverviewCrossAggregateCategory, OverviewSelectableMetricKey } from "./overviewSummaryTypes";
 import { useId } from "react";
 import type { CSSProperties } from "react";
@@ -16,6 +16,7 @@ import {
   getCrossAggregateChartColors,
   getOverBudgetChartState,
   type OverviewChartFund,
+  type OverviewChartSegment,
   type OverviewChartPalette,
 } from "./overviewChart";
 
@@ -41,7 +42,25 @@ export function OverviewFundChart({
   balanceRateThresholds,
 }: OverviewFundChartProps) {
   const chartSummaryId = useId();
-  const segments = createOverviewChartSegments(fund, palette);
+  const categoryLabel = categoryMetric === null ? "" : metricCopy[categoryMetric].label;
+  const categoryAmount = categoryMetric === null ? 0 : getFundMetricValue(categoryMetric, fund);
+  const categoryRows = categoryMetric === null ? [] : (crossAggregateCategories ?? []).map((row) => ({
+    label: CROSS_AGGREGATE_CATEGORY_LABELS[row.crossAggregateCategory],
+    value: getCrossAggregateMetricValue(categoryMetric, row),
+    color: getCrossAggregateChartColors(palette)[row.crossAggregateCategory],
+  }));
+  const positiveTotal = categoryRows.reduce((sum, row) => sum + Math.max(0, row.value), 0);
+  const segments: Array<Omit<OverviewChartSegment, "label"> & { label: string }> = categoryMetric === null
+    ? createOverviewChartSegments(fund, palette)
+    : categoryRows.filter((row) => row.value > 0).map((row) => ({
+      label: row.label, color: row.color, percentage: row.value / positiveTotal * 100,
+    }));
+  const categoryStatus = categoryMetric === null ? null
+    : crossAggregateCategories === undefined ? "大費目別内訳を表示できません。"
+    : crossAggregateCategories.length === 0 ? "大費目データなし"
+    : categoryMetric === "assets" && crossAggregateCategories.every((row) => row.budgetAmount === null) ? "費目別予算が未設定"
+    : categoryRows.every((row) => row.value === 0) ? `${categoryLabel}は0円です。`
+    : positiveTotal === 0 ? "正の金額がないため円弧を表示しません。" : null;
   const isDarkTheme =
     typeof document !== "undefined" && document.documentElement.dataset.theme === "dark";
   const rate = getRateMetric(
@@ -68,37 +87,16 @@ export function OverviewFundChart({
   const overBudgetRingRadius = 67;
   const overBudgetRingCircumference = 2 * Math.PI * overBudgetRingRadius;
   let accumulatedPercentage = 0;
-  const accessibleSummary = [
+  const accessibleSummary = categoryMetric === null ? [
     `執行済 ${formatAmount(fund.actual_amount, amountDisplayMode)}`,
     `執行予定 ${formatAmount(fund.committed_amount, amountDisplayMode)}`,
     `残高 ${formatAmount(fund.freeBalance, amountDisplayMode)}`,
+  ].join("、") : [
+    `${categoryLabel} ${formatAmount(categoryAmount, amountDisplayMode)}`,
+    ...categoryRows.filter((row) => row.value !== 0)
+      .map((row) => `${row.label} ${formatAmount(row.value, amountDisplayMode)} ${formatPercentage(row.value, categoryAmount)}`),
+    ...(categoryStatus ? [categoryStatus] : []),
   ].join("、");
-
-  if (categoryMetric !== null) {
-    const totalValue = getFundMetricValue(categoryMetric, fund);
-    const budgetTotal = crossAggregateCategories?.reduce((sum, row) => sum + (row.budgetAmount ?? 0), 0) ?? 0;
-    const budgetDifference = fund.awarded_amount - budgetTotal;
-    return <div className="fund-card-category-chart">
-      {crossAggregateCategories === undefined ? <>
-        <p>{`${metricCopy[categoryMetric].label} ${formatAmount(totalValue, amountDisplayMode)}`}</p>
-        <p className="overview-category-empty">大費目別内訳を表示できません。</p>
-      </> : <OverviewCrossAggregateDonut
-        amountDisplayMode={amountDisplayMode}
-        colors={getCrossAggregateChartColors(palette)}
-        metric={categoryMetric}
-        rows={crossAggregateCategories}
-        totalValue={totalValue}
-        fundName={fund.name}
-      />}
-      <div className="fund-card-chart-metrics">
-        <p className="fund-card-row"><span>{getRateMetricLabel(rateMetric)}</span><strong className={rate.className}>{rate.label}</strong></p>
-        {overBudgetAmount > 0 ? <p><strong className="detail-rate-alert">{`予算超過 ${formatAmount(overBudgetAmount, amountDisplayMode)}`}</strong></p> : null}
-      </div>
-      {categoryMetric === "assets" && crossAggregateCategories !== undefined && crossAggregateCategories.length > 0 && budgetDifference !== 0 ?
-        <p className="overview-category-note">{`費目予算合計 ${formatAmount(budgetTotal, amountDisplayMode)}／交付額との差（交付額−費目予算）${formatAmount(budgetDifference, amountDisplayMode)}。円弧は正の費目予算合計、凡例の割合は交付額を基準に表示します。`}</p>
-        : null}
-    </div>;
-  }
 
   return (
     <div className="fund-card-chart">
@@ -106,7 +104,7 @@ export function OverviewFundChart({
         <svg
           viewBox="0 0 160 160"
           role="img"
-          aria-label={`${fund.name} の予算内訳`}
+          aria-label={categoryMetric === null ? `${fund.name} の予算内訳` : `${fund.name} の${categoryLabel}の大費目別内訳グラフ`}
           aria-describedby={chartSummaryId}
           focusable="false"
         >
@@ -171,7 +169,12 @@ export function OverviewFundChart({
               </g>
             );
           })}
-          {overBudgetAmount > 0 ? (
+          {categoryMetric !== null ? <>
+            <text x="80" y="71" textAnchor="middle" className="fund-card-donut-value fund-card-donut-metric-label">{categoryLabel}</text>
+            <text x="80" y="92" textAnchor="middle" className="fund-card-donut-value fund-card-donut-metric-amount"
+              textLength={formatAmount(categoryAmount, amountDisplayMode).length > 10 ? 80 : undefined}
+              lengthAdjust="spacingAndGlyphs">{formatAmount(categoryAmount, amountDisplayMode)}</text>
+          </> : overBudgetAmount > 0 ? (
             <>
               <text
                 x="80"
@@ -186,7 +189,7 @@ export function OverviewFundChart({
                 y="92"
                 textAnchor="middle"
                 className="fund-card-donut-value fund-card-donut-alert-amount detail-rate-alert"
-                textLength={formatAmount(-overBudgetAmount, amountDisplayMode).length > 12 ? 110 : undefined}
+                textLength={formatAmount(-overBudgetAmount, amountDisplayMode).length > 12 ? 80 : undefined}
                 lengthAdjust="spacingAndGlyphs"
               >
                 {formatAmount(-overBudgetAmount, amountDisplayMode)}
@@ -213,7 +216,7 @@ export function OverviewFundChart({
         </figcaption>
       </figure>
 
-      <div className="fund-card-legend overview-fund-card-legend" aria-label={`${fund.name} の凡例`}>
+      {categoryMetric === null ? <div className="fund-card-legend overview-fund-card-legend" aria-label={`${fund.name} の凡例`}>
         {segments.map((segment) => (
           <p key={segment.label} className="fund-card-legend-row">
             <span
@@ -232,13 +235,17 @@ export function OverviewFundChart({
             </span>
           </p>
         ))}
-      </div>
+      </div> : null}
+      {categoryStatus ? <p className="fund-card-chart-empty">{categoryStatus}</p> : null}
 
       <div className="fund-card-chart-metrics">
         <p className="fund-card-row">
-          <span>{metricLabel}</span>
-          <strong>{formatAmount(metricAmount, amountDisplayMode)}</strong>
+          <span>{categoryMetric === null ? metricLabel : getRateMetricLabel(rateMetric)}</span>
+          <strong className={categoryMetric === null ? undefined : rate.className}>
+            {categoryMetric === null ? formatAmount(metricAmount, amountDisplayMode) : rate.label}
+          </strong>
         </p>
+        {categoryMetric !== null && overBudgetAmount > 0 ? <p><strong className="detail-rate-alert">{`予算超過 ${formatAmount(overBudgetAmount, amountDisplayMode)}`}</strong></p> : null}
       </div>
     </div>
   );

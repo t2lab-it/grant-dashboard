@@ -33,10 +33,8 @@ describe("Overview navigation", () => {
     await user.selectOptions(screen.getByRole("combobox", { name: "年度" }), "2027");
     expect(await screen.findByRole("img", { name: "翌年 の消化額の大費目別内訳グラフ" })).toHaveTextContent("20円");
     const nextFund = within(screen.getByRole("link", { name: /翌年/ }));
-    expect(nextFund.getByText("旅費系")).toBeInTheDocument();
-    expect(nextFund.getByRole("listitem")).toHaveTextContent("20円");
-    expect(nextFund.queryByText("物品系")).not.toBeInTheDocument();
-    expect(nextFund.queryByText("10円")).not.toBeInTheDocument();
+    expect(nextFund.getByRole("img")).toHaveAccessibleDescription(/旅費系 20円 100.0%/);
+    expect(nextFund.getByRole("img")).not.toHaveAccessibleDescription(/物品系|10円/);
     expect(screen.getByRole("button", { name: /^消化額 / })).toHaveAttribute("aria-pressed", "true");
     expect(screen.queryByRole("img", { name: /今年 の/ })).not.toBeInTheDocument();
     expect(view.router.state.location.search).toBe("?year=2027");

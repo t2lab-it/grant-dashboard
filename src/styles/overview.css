@@ -68,10 +68,10 @@
 }
 
 .overview-section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
 }
 
 .overview-section-header h2 {
@@ -1009,9 +1009,10 @@
 }
 
 .overview-funds { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-content: start; }
-.overview-section-header { flex-wrap: wrap; align-items: center; }
 .overview-section-controls { flex-wrap: wrap; }
-.overview-shared-legend { display: none; }
+.overview-shared-legend { display: flex; flex-wrap: wrap; gap: 10px 16px; font-size: .85rem; }
+.overview-shared-legend > span { display: flex; align-items: center; gap: 6px; }
+.overview-funds .overview-fund-card-legend { display: none; }
 .fund-card > h3 { margin: 0; font-size: 1.1rem; }
 .overview-hero-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--hero-card-min-width, 9rem)), 1fr)); }
 .hero-card-amount { overflow-wrap: anywhere; white-space: normal; }
@@ -1020,9 +1021,6 @@
   .overview-hero-grid, .first-run-card { grid-column: 1 / -1; }
   .overview-context-panel { grid-column: 2; grid-row: auto / span 2; }
   .overview-funds, .overview-latest-import { grid-column: 1; }
-  .overview-shared-legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: .85rem; }
-  .overview-shared-legend > span { display: flex; align-items: center; gap: 6px; }
-  .overview-funds .overview-fund-card-legend { display: none; }
 }
 
 .first-run-choice { display: grid; align-content: start; gap: 12px; padding-block: 8px; }
@@ -1069,18 +1067,6 @@
   background: color-mix(in srgb, var(--hero-card-dark-bottom) 70%, #1d4ed8);
   box-shadow: inset 0 0 0 2px #93c5fd, 0 18px 36px rgba(2, 6, 23, 0.42);
 }
-.hero-card-help, .hero-card-balance { display: block; font-size: 0.78rem; line-height: 1.5; }
-.hero-card-help { margin-top: 6px; }
-.hero-card-balance { margin-top: 3px; font-weight: 650; }
-.fund-card-category-chart { min-width: 0; }
-.fund-card-category-chart .overview-cross-aggregate-chart { display: flex; flex-direction: column; align-items: stretch; }
-.fund-card-category-chart .overview-cross-aggregate-donut { width: min(100%, 210px); margin-inline: auto; }
-.fund-card-category-chart .overview-cross-aggregate-donut svg { width: 100%; height: auto; }
-.fund-card-category-chart .overview-cross-aggregate-row { grid-template-columns: 10px minmax(0, 1fr) auto; gap: 4px 6px; }
-.fund-card-category-chart .overview-cross-aggregate-label { grid-column: 2 / -1; }
-.fund-card-category-chart .overview-cross-aggregate-value { grid-column: 2; justify-self: start; }
-.fund-card-category-chart .overview-cross-aggregate-share { grid-column: 3; }
-.overview-category-center-label { fill: var(--app-text-muted); font-size: 8px; }
-.overview-category-center-value { fill: var(--app-text); font-size: 9px; font-weight: 700; }
-.overview-category-note, .overview-category-empty { font-size: 0.75rem; line-height: 1.6; overflow-wrap: anywhere; }
-.overview-category-note { color: var(--app-text-muted); margin: 10px 0 0; }
+.fund-card-donut-value.fund-card-donut-metric-label { fill: var(--app-text-muted); font-size: 10px; }
+.fund-card-donut-value.fund-card-donut-metric-amount { font-size: 12px; }
+.fund-card-chart-empty { font-size: .8rem; line-height: 1.5; }

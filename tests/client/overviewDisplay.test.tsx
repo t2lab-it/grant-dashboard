@@ -83,7 +83,7 @@ describe("Overview display", () => {
     const hero = within(await screen.findByRole("group", { name: "年度全体の指標" }));
     expect(hero.getAllByRole("button")).toHaveLength(4);
     for (const button of hero.getAllByRole("button")) expect(button).toHaveAttribute("aria-pressed", "false");
-    expect(hero.getByText("残高 500,000円")).toBeInTheDocument();
+    expect(hero.getByRole("button", { name: "消化額 700,000円" })).toBeInTheDocument();
     const first = within(screen.getByRole("link", { name: /部分精算/ }));
     const second = within(screen.getByRole("link", { name: /超過予算/ }));
     expect(first.getByRole("img", { name: "部分精算 の予算内訳" })).toBeInTheDocument();
@@ -93,9 +93,7 @@ describe("Overview display", () => {
       expect(first.getByRole("img")).toHaveAccessibleDescription(new RegExp(`${label} ${amount}`));
       expect(screen.getByRole("heading", { name: `${label}の内訳` })).toBeInTheDocument();
       if (label === "予算総額") {
-        expect(first.getByText("(50.0%)")).toBeInTheDocument();
-        expect(first.getByText("(30.0%)")).toBeInTheDocument();
-        expect(first.getByText(/費目予算合計 800,000円.*交付額−費目予算.*200,000円/)).toBeInTheDocument();
+        expect(first.getByRole("img")).toHaveAccessibleDescription(/物品系 500,000円 50.0%.*旅費系 300,000円 30.0%/);
         const arcs = first.getByRole("img").querySelectorAll("circle[stroke-dasharray]");
         const shares = Array.from(arcs).map((arc) => {
           const circumference = 2 * Math.PI * Number(arc.getAttribute("r"));
@@ -104,8 +102,8 @@ describe("Overview display", () => {
         expect(shares[0]).toBeCloseTo(0.625);
         expect(shares[1]).toBeCloseTo(0.375);
         expect(shares.reduce((sum, share) => sum + share, 0)).toBeCloseTo(1);
-        expect(first.getAllByRole("listitem").map((row) => within(row).getByText(/物品系|旅費系/).textContent))
-          .toEqual(["物品系", "旅費系"]);
+        expect(screen.getByLabelText("予算の共通凡例")).toHaveTextContent("物品系");
+        expect(first.queryByRole("list")).not.toBeInTheDocument();
       }
     }
     await user.click(hero.getByRole("button", { name: /^消化額 / }));
@@ -113,10 +111,8 @@ describe("Overview display", () => {
     expect(panel.getByText("700,000円")).toBeInTheDocument();
     expect(panel.getByText("(71.4%)")).toBeInTheDocument();
     expect(panel.getByText("(42.9%)")).toBeInTheDocument();
-    expect(first.getByText("(40.0%)")).toBeInTheDocument();
-    expect(first.getByText("(60.0%)")).toBeInTheDocument();
-    expect(second.getByText("その他")).toBeInTheDocument();
-    expect(second.queryByText("旅費系")).not.toBeInTheDocument();
+    expect(first.getByRole("img")).toHaveAccessibleDescription(/物品系 200,000円 40.0%.*旅費系 300,000円 60.0%/);
+    expect(second.getByRole("img")).toHaveAccessibleDescription(/その他 200,000円 100.0%/);
     await user.click(screen.getByRole("button", { name: "数値" }));
     expect(first.getByText("交付額")).toBeInTheDocument();
     await user.click(hero.getByRole("button", { name: /^執行済額 / }));
@@ -150,7 +146,7 @@ describe("Overview display", () => {
     await user.click(hero.getByRole("button", { name: /^執行済額 / }));
     const negative = within(screen.getByRole("link", { name: /負値/ }));
     expect(negative.getByText("正の金額がないため円弧を表示しません。")).toBeInTheDocument();
-    expect(negative.getByText("(0.0%)")).toBeInTheDocument();
+    expect(negative.getByRole("img")).toHaveAccessibleDescription(/旅費系 -50円 0.0%/);
     expect(negative.getAllByText("-50円").length).toBeGreaterThan(0);
     for (const name of ["欠落", "空", "未配分"]) {
       expect(within(screen.getByRole("link", { name: new RegExp(`^${name} `) })).getByText("予算超過 100,000円"))
@@ -203,7 +199,7 @@ describe("Overview display", () => {
 
     expect(await screen.findByRole("button", { name: /^予算総額 10,246,706円$/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^執行予定額 7,087,000円$/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^消化額 7,087,000円/ })).toHaveTextContent("残高 3,159,706円");
+    expect(screen.getByRole("button", { name: "消化額 7,087,000円" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /ACT-X/i })).toBeInTheDocument();
     expect(screen.getByText("直近インポート")).toBeInTheDocument();
     expect(screen.getByText("budget2026.xlsx")).toBeInTheDocument();

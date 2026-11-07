@@ -1,14 +1,19 @@
+import { OverviewCrossAggregateDonut } from "./OverviewCrossAggregateDonut";
+import { getFundMetricValue, metricCopy } from "./overviewSummaryModel";
+import type { OverviewCrossAggregateCategory, OverviewSelectableMetricKey } from "./overviewSummaryTypes";
 import { useId } from "react";
 import type { CSSProperties } from "react";
 import { formatAmount, type AmountDisplayMode } from "../../lib/format";
 import {
   getRateMetric,
+  getRateMetricLabel,
   type BalanceRateThresholds,
   type ExecutionRateThresholds,
   type RateMetricKey,
 } from "../../lib/executionRate";
 import {
   createOverviewChartSegments,
+  getCrossAggregateChartColors,
   getOverBudgetChartState,
   type OverviewChartFund,
   type OverviewChartPalette,
@@ -16,6 +21,8 @@ import {
 
 type OverviewFundChartProps = {
   fund: OverviewChartFund;
+  categoryMetric?: OverviewSelectableMetricKey | null;
+  crossAggregateCategories?: OverviewCrossAggregateCategory[];
   palette: OverviewChartPalette;
   rateMetric: RateMetricKey;
   amountDisplayMode: AmountDisplayMode;
@@ -25,6 +32,8 @@ type OverviewFundChartProps = {
 
 export function OverviewFundChart({
   fund,
+  categoryMetric = null,
+  crossAggregateCategories,
   palette,
   rateMetric,
   amountDisplayMode,
@@ -64,6 +73,32 @@ export function OverviewFundChart({
     `執行予定 ${formatAmount(fund.committed_amount, amountDisplayMode)}`,
     `残高 ${formatAmount(fund.freeBalance, amountDisplayMode)}`,
   ].join("、");
+
+  if (categoryMetric !== null) {
+    const totalValue = getFundMetricValue(categoryMetric, fund);
+    const budgetTotal = crossAggregateCategories?.reduce((sum, row) => sum + (row.budgetAmount ?? 0), 0) ?? 0;
+    const budgetDifference = fund.awarded_amount - budgetTotal;
+    return <div className="fund-card-category-chart">
+      {crossAggregateCategories === undefined ? <>
+        <p>{`${metricCopy[categoryMetric].label} ${formatAmount(totalValue, amountDisplayMode)}`}</p>
+        <p className="overview-category-empty">大費目別内訳を表示できません。</p>
+      </> : <OverviewCrossAggregateDonut
+        amountDisplayMode={amountDisplayMode}
+        colors={getCrossAggregateChartColors(palette)}
+        metric={categoryMetric}
+        rows={crossAggregateCategories}
+        totalValue={totalValue}
+        fundName={fund.name}
+      />}
+      <div className="fund-card-chart-metrics">
+        <p className="fund-card-row"><span>{getRateMetricLabel(rateMetric)}</span><strong className={rate.className}>{rate.label}</strong></p>
+        {overBudgetAmount > 0 ? <p><strong className="detail-rate-alert">{`予算超過 ${formatAmount(overBudgetAmount, amountDisplayMode)}`}</strong></p> : null}
+      </div>
+      {categoryMetric === "assets" && crossAggregateCategories !== undefined && crossAggregateCategories.length > 0 && budgetDifference !== 0 ?
+        <p className="overview-category-note">{`費目予算合計 ${formatAmount(budgetTotal, amountDisplayMode)}／交付額との差（交付額−費目予算）${formatAmount(budgetDifference, amountDisplayMode)}。円弧は正の費目予算合計、凡例の割合は交付額を基準に表示します。`}</p>
+        : null}
+    </div>;
+  }
 
   return (
     <div className="fund-card-chart">

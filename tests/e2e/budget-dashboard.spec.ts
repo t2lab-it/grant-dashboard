@@ -54,6 +54,40 @@ test("overview to fund detail to form flow works", async ({ page }) => {
   );
 });
 
+test("overview category selection uses the real API and toggles back with keyboard controls", async ({ page }) => {
+  await page.goto("/?year=2026");
+  const dismiss = page.getByRole("button", { name: "今回は始めない" });
+  await dismiss.click();
+  const hero = page.getByRole("group", { name: "年度全体の指標" });
+  await expect(hero.getByRole("button", { pressed: true })).toHaveCount(0);
+  const requests: string[] = [];
+  page.on("request", (request) => { if (/\/api\/(overview|funds\/)/.test(request.url())) requests.push(request.url()); });
+  for (const label of ["予算総額", "消化額"]) {
+    const button = hero.getByRole("button", { name: new RegExp(`^${label} `) });
+    await button.focus();
+    await page.keyboard.press("Enter");
+    await expect(button).toHaveAttribute("aria-pressed", "true");
+    await expect(hero.getByRole("button", { pressed: true })).toHaveCount(1);
+    await expect(page.getByRole("img", { name: `デモ研究費A の${label}の大費目別内訳グラフ` })).toBeVisible();
+    await expect(page.getByRole("heading", { name: `${label}の内訳` })).toBeVisible();
+  }
+  await page.keyboard.press("Space");
+  await expect(hero.getByRole("button", { pressed: true })).toHaveCount(0);
+  await expect(page.getByRole("img", { name: "デモ研究費A の予算内訳" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "予算総額の内訳" })).toBeVisible();
+  expect(requests).toEqual([]);
+  await hero.getByRole("button", { name: /^消化額 / }).click();
+  await expect(hero.getByText(/残高 [\d,]+円/)).toBeVisible();
+  await page.getByRole("button", { name: "2026年6月の月ラベルから消化額サマリを開く" }).click();
+  await expect(page).toHaveURL(/summaryMetric=consumed/);
+  const dialog = page.getByRole("dialog", { name: "2026年6月の予算横断サマリ" });
+  await expect(dialog.getByRole("table", { name: "予算別一覧" }).getByRole("columnheader", { name: "執行＋予定の累計" })).toHaveAttribute("data-highlighted", "true");
+  await dialog.getByRole("button", { name: "翌月" }).click();
+  await expect(page.getByRole("dialog", { name: "2026年7月の予算横断サマリ" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
 test("demo tutorial starts on overview and moves to fund detail", async ({ page }) => {
   const overviewResponsePromise = page.waitForResponse("**/api/overview");
   await page.goto("/");
@@ -185,7 +219,7 @@ test("preserves form input on failure, saves and reloads it, then settles only t
   await expect(page.locator('[data-search-focus="true"]')).toContainText("回帰確認の購入予定");
 });
 
-test("keeps a directly opened monthly summary above the startup prompt and follows year links", async ({ page }) => {
+test("keeps a directly opened balance monthly summary above the startup prompt and follows year links", async ({ page }) => {
   await page.goto("/?year=2026&month=2026-06&summaryMetric=balance");
   const summary = page.getByRole("dialog", { name: "2026年6月の予算横断サマリ" });
   await expect(summary).toBeVisible();

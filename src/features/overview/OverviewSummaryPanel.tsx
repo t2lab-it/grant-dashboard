@@ -52,7 +52,8 @@ function createInsightCards({
   totals: OverviewTotals;
 }): OverviewInsight[] {
   switch (metric) {
-    case "assets": {
+    case "assets":
+    case "consumed": {
       return [
         { label: "予算数", value: `${funds.length}件` },
         { label: "計画化率", value: formatPercentage(totals.actual + totals.committed, totals.assets) },
@@ -174,7 +175,7 @@ export function OverviewSummaryPanel({
                   <span className="overview-context-inline-rank">{`${index + 1}.`}</span>
                   <span className="overview-context-inline-name">{item.name}</span>
                   <span className="overview-context-inline-value">{formatAmount(item.value, amountDisplayMode)}</span>
-                  <span className="overview-context-inline-share">{`(${formatPercentage(item.value, totalValue || 1)})`}</span>
+                  <span className="overview-context-inline-share">{`(${formatPercentage(item.value, metric === "consumed" ? totalValue : totalValue || 1)})`}</span>
                 </span>
               </li>
             ))}

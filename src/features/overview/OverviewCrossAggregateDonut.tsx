@@ -11,15 +11,18 @@ export function OverviewCrossAggregateDonut({
   metric,
   rows,
   totalValue,
+  fundName,
 }: {
   amountDisplayMode: AmountDisplayMode;
   colors: CrossAggregateChartColors;
   metric: OverviewSummaryMetricKey;
   rows: OverviewCrossAggregateCategory[];
   totalValue: number;
+  fundName?: string;
 }) {
   const chartSummaryId = useId();
   const copy = metricCopy[metric];
+  const percentageBase = fundName !== undefined || metric === "consumed" ? totalValue : totalValue || 1;
   const displayRows = rows
     .map((row) => ({
       ...row,
@@ -33,11 +36,12 @@ export function OverviewCrossAggregateDonut({
   const chartStroke = 16;
   const chartCircumference = 2 * Math.PI * chartRadius;
   let accumulatedPercentage = 0;
-  const accessibleSummary = displayRows
-    .map((row) => `${row.label} ${formatAmount(row.value, amountDisplayMode)} ${formatPercentage(row.value, totalValue || 1)}`)
-    .join("、");
+  const accessibleSummary = [
+    ...(fundName !== undefined ? [`${copy.label} ${formatAmount(totalValue, amountDisplayMode)}`] : []),
+    ...displayRows.map((row) => `${row.label} ${formatAmount(row.value, amountDisplayMode)} ${formatPercentage(row.value, percentageBase)}`),
+  ].join("、");
 
-  if (displayRows.length === 0) {
+  if (displayRows.length === 0 && fundName === undefined) {
     return <p className="overview-context-empty">まだ大費目のデータがありません。</p>;
   }
 
@@ -47,7 +51,7 @@ export function OverviewCrossAggregateDonut({
         <svg
           viewBox="0 0 128 128"
           role="img"
-          aria-label={`${copy.label}の大費目別内訳グラフ`}
+          aria-label={`${fundName ? `${fundName} の` : ""}${copy.label}の大費目別内訳グラフ`}
           aria-describedby={chartSummaryId}
           focusable="false"
         >
@@ -83,11 +87,23 @@ export function OverviewCrossAggregateDonut({
                 );
               })
             : null}
+          {fundName !== undefined ? <>
+            <text x="64" y="57" textAnchor="middle" className="overview-category-center-label">{copy.label}</text>
+            <text x="64" y="74" textAnchor="middle" className="overview-category-center-value"
+              textLength={formatAmount(totalValue, amountDisplayMode).length > 10 ? 64 : undefined}
+              lengthAdjust="spacingAndGlyphs">{formatAmount(totalValue, amountDisplayMode)}</text>
+          </> : null}
         </svg>
         <figcaption id={chartSummaryId} className="sr-only">
           {accessibleSummary}
         </figcaption>
       </figure>
+      {fundName !== undefined && chartTotal === 0 ? <p className="overview-category-empty">{
+        rows.length === 0 ? "大費目データなし"
+        : metric === "assets" && rows.every((row) => row.budgetAmount === null) ? "費目別予算が未設定"
+        : displayRows.length === 0 ? `${copy.label}は0円です。`
+        : "正の金額がないため円弧を表示しません。"
+      }</p> : null}
       <ol className="overview-cross-aggregate-legend">
         {displayRows.map((row) => (
           <li key={row.crossAggregateCategory} className="overview-cross-aggregate-row">
@@ -97,7 +113,7 @@ export function OverviewCrossAggregateDonut({
             />
             <span className="overview-cross-aggregate-label">{row.label}</span>
             <span className="overview-cross-aggregate-value">{formatAmount(row.value, amountDisplayMode)}</span>
-            <span className="overview-cross-aggregate-share">{`(${formatPercentage(row.value, totalValue || 1)})`}</span>
+            <span className="overview-cross-aggregate-share">{`(${formatPercentage(row.value, percentageBase)})`}</span>
           </li>
         ))}
       </ol>

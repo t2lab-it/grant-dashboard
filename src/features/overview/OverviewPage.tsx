@@ -27,6 +27,7 @@ import {
   type OverviewChartFund,
 } from "./overviewChart";
 import type { CrossAggregateCategoryAmounts } from "../../contracts/crossAggregateCategory";
+import type { OverviewSelectableMetricKey } from "./overviewSummaryTypes";
 import { RateMetricToggle } from "../funds/RateMetricToggle";
 import { setRateSearchParam } from "../funds/rateQueryParams";
 import type { RateMetricKey } from "../../lib/executionRate";
@@ -108,7 +109,7 @@ function isProjectTagFilterKey(value: string | null): value is ProjectTagFilterK
 }
 
 function isOverviewSummaryMetric(value: string | null): value is OverviewSummaryMetricKey {
-  return value === "assets" || value === "actual" || value === "committed" || value === "balance";
+  return value === "assets" || value === "consumed" || value === "actual" || value === "committed" || value === "balance";
 }
 
 function projectTagFilterMatchesFund(
@@ -155,7 +156,7 @@ export function OverviewPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const requestedFiscalYear = getFiscalYearFromSearch(`?${searchParams.toString()}`);
-  const [activeSummaryMetric, setActiveSummaryMetric] = useState<OverviewSummaryMetricKey>("assets");
+  const [activeSummaryMetric, setActiveSummaryMetric] = useState<OverviewSelectableMetricKey | null>(null);
   const {
     settings: {
       themePreset,
@@ -199,6 +200,7 @@ export function OverviewPage() {
   const filteredFunds = data.funds.filter((fund) => projectTagFilterMatchesFund(activeProjectTagFilter, fund));
   const palette = getOverviewChartPalette(themePreset, customChartPresets);
   const monthlyStatus = data.monthlyStatus;
+  const crossAggregateOrder = new Map(data.crossAggregateCategories.map((row, index) => [row.crossAggregateCategory, index]));
   const assetsHeroStyle: HeroCardStyle = {
     "--hero-card-accent-start": "rgba(255, 255, 255, 0.96)",
     "--hero-card-accent-end": "rgba(148, 163, 184, 0.16)",
@@ -212,17 +214,7 @@ export function OverviewPage() {
   };
   const actualHeroStyle = createTintedHeroStyle(palette.actual);
   const committedHeroStyle = createTintedHeroStyle(palette.committed);
-  const balanceHeroStyle: HeroCardStyle = {
-    "--hero-card-accent-start": "rgba(255, 255, 255, 0.96)",
-    "--hero-card-accent-end": palette.balance,
-    "--hero-card-base": palette.balance,
-    "--hero-card-border": palette.balanceBorder,
-    "--hero-card-dark-top": "rgba(25, 38, 57, 0.98)",
-    "--hero-card-dark-bottom": "rgba(18, 28, 43, 0.98)",
-    "--hero-card-dark-glow": hexToRgba(palette.balance, 0.28),
-    "--hero-card-dark-border": hexToRgba(palette.balanceBorder, 0.38),
-    "--hero-card-dark-active-border": hexToRgba(palette.balanceBorder, 0.54),
-  };
+  const consumedHeroStyle = createTintedHeroStyle(palette.actual);
 
   function updateOverviewRateMetric(value: RateMetricKey) {
     const nextParams = new URLSearchParams(searchParams);
@@ -250,7 +242,7 @@ export function OverviewPage() {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set("year", String(selectedFiscalYear));
     nextParams.set("month", month);
-    nextParams.set("summaryMetric", activeSummaryMetric);
+    nextParams.set("summaryMetric", activeSummaryMetric ?? "assets");
     setSearchParams(nextParams, {
       state: { monthlySummaryBackgroundSearch: searchParams.toString() },
     });
@@ -294,15 +286,15 @@ export function OverviewPage() {
       ? requestedSummaryMonth
       : null;
   const heroCards: Array<{
-    key: OverviewSummaryMetricKey;
+    key: OverviewSelectableMetricKey;
     label: string;
     amount: number;
     style?: CSSProperties;
   }> = [
     { key: "assets", label: "予算総額", amount: data.totals.assets, style: assetsHeroStyle as CSSProperties },
+    { key: "consumed", label: "消化額", amount: data.totals.actual + data.totals.committed, style: consumedHeroStyle },
     { key: "actual", label: "執行済額", amount: data.totals.actual, style: actualHeroStyle as CSSProperties },
     { key: "committed", label: "執行予定額", amount: data.totals.committed, style: committedHeroStyle as CSSProperties },
-    { key: "balance", label: "残高", amount: data.totals.freeBalance, style: balanceHeroStyle as CSSProperties },
   ];
   const shouldShowFirstRunGuide = !staticDemoMode && (data.funds.length === 0 || data.latestImport === null);
 
@@ -330,12 +322,18 @@ export function OverviewPage() {
               style={card.style}
               data-tour-id={`overview-summary-card-${card.key}`}
               aria-controls="overview-summary-context"
-              aria-expanded={isActive}
               aria-pressed={isActive}
-              onClick={() => setActiveSummaryMetric(card.key)}
+              onClick={() => setActiveSummaryMetric(isActive ? null : card.key)}
             >
               <p>{card.label}</p>
               <strong className="hero-card-amount">{formatAmount(card.amount, amountDisplayMode)}</strong>
+              {card.key === "consumed" ? <>
+                <span className="hero-card-help">執行済額＋未実行の執行予定残額</span>
+                <span className={data.totals.freeBalance < 0 ? "hero-card-balance detail-rate-alert" : "hero-card-balance"}>
+                  {`残高 ${formatAmount(data.totals.freeBalance, amountDisplayMode)}`}
+                  {data.totals.freeBalance < 0 ? "（予算超過）" : ""}
+                </span>
+              </> : null}
             </button>
           );
         })}
@@ -414,7 +412,7 @@ export function OverviewPage() {
           )}
         </div>
       </header>
-      {displayMode === "chart" ? (
+      {displayMode === "chart" && activeSummaryMetric === null ? (
         <div className="overview-shared-legend" aria-label="予算の共通凡例">
           {([ ["執行済", palette.actual], ["執行予定", palette.committed], ["残高", palette.balance] ] as const).map(([label, color]) => (
             <span key={label}><i className="fund-card-legend-chip" style={{ backgroundColor: color }} aria-hidden="true" />{label}</span>
@@ -467,6 +465,11 @@ export function OverviewPage() {
               {displayMode === "chart" ? (
                 <OverviewFundChart
                   fund={fund}
+                  categoryMetric={activeSummaryMetric}
+                  crossAggregateCategories={fund.crossAggregateCategories?.slice().sort((left, right) =>
+                    (crossAggregateOrder.get(left.crossAggregateCategory) ?? crossAggregateOrder.size)
+                    - (crossAggregateOrder.get(right.crossAggregateCategory) ?? crossAggregateOrder.size),
+                  )}
                   palette={palette}
                   rateMetric={rateMetric}
                   amountDisplayMode={amountDisplayMode}
@@ -504,7 +507,7 @@ export function OverviewPage() {
       </section>
       <OverviewSummaryPanel
         id="overview-summary-context"
-        metric={activeSummaryMetric}
+        metric={activeSummaryMetric ?? "assets"}
         totals={data.totals}
         funds={data.funds}
         monthlyStatus={monthlyStatus}

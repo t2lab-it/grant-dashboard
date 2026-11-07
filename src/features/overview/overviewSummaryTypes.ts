@@ -3,7 +3,9 @@ import type { BalanceRateThresholds } from "../../lib/executionRate";
 import type { AmountDisplayMode } from "../../lib/format";
 import type { OverviewChartPalette } from "./overviewChart";
 
-export type OverviewSummaryMetricKey = "assets" | "actual" | "committed" | "balance";
+export type OverviewSummaryMetricKey = "assets" | "consumed" | "actual" | "committed" | "balance";
+
+export type OverviewSelectableMetricKey = Exclude<OverviewSummaryMetricKey, "balance">;
 
 export type OverviewTotals = {
   assets: number;

@@ -121,10 +121,10 @@ describe("Demo tutorial", () => {
     expect(await screen.findByRole("dialog", { name: "チュートリアルを始めますか？" })).toBeInTheDocument();
   });
 
-  it("waits for a directly opened monthly summary to close before prompting", async () => {
+  it.each(["balance", "consumed"])("waits for a directly opened %s monthly summary to close before prompting", async (metric) => {
     const user = userEvent.setup();
     mockDemoOverviewAndFundDetail();
-    renderAppRoute("/?year=2026&month=2026-06&summaryMetric=balance");
+    renderAppRoute(`/?year=2026&month=2026-06&summaryMetric=${metric}`);
     const monthly = await screen.findByRole("dialog", { name: "2026年6月の予算横断サマリ" });
     expect(screen.queryByRole("dialog", { name: "チュートリアルを始めますか？" })).not.toBeInTheDocument();
     await user.click(within(monthly).getByRole("button", { name: "月別サマリを閉じる" }));

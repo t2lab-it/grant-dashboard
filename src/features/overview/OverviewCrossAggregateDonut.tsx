@@ -20,7 +20,7 @@ export function OverviewCrossAggregateDonut({
 }) {
   const chartSummaryId = useId();
   const copy = metricCopy[metric];
-  const percentageBase = metric === "consumed" ? totalValue : totalValue || 1;
+  const percentageBase = metric === "assets" || metric === "consumed" ? totalValue : totalValue || 1;
   const displayRows = rows
     .map((row) => ({
       ...row,

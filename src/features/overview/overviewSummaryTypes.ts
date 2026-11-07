@@ -28,6 +28,7 @@ export type OverviewSummaryFund = {
   committed_amount: number;
   actual_amount: number;
   freeBalance: number;
+  crossAggregateCategories?: OverviewCrossAggregateCategory[];
 };
 
 export type OverviewCrossAggregateCategory = CrossAggregateCategoryAmounts;

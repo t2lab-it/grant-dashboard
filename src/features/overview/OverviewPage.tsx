@@ -29,6 +29,7 @@ import {
 } from "./overviewChart";
 import { CROSS_AGGREGATE_CATEGORY_CODES, CROSS_AGGREGATE_CATEGORY_LABELS, type CrossAggregateCategoryAmounts } from "../../contracts/crossAggregateCategory";
 import type { OverviewSelectableMetricKey } from "./overviewSummaryTypes";
+import { getCategoryBudgetTotal, metricCopy } from "./overviewSummaryModel";
 import { RateMetricToggle } from "../funds/RateMetricToggle";
 import { setRateSearchParam } from "../funds/rateQueryParams";
 import type { RateMetricKey } from "../../lib/executionRate";
@@ -298,7 +299,7 @@ export function OverviewPage() {
     amount: number;
     style?: CSSProperties;
   }> = [
-    { key: "assets", label: "予算総額", amount: data.totals.assets, style: assetsHeroStyle as CSSProperties },
+    { key: "assets", label: metricCopy.assets.label, amount: getCategoryBudgetTotal(data.crossAggregateCategories), style: assetsHeroStyle as CSSProperties },
     { key: "consumed", label: "消化額", amount: data.totals.actual + data.totals.committed, style: consumedHeroStyle },
     { key: "actual", label: "執行済額", amount: data.totals.actual, style: actualHeroStyle as CSSProperties },
     { key: "committed", label: "執行予定額", amount: data.totals.committed, style: committedHeroStyle as CSSProperties },

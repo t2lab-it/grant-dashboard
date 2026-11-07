@@ -43,7 +43,8 @@ export function OverviewFundChart({
 }: OverviewFundChartProps) {
   const chartSummaryId = useId();
   const categoryLabel = categoryMetric === null ? "" : metricCopy[categoryMetric].label;
-  const categoryAmount = categoryMetric === null ? 0 : getFundMetricValue(categoryMetric, fund);
+  const categoryAmount = categoryMetric === null ? 0 : getFundMetricValue(categoryMetric, { ...fund, crossAggregateCategories });
+  const categoryAmountLabel = categoryAmount === null ? "—" : formatAmount(categoryAmount, amountDisplayMode);
   const categoryRows = categoryMetric === null ? [] : (crossAggregateCategories ?? []).map((row) => ({
     label: CROSS_AGGREGATE_CATEGORY_LABELS[row.crossAggregateCategory],
     value: getCrossAggregateMetricValue(categoryMetric, row),
@@ -92,9 +93,9 @@ export function OverviewFundChart({
     `執行予定 ${formatAmount(fund.committed_amount, amountDisplayMode)}`,
     `残高 ${formatAmount(fund.freeBalance, amountDisplayMode)}`,
   ].join("、") : [
-    `${categoryLabel} ${formatAmount(categoryAmount, amountDisplayMode)}`,
+    `${categoryLabel} ${categoryAmountLabel}`,
     ...categoryRows.filter((row) => row.value !== 0)
-      .map((row) => `${row.label} ${formatAmount(row.value, amountDisplayMode)} ${formatPercentage(row.value, categoryAmount)}`),
+      .map((row) => `${row.label} ${formatAmount(row.value, amountDisplayMode)} ${formatPercentage(row.value, categoryAmount ?? 0)}`),
     ...(categoryStatus ? [categoryStatus] : []),
   ].join("、");
 
@@ -172,8 +173,8 @@ export function OverviewFundChart({
           {categoryMetric !== null ? <>
             <text x="80" y="71" textAnchor="middle" className="fund-card-donut-value fund-card-donut-metric-label">{categoryLabel}</text>
             <text x="80" y="92" textAnchor="middle" className="fund-card-donut-value fund-card-donut-metric-amount"
-              textLength={formatAmount(categoryAmount, amountDisplayMode).length > 10 ? 80 : undefined}
-              lengthAdjust="spacingAndGlyphs">{formatAmount(categoryAmount, amountDisplayMode)}</text>
+              textLength={categoryAmountLabel.length > 10 ? 80 : undefined}
+              lengthAdjust="spacingAndGlyphs">{categoryAmountLabel}</text>
           </> : overBudgetAmount > 0 ? (
             <>
               <text

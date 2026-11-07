@@ -4,7 +4,7 @@ import type { OverviewCrossAggregateCategory, OverviewMonthlyStatus, OverviewSum
 
 export const metricCopy = {
   assets: {
-    label: "予算総額",
+    label: "費目予算",
     trendLabel: "執行＋予定の累計",
   },
   consumed: {
@@ -27,10 +27,14 @@ export const metricCopy = {
   },
 } as const;
 
-export function getTotalMetricValue(metric: OverviewSummaryMetricKey, totals: OverviewTotals) {
+export function getCategoryBudgetTotal(rows: OverviewCrossAggregateCategory[]) {
+  return rows.reduce((sum, row) => sum + (row.budgetAmount ?? 0), 0);
+}
+
+export function getTotalMetricValue(metric: OverviewSummaryMetricKey, totals: OverviewTotals, categories: OverviewCrossAggregateCategory[]) {
   switch (metric) {
     case "assets":
-      return totals.assets;
+      return getCategoryBudgetTotal(categories);
     case "consumed":
       return totals.actual + totals.committed;
     case "actual":
@@ -44,7 +48,7 @@ export function getTotalMetricValue(metric: OverviewSummaryMetricKey, totals: Ov
 export function getFundMetricValue(metric: OverviewSummaryMetricKey, fund: Omit<OverviewSummaryFund, "id">) {
   switch (metric) {
     case "assets":
-      return fund.awarded_amount;
+      return fund.crossAggregateCategories === undefined ? null : getCategoryBudgetTotal(fund.crossAggregateCategories);
     case "consumed":
       return fund.actual_amount + fund.committed_amount;
     case "actual":

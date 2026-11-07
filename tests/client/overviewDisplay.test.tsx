@@ -69,12 +69,12 @@ describe("Overview display", () => {
       { crossAggregateCategory: "equipment" as const, budgetAmount: 500000, plannedAmount: 0, actualAmount: 200000 },
       { crossAggregateCategory: "travel" as const, budgetAmount: 300000, plannedAmount: 300000, actualAmount: 0 },
     ];
-    mockOverviewResponse({ totals: { assets: 1200000, actual: 300000, committed: 400000, freeBalance: 500000 },
+    mockOverviewResponse({ totals: { assets: 3000000, actual: 300000, committed: 400000, freeBalance: 2300000 },
       crossAggregateCategories: [...rows, { crossAggregateCategory: "other", budgetAmount: null, actualAmount: 100000, plannedAmount: 100000 }],
       funds: [buildOverviewFund({ name: "部分精算", awarded_amount: 1000000, actual_amount: 200000,
         committed_amount: 300000, freeBalance: 500000, crossAggregateCategories: [...rows].reverse() }),
-        buildOverviewFund({ id: 2, name: "超過予算", awarded_amount: 200000, actual_amount: 100000,
-          committed_amount: 100000, freeBalance: 0, crossAggregateCategories: [
+        buildOverviewFund({ id: 2, name: "超過予算", awarded_amount: 2000000, actual_amount: 100000,
+          committed_amount: 100000, freeBalance: 1800000, crossAggregateCategories: [
             { crossAggregateCategory: "other", budgetAmount: null, actualAmount: 100000, plannedAmount: 100000 },
           ] }),
       ],
@@ -83,17 +83,25 @@ describe("Overview display", () => {
     const hero = within(await screen.findByRole("group", { name: "年度全体の指標" }));
     expect(hero.getAllByRole("button")).toHaveLength(4);
     for (const button of hero.getAllByRole("button")) expect(button).toHaveAttribute("aria-pressed", "false");
+    expect(hero.getByRole("button", { name: "費目予算 800,000円" })).toBeInTheDocument();
     expect(hero.getByRole("button", { name: "消化額 700,000円" })).toBeInTheDocument();
     const first = within(screen.getByRole("link", { name: /部分精算/ }));
     const second = within(screen.getByRole("link", { name: /超過予算/ }));
     expect(first.getByRole("img", { name: "部分精算 の予算内訳" })).toBeInTheDocument();
-    for (const [label, amount] of [["予算総額", "1,000,000円"], ["消化額", "500,000円"], ["執行済額", "200,000円"], ["執行予定額", "300,000円"]]) {
+    for (const [label, amount] of [["費目予算", "800,000円"], ["消化額", "500,000円"], ["執行済額", "200,000円"], ["執行予定額", "300,000円"]]) {
       await user.click(hero.getByRole("button", { name: new RegExp(`^${label} `) }));
       expect(first.getByRole("img", { name: `部分精算 の${label}の大費目別内訳グラフ` })).toHaveTextContent(amount);
       expect(first.getByRole("img")).toHaveAccessibleDescription(new RegExp(`${label} ${amount}`));
       expect(screen.getByRole("heading", { name: `${label}の内訳` })).toBeInTheDocument();
-      if (label === "予算総額") {
-        expect(first.getByRole("img")).toHaveAccessibleDescription(/物品系 500,000円 50.0%.*旅費系 300,000円 30.0%/);
+      if (label === "費目予算") {
+        const panel = within(screen.getByRole("complementary", { name: "予算概要の分析" }));
+        const budgetRow = panel.getByText("部分精算").closest("li")!;
+        expect(budgetRow).toHaveTextContent("800,000円(100.0%)");
+        expect(panel.getByText("超過予算").closest("li")).toHaveTextContent("0円(0.0%)");
+        expect(within(budgetRow.closest("ol")!).getAllByRole("listitem")[0]).toBe(budgetRow);
+        expect(panel.getByRole("img", { name: "費目予算の大費目別内訳グラフ" }))
+          .toHaveAccessibleDescription(/物品系 500,000円 62.5%.*旅費系 300,000円 37.5%/);
+        expect(first.getByRole("img")).toHaveAccessibleDescription(/物品系 500,000円 62.5%.*旅費系 300,000円 37.5%/);
         const arcs = first.getByRole("img").querySelectorAll("circle[stroke-dasharray]");
         const shares = Array.from(arcs).map((arc) => {
           const circumference = 2 * Math.PI * Number(arc.getAttribute("r"));
@@ -119,7 +127,7 @@ describe("Overview display", () => {
     expect(first.getByRole("img", { name: /執行済額の大費目/ })).toBeInTheDocument();
     await user.click(hero.getByRole("button", { name: /^執行済額 / }));
     expect(first.getByRole("img", { name: "部分精算 の予算内訳" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "予算総額の内訳" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "費目予算の内訳" })).toBeInTheDocument();
   });
 
   it("distinguishes missing, empty, unallocated and negative categories while preserving rates and warnings", async () => {
@@ -137,10 +145,13 @@ describe("Overview display", () => {
     ] });
     renderOverviewPage();
     const hero = within(await screen.findByRole("group", { name: "年度全体の指標" }));
-    await user.click(hero.getByRole("button", { name: /^予算総額 / }));
+    await user.click(hero.getByRole("button", { name: /^費目予算 / }));
     expect(screen.getByText("大費目別内訳を表示できません。")).toBeInTheDocument();
     expect(screen.getByText("大費目データなし")).toBeInTheDocument();
     expect(screen.getByText("費目別予算が未設定")).toBeInTheDocument();
+    expect(within(screen.getByRole("link", { name: /欠落/ })).getByRole("img")).toHaveTextContent("—");
+    const panel = within(screen.getByRole("complementary", { name: "予算概要の分析" }));
+    expect(panel.getByText("欠落").closest("li")).toHaveTextContent("内訳取得不可");
     await user.click(hero.getByRole("button", { name: /^執行済額 / }));
     const negative = within(screen.getByRole("link", { name: /負値/ }));
     expect(negative.getByText("正の金額がないため円弧を表示しません。")).toBeInTheDocument();
@@ -190,7 +201,7 @@ describe("Overview display", () => {
 
     renderAppRoute("/");
 
-    expect(await screen.findByRole("button", { name: /^予算総額 10,246,706円$/ })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /^費目予算 0円$/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^執行予定額 7,087,000円$/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /ACT-X/i })).toBeInTheDocument();
     expect(screen.getByText("直近インポート")).toBeInTheDocument();
@@ -485,7 +496,7 @@ describe("Overview display", () => {
     const view = renderAppRoute("/?rate=balance&projectTag=tag-1");
 
     const monthLabel = await screen.findByRole("button", {
-      name: "2026年6月の月ラベルから予算総額サマリを開く",
+      name: "2026年6月の月ラベルから費目予算サマリを開く",
     });
     expect(
       fetchMock.mock.calls.some(([input]) => String(input).startsWith("/api/overview/monthly-summary")),
@@ -662,7 +673,7 @@ describe("Overview display", () => {
     });
     const view = renderAppRoute("/?rate=balance");
     const monthLabel = await screen.findByRole("button", {
-      name: "2026年6月の月ラベルから予算総額サマリを開く",
+      name: "2026年6月の月ラベルから費目予算サマリを開く",
     });
 
     monthLabel.focus();
@@ -794,7 +805,7 @@ describe("Overview display", () => {
     const view = renderAppRoute("/?year=2026");
 
     const dataPoint = await screen.findByRole("button", {
-      name: "2026年6月の予算総額データ点からサマリを開く",
+      name: "2026年6月の費目予算データ点からサマリを開く",
     });
     expect(dataPoint.querySelector(".overview-context-trend-hit-target")).toHaveAttribute("r", "12");
 
@@ -880,11 +891,11 @@ describe("Overview display", () => {
       renderOverviewPage();
       await vi.runAllTimersAsync();
 
-      expect(screen.getByRole("button", { name: /^予算総額 1,000,000円$/ })).toHaveAttribute(
+      expect(screen.getByRole("button", { name: /^費目予算 1,000,000円$/ })).toHaveAttribute(
         "aria-pressed",
         "false",
       );
-      expect(screen.getByRole("heading", { name: "予算総額の内訳" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "費目予算の内訳" })).toBeInTheDocument();
       expect(screen.getByText("予算数")).toBeInTheDocument();
       expect(screen.getByText("2件")).toBeInTheDocument();
       expect(screen.getByText("計画化率")).toBeInTheDocument();

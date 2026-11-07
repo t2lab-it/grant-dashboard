@@ -125,14 +125,15 @@ export function OverviewSummaryPanel({
   totals,
 }: OverviewSummaryPanelProps) {
   const copy = metricCopy[metric];
-  const totalValue = getTotalMetricValue(metric, totals);
+  const totalValue = getTotalMetricValue(metric, totals, crossAggregateCategories);
   const breakdown = [...funds]
     .map((fund) => ({
       id: fund.id,
       name: fund.name,
       value: getFundMetricValue(metric, fund),
     }))
-    .sort((left, right) => right.value - left.value);
+    .sort((left, right) => Number(left.value === null) - Number(right.value === null)
+      || (right.value ?? 0) - (left.value ?? 0));
   const insights = createInsightCards({
     amountDisplayMode,
     funds,
@@ -174,8 +175,8 @@ export function OverviewSummaryPanel({
                 <span className="overview-context-inline-summary">
                   <span className="overview-context-inline-rank">{`${index + 1}.`}</span>
                   <span className="overview-context-inline-name">{item.name}</span>
-                  <span className="overview-context-inline-value">{formatAmount(item.value, amountDisplayMode)}</span>
-                  <span className="overview-context-inline-share">{`(${formatPercentage(item.value, metric === "consumed" ? totalValue : totalValue || 1)})`}</span>
+                  <span className="overview-context-inline-value">{item.value === null ? "内訳取得不可" : formatAmount(item.value, amountDisplayMode)}</span>
+                  {item.value === null ? null : <span className="overview-context-inline-share">{`(${formatPercentage(item.value, metric === "assets" || metric === "consumed" ? totalValue : totalValue || 1)})`}</span>}
                 </span>
               </li>
             ))}

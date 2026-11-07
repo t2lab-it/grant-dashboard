@@ -15,8 +15,8 @@ export type DemoTutorialStep = {
 export const standardDemoTutorialSteps: DemoTutorialStep[] = [
   {
     id: "overview-summary",
-    title: "予算総額の内訳",
-    body: "最初から開いている分析パネルで、総額、予定、実績、残高の全体像を確認します。",
+    title: "費目予算の内訳",
+    body: "最初から開いている分析パネルで、設定した費目予算の合計と内訳を確認します。上部の指標を選ぶと、消化額、執行済額、執行予定額へ切り替わります。",
     targetId: "overview-summary",
     route: "overview",
   },

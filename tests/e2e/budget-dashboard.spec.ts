@@ -67,7 +67,7 @@ test("overview category selection uses the real API and toggles back with keyboa
   expect(standardRing).not.toBeNull();
   const requests: string[] = [];
   page.on("request", (request) => { if (/\/api\/(overview|funds\/)/.test(request.url())) requests.push(request.url()); });
-  for (const label of ["予算総額", "消化額"]) {
+  for (const label of ["費目予算", "消化額"]) {
     const button = hero.getByRole("button", { name: new RegExp(`^${label} `) });
     await button.focus();
     await page.keyboard.press("Enter");
@@ -87,7 +87,7 @@ test("overview category selection uses the real API and toggles back with keyboa
   await page.keyboard.press("Space");
   await expect(hero.getByRole("button", { pressed: true })).toHaveCount(0);
   await expect(page.getByRole("img", { name: "デモ研究費A の予算内訳" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "予算総額の内訳" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "費目予算の内訳" })).toBeVisible();
   expect(requests).toEqual([]);
   await hero.getByRole("button", { name: /^消化額 / }).click();
   await expect(hero.getByRole("button", { name: /^消化額 [\d,]+円$/ })).toBeVisible();
@@ -114,8 +114,8 @@ test("demo tutorial starts on overview and moves to fund detail", async ({ page 
   await prompt.getByRole("button", { name: "チュートリアルを始める" }).click();
 
   const tutorial = page.getByRole("dialog", { name: "チュートリアル" });
-  await expect(tutorial.getByText("予算総額の内訳")).toBeVisible();
-  await expect(page.getByTestId("tour-target-overview-summary").getByRole("heading", { name: "予算総額の内訳" })).toBeVisible();
+  await expect(tutorial.getByText("費目予算の内訳")).toBeVisible();
+  await expect(page.getByTestId("tour-target-overview-summary").getByRole("heading", { name: "費目予算の内訳" })).toBeVisible();
 
   await tutorial.getByRole("button", { name: "次へ" }).click();
   const fundResponsePromise = page.waitForResponse("**/api/funds/1");
@@ -306,10 +306,11 @@ test("keeps long budget names, classification tags and large amounts within the 
       fund.name += "研究プロジェクト".repeat(20) + "UnbrokenIdentifier".repeat(20);
       for (const tag of fund.projectTags) tag.name += "UnbrokenClassification".repeat(20);
     }
-    data.totals.assets = 4200000000000;
+    data.crossAggregateCategories[0].budgetAmount = 4200000000000;
+    for (const row of data.crossAggregateCategories.slice(1)) row.budgetAmount = null;
     await route.fulfill({response, json: data});
   });
   await page.goto("/?year=2026");
-  await expect(page.getByRole("button", {name: /^予算総額 /})).toContainText("4,200,000,000,000円");
+  await expect(page.getByRole("button", {name: /^費目予算 /})).toContainText("4,200,000,000,000円");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });

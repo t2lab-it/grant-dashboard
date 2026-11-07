@@ -91,7 +91,7 @@ describe("Overview display", () => {
     await user.click(within(screen.getByRole("group", { name: "率表示" })).getByRole("button", { name: "残高率" }));
     for (const [label, amount] of [["費目予算", "800,000円"], ["消化額", "500,000円"], ["執行済額", "200,000円"], ["執行予定額", "300,000円"]]) {
       await user.click(hero.getByRole("button", { name: new RegExp(`^${label} `) }));
-      expect(first.getByRole("img", { name: `部分精算 の${label}の大費目別内訳グラフ` })).toHaveTextContent(amount);
+      expect(first.getByRole("img", { name: `部分精算 の${label}の大費目別内訳グラフ` })).toHaveTextContent(new RegExp(`^${amount}$`));
       expect(first.getByRole("img")).toHaveAccessibleDescription(new RegExp(`${label} ${amount}`));
       expect(screen.getByRole("heading", { name: `${label}の内訳` })).toBeInTheDocument();
       if (label === "費目予算") {

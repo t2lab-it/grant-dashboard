@@ -169,12 +169,11 @@ export function OverviewFundChart({
               </g>
             );
           })}
-          {categoryMetric !== null ? <>
-            <text x="80" y="71" textAnchor="middle" className="fund-card-donut-value fund-card-donut-metric-label">{categoryLabel}</text>
-            <text x="80" y="92" textAnchor="middle" className="fund-card-donut-value fund-card-donut-metric-amount"
+          {categoryMetric !== null ? (
+            <text x="80" y="80" textAnchor="middle" dominantBaseline="middle" className="fund-card-donut-value fund-card-donut-metric-amount"
               textLength={categoryAmountLabel.length > 10 ? 80 : undefined}
               lengthAdjust="spacingAndGlyphs">{categoryAmountLabel}</text>
-          </> : overBudgetAmount > 0 ? (
+          ) : overBudgetAmount > 0 ? (
             <>
               <text
                 x="80"

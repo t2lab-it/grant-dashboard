@@ -1,4 +1,4 @@
-import type { CrossAggregateCategory } from "../../contracts/crossAggregateCategory";
+import type { CrossAggregateCategoryAmounts } from "../../contracts/crossAggregateCategory";
 import type { BalanceRateThresholds } from "../../lib/executionRate";
 import type { AmountDisplayMode } from "../../lib/format";
 import type { OverviewChartPalette } from "./overviewChart";
@@ -28,12 +28,7 @@ export type OverviewSummaryFund = {
   freeBalance: number;
 };
 
-export type OverviewCrossAggregateCategory = {
-  crossAggregateCategory: CrossAggregateCategory;
-  budgetAmount: number | null;
-  plannedAmount: number;
-  actualAmount: number;
-};
+export type OverviewCrossAggregateCategory = CrossAggregateCategoryAmounts;
 
 export type OverviewSummaryPanelProps = {
   id: string;

@@ -3,7 +3,7 @@ import {
   handleStaticDemoRequest,
   resetStaticDemoStore,
 } from "../../src/demo/staticDemoApi";
-import { readStaticDemoState } from "../../src/demo/staticDemoState";
+import { mutateStaticDemoState, readStaticDemoState } from "../../src/demo/staticDemoState";
 
 async function readJson(response: Response) {
   return (await response.json()) as Record<string, unknown>;
@@ -130,6 +130,40 @@ describe("static demo API", () => {
       code: "invalid_payload",
       message: "入力内容を確認してください。",
     });
+  });
+
+  test("preserves null category budgets in overview while keeping partial settlements", async () => {
+    mutateStaticDemoState((state) => {
+      state.budget_lines = state.budget_lines.filter((line) => line.fund_id !== 1);
+      state.budget_lines.push({ id: 999, fund_id: 1, category_id: 1, amount: null, notes: "未設定" });
+    });
+    const overview = await readJson(await handleStaticDemoRequest("/api/overview?year=2026", { method: "GET" })) as unknown as import("../../src/features/overview/OverviewPage").OverviewResponse;
+    const fund = overview.funds.find((row) => row.id === 1)!;
+    expect(fund.crossAggregateCategories.every((row) => row.budgetAmount === null)).toBe(true);
+    expect(fund.crossAggregateCategories.find((row) => row.crossAggregateCategory === "equipment"))
+      .toMatchObject({ budgetAmount: null, actualAmount: 345000, plannedAmount: 475000 });
+  });
+
+  test("keeps fund category amounts consistent with fund totals and annual aggregates in every demo year", async () => {
+    for (const year of [2025, 2026, 2027]) {
+      const overview = await readJson(await handleStaticDemoRequest(`/api/overview?year=${year}`, { method: "GET" })) as unknown as import("../../src/features/overview/OverviewPage").OverviewResponse;
+      if (year === 2026) {
+        expect(overview.funds.find((fund) => fund.id === 1)?.crossAggregateCategories).toEqual([
+          { crossAggregateCategory: "equipment", budgetAmount: 1200000, actualAmount: 345000, plannedAmount: 475000 },
+          { crossAggregateCategory: "travel", budgetAmount: 400000, actualAmount: 185000, plannedAmount: 180000 },
+        ]);
+      }
+      for (const fund of overview.funds) {
+        expect(fund.crossAggregateCategories.reduce((sum, row) => sum + row.actualAmount + row.plannedAmount, 0))
+          .toBe(fund.actual_amount + fund.committed_amount);
+      }
+      for (const row of overview.crossAggregateCategories) {
+        const rows = overview.funds.flatMap((fund) => fund.crossAggregateCategories)
+          .filter((item) => item.crossAggregateCategory === row.crossAggregateCategory);
+        expect(rows.reduce((sum, item) => sum + item.actualAmount, 0)).toBe(row.actualAmount);
+        expect(rows.reduce((sum, item) => sum + item.plannedAmount, 0)).toBe(row.plannedAmount);
+      }
+    }
   });
 
   test("builds overview from demo seed data", async () => {

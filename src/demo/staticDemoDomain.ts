@@ -163,9 +163,9 @@ export function getFundActualAmount(state: StaticDemoState, fundId: number) {
     .reduce((sum, entry) => sum + entry.amount, 0);
 }
 
-export function getStaticOverviewCrossAggregateCategories(state: StaticDemoState, fiscalYear: number) {
+export function getStaticOverviewCrossAggregateCategories(state: StaticDemoState, fiscalYear: number, fundId?: number) {
   const scopedFundIds = new Set(
-    state.funds.filter((fund) => fund.fiscal_year === fiscalYear).map((fund) => fund.id),
+    state.funds.filter((fund) => fund.fiscal_year === fiscalYear && (fundId === undefined || fund.id === fundId)).map((fund) => fund.id),
   );
   const rowsByCategory = new Map<
     CrossAggregateCategory,
@@ -212,7 +212,7 @@ export function toFreeBalance(assets: number, committed: number, actual: number)
 }
 
 export function sumBudgetLines(lines: StaticDemoBudgetLine[]) {
-  if (lines.length === 0) {
+  if (lines.every((line) => line.amount === null)) {
     return null;
   }
 

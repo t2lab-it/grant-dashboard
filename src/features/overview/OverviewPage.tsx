@@ -26,7 +26,7 @@ import {
   getOverviewChartPalette,
   type OverviewChartFund,
 } from "./overviewChart";
-import type { CrossAggregateCategory } from "../../contracts/crossAggregateCategory";
+import type { CrossAggregateCategoryAmounts } from "../../contracts/crossAggregateCategory";
 import { RateMetricToggle } from "../funds/RateMetricToggle";
 import { setRateSearchParam } from "../funds/rateQueryParams";
 import type { RateMetricKey } from "../../lib/executionRate";
@@ -82,12 +82,7 @@ export type OverviewResponse = FiscalYearOverviewFields & {
   }>;
   linkedActualAmount: number;
   pendingPlannedCount: number;
-  crossAggregateCategories: Array<{
-    crossAggregateCategory: CrossAggregateCategory;
-    budgetAmount: number | null;
-    plannedAmount: number;
-    actualAmount: number;
-  }>;
+  crossAggregateCategories: CrossAggregateCategoryAmounts[];
   yearEndRisk: YearEndRiskSummary;
   latestImport: {
     id: number;
@@ -99,7 +94,7 @@ export type OverviewResponse = FiscalYearOverviewFields & {
   tutorial: {
     eligibleDemoData: boolean;
   };
-  funds: Array<{ id: number; projectTags: ClassificationTag[] } & OverviewChartFund>;
+  funds: Array<{ id: number; projectTags: ClassificationTag[]; crossAggregateCategories: CrossAggregateCategoryAmounts[] } & OverviewChartFund>;
 };
 
 type ProjectTagFilterKey = "all" | "unassigned" | `tag-${number}`;

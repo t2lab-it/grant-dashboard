@@ -165,6 +165,7 @@ export function getOverviewSnapshot(db: Database.Database, options: OverviewSnap
 
   const funds = aggregateRows.map((row) => ({
     ...row,
+    crossAggregateCategories: listFundCrossAggregateCategoryRows(db, row.id),
     freeBalance: toFreeBalance(row.awarded_amount, row.committed_amount, row.actual_amount),
     projectTags: listAssignedClassifications(db, "fund", row.id).filter((tag) => tag.kind === "project"),
   }));

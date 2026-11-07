@@ -110,6 +110,7 @@ export function buildOverviewFund(
     actual_amount: 400000,
     freeBalance: -100000,
     projectTags: [],
+    crossAggregateCategories: [],
     ...overrides,
   };
 }

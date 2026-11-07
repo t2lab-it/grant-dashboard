@@ -75,6 +75,7 @@ function mockDemoOverviewAndFundDetail() {
                 actual_amount: 300000,
                 freeBalance: 1400000,
                 projectTags: [],
+                crossAggregateCategories: [],
               },
             ],
           }),

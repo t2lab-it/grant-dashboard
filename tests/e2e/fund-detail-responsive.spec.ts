@@ -14,7 +14,10 @@ async function setup(page: import("@playwright/test").Page, stress = false, with
     ...item, description: "長い内容".repeat(30), categoryName: "長い費目".repeat(20), amount: 999999999999999,
     auxiliaryLabels: [{ id: 1, kind: "auxiliary" as const, name: "長い補助ラベル".repeat(10), color: "#123456" }, { id: 2, kind: "auxiliary" as const, name: "補助ラベル2", color: "#123456" }],
   } : withNote && index === 0 ? { ...item, notes: "幅変更後も残るメモ" } : item),
-    plannedItemHistory: plannedItemHistory.map((item) => stress && item.status === "completed" ? { ...item, remainingAmount: 999999999999999 } : item), actualEntries };
+    plannedItemHistory: plannedItemHistory.map((item) => stress && item.status === "completed" ? { ...item, remainingAmount: 999999999999999 } : item),
+    actualEntries: actualEntries.map((item, index) => stress && index === 0
+      ? { ...item, description: "長い実績の内容".repeat(30) }
+      : item) };
   expect(fixture.plannedItems.map((item) => item.id)).toEqual([101, 102, 103]);
   expect(fixture.plannedItemHistory.map((item) => item.status)).toEqual(["completed", "cancelled", "cancelled"]);
   expect(fixture.actualEntries.every((item) => item.amount === 100000)).toBeTruthy();
@@ -33,7 +36,7 @@ test("portrait lists fit and reduce row heights", async ({ page }) => {
 });
 
 test("layouts align, wrap, and do not depend on viewport height", async ({ page }) => {
-  await setup(page);
+  await setup(page, true);
   for (const width of [390, 768, 899, 900, 901, 1024, 1152, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     const rows = page.locator(".detail-history-row");
@@ -57,7 +60,9 @@ test("layouts align, wrap, and do not depend on viewport height", async ({ page 
         expect(new Set(buttonTops).size).toBeLessThanOrEqual(1);
       }
     } else {
-      expect(Math.abs(short.description.y - short.date.y)).toBeLessThan(5);
+      // Wrapped cells have different heights; the grid aligns their centers.
+      const centers = [short.date, short.description, short.amount].map((cell) => cell.y + cell.height / 2);
+      expect(Math.max(...centers) - Math.min(...centers), `viewport width: ${width}`).toBeLessThanOrEqual(1);
       for (const table of await page.locator(".detail-history-table").all()) {
         const alignment = await table.evaluate((element) => {
           const head = element.querySelector(".detail-history-head")!;

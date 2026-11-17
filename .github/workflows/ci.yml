@@ -16,7 +16,8 @@ concurrency:
 jobs:
   test-build:
     name: Test and build
-    runs-on: ubuntu-latest
+    # Pin the OS to a version supported by the locked Playwright release.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
